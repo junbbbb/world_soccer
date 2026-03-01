@@ -57,14 +57,17 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget _buildCollapsed(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('칼로FC', style: AppTextStyles.teamName.copyWith(fontSize: 16)),
-          const SizedBox(width: 8),
-          Image.asset('assets/images/fc_calor.png', width: 20, height: 20),
-          const SizedBox(width: 16),
+          Row(
+            children: [
+              Text('칼로FC', style: AppTextStyles.teamName),
+              const SizedBox(width: 8),
+              Image.asset('assets/images/fc_calor.png', width: 28, height: 28),
+            ],
+          ),
           Text(
             '오후 8:00',
             style: AppTextStyles.teamName.copyWith(
@@ -72,10 +75,13 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(width: 16),
-          Image.asset('assets/images/fc_bosong.png', width: 20, height: 20),
-          const SizedBox(width: 8),
-          Text('뽀잉FC', style: AppTextStyles.teamName.copyWith(fontSize: 16)),
+          Row(
+            children: [
+              Image.asset('assets/images/fc_bosong.png', width: 28, height: 28),
+              const SizedBox(width: 8),
+              Text('뽀잉FC', style: AppTextStyles.teamName),
+            ],
+          ),
         ],
       ),
     );
