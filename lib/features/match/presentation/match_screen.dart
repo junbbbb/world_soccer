@@ -67,121 +67,130 @@ class _MatchScreenState extends State<MatchScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
-      child: DefaultTabController(
-        length: 3,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          body: Stack(
-            children: [
-              NestedScrollView(
-                headerSliverBuilder: (context, innerBoxIsScrolled) {
-                  return [
-                    const SliverToBoxAdapter(child: MatchHeader()),
-                    const SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _TabBarDelegate(child: MatchTabBar()),
+      child: Container(
+        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+        child: SafeArea(
+          bottom: false,
+          child: DefaultTabController(
+            length: 3,
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              body: Stack(
+                children: [
+                  NestedScrollView(
+                    headerSliverBuilder: (context, innerBoxIsScrolled) {
+                      return [
+                        const SliverPersistentHeader(
+                          pinned: true,
+                          delegate: MatchHeaderDelegate(),
+                        ),
+                        const SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _TabBarDelegate(child: MatchTabBar()),
+                        ),
+                      ];
+                    },
+                    body: const TabBarView(
+                      children: [
+                        // 경기정보 탭
+                        SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              LineupSection(),
+                              AttendanceSection(),
+                              RecentRecordSection(),
+                              SizedBox(
+                                height: 120,
+                              ), // Bottom padding to scroll past the fixed action bar
+                            ],
+                          ),
+                        ),
+                        // 상대전적 탭 (placeholder)
+                        Center(child: Text('상대전적')),
+                        // 채팅 탭 (placeholder)
+                        Center(child: Text('채팅')),
+                      ],
                     ),
-                  ];
-                },
-                body: const TabBarView(
-                  children: [
-                    // 경기정보 탭
-                    SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          LineupSection(),
-                          AttendanceSection(),
-                          RecentRecordSection(),
-                          SizedBox(
+                  ),
+                  // Dark scrim overlay (covers full screen including behind bottom bar corners)
+                  if (_isBarExpanded)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTap: _collapseBar,
+                        child: AnimatedOpacity(
+                          opacity: _isBarExpanded ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 250),
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Bottom action bar inside Stack so scrim covers behind rounded corners
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: BottomActionBar(
+                      key: _barKey,
+                      isJoined: _hasJoined,
+                      onExpandChanged: _onExpandChanged,
+                      onJoinRequested: _handleJoinRequest,
+                      onCancelJoined: _handleCancelJoin,
+                    ),
+                  ),
+                  // 참가 완료 애니메이션 (토스 스타일)
+                  if (_isJoinComplete)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.3), // 배경 살짝 딤처리
+                        child: Center(
+                          child: Container(
+                            width: 120,
                             height: 120,
-                          ), // Bottom padding to scroll past the fixed action bar
-                        ],
-                      ),
-                    ),
-                    // 상대전적 탭 (placeholder)
-                    Center(child: Text('상대전적')),
-                    // 채팅 탭 (placeholder)
-                    Center(child: Text('채팅')),
-                  ],
-                ),
-              ),
-              // Dark scrim overlay (covers full screen including behind bottom bar corners)
-              if (_isBarExpanded)
-                Positioned.fill(
-                  child: GestureDetector(
-                    onTap: _collapseBar,
-                    child: AnimatedOpacity(
-                      opacity: _isBarExpanded ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 250),
-                      child: Container(
-                        color: Colors.black.withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ),
-                ),
-              // Bottom action bar inside Stack so scrim covers behind rounded corners
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: BottomActionBar(
-                  key: _barKey,
-                  isJoined: _hasJoined,
-                  onExpandChanged: _onExpandChanged,
-                  onJoinRequested: _handleJoinRequest,
-                  onCancelJoined: _handleCancelJoin,
-                ),
-              ),
-              // 참가 완료 애니메이션 (토스 스타일)
-              if (_isJoinComplete)
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.3), // 배경 살짝 딤처리
-                    child: Center(
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: CheckMark(
-                                active: true,
-                                curve: Curves.easeOutCubic,
-                                duration: Duration(milliseconds: 500),
-                                strokeWidth: 4,
-                                activeColor: AppColors.accentBlue,
-                                inactiveColor: Colors.transparent,
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 50,
+                                  height: 50,
+                                  child: CheckMark(
+                                    active: true,
+                                    curve: Curves.easeOutCubic,
+                                    duration: Duration(milliseconds: 500),
+                                    strokeWidth: 4,
+                                    activeColor: AppColors.accentBlue,
+                                    inactiveColor: Colors.transparent,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  '참가 완료',
+                                  style: AppTextStyles.title.copyWith(
+                                    fontSize: 15,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '참가 완료',
-                              style: AppTextStyles.title.copyWith(
-                                fontSize: 15,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
