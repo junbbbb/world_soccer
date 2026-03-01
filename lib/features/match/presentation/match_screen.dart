@@ -23,6 +23,7 @@ class _MatchScreenState extends State<MatchScreen> {
   final _barKey = GlobalKey<BottomActionBarState>();
   bool _isBarExpanded = false;
   bool _isJoinComplete = false;
+  bool _showJoinAnimation = false;
   bool _hasJoined = false; // Add variable to track successfully joined status
 
   void _onExpandChanged(bool expanded) {
@@ -42,24 +43,43 @@ class _MatchScreenState extends State<MatchScreen> {
     // 약간의 딜레이 후 참가 완료 애니메이션 표시
     await Future.delayed(const Duration(milliseconds: 300));
     setState(() {
-      _isJoinComplete = true;
+      _isJoinComplete = true; // 트리에 위젯 추가
     });
 
-    // 애니메이션이 끝나면 자동으로 상태를 원래대로 돌려놓고, 버튼 상태를 업데이트합니다. (약 1.5초 후)
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // 프레임 반영 후 투명도 애니메이션 시작
+    await Future.delayed(const Duration(milliseconds: 50));
     if (mounted) {
       setState(() {
-        _isJoinComplete = false;
-        _hasJoined = true;
+        _showJoinAnimation = true;
+      });
+    }
+
+    // 2초 정도 성공 화면 보여줌 (스케일 애니메이션 및 체크 애니메이션 진행)
+    await Future.delayed(const Duration(milliseconds: 2000));
+    if (mounted) {
+      setState(() {
+        _showJoinAnimation = false; // 투명하게 페이드아웃 시작
+      });
+    }
+
+    // 페이드 아웃 될 동안 대기 (400ms)
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    if (mounted) {
+      setState(() {
+        _isJoinComplete = false; // 트리에서 아예 제거
+        _hasJoined = true; // 완료 상태 업데이트
       });
     }
   }
 
   void _handleCancelJoin() {
     _collapseBar();
+
     setState(() {
       _hasJoined = false;
       _isJoinComplete = false;
+      _showJoinAnimation = false;
     });
   }
 
@@ -67,131 +87,212 @@ class _MatchScreenState extends State<MatchScreen> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
-      child: Container(
-        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
-        child: SafeArea(
-          bottom: false,
-          child: DefaultTabController(
-            length: 3,
-            child: Scaffold(
-              backgroundColor: Colors.white,
-              body: Stack(
-                children: [
-                  NestedScrollView(
-                    headerSliverBuilder: (context, innerBoxIsScrolled) {
-                      return [
-                        const SliverPersistentHeader(
-                          pinned: true,
-                          delegate: MatchHeaderDelegate(),
-                        ),
-                        const SliverPersistentHeader(
-                          pinned: true,
-                          delegate: _TabBarDelegate(child: MatchTabBar()),
-                        ),
-                      ];
-                    },
-                    body: const TabBarView(
-                      children: [
-                        // 경기정보 탭
-                        SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              LineupSection(),
-                              AttendanceSection(),
-                              RecentRecordSection(),
-                              SizedBox(
-                                height: 120,
-                              ), // Bottom padding to scroll past the fixed action bar
-                            ],
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Stack(
+          children: [
+            // Background and Content bounded by SafeArea
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: AppColors.headerGradient,
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: DefaultTabController(
+                    length: 3,
+                    child: NestedScrollView(
+                      headerSliverBuilder: (context, innerBoxIsScrolled) {
+                        return [
+                          const SliverPersistentHeader(
+                            pinned: true,
+                            delegate: MatchHeaderDelegate(),
                           ),
-                        ),
-                        // 상대전적 탭 (placeholder)
-                        Center(child: Text('상대전적')),
-                        // 채팅 탭 (placeholder)
-                        Center(child: Text('채팅')),
-                      ],
-                    ),
-                  ),
-                  // Dark scrim overlay (covers full screen including behind bottom bar corners)
-                  if (_isBarExpanded)
-                    Positioned.fill(
-                      child: GestureDetector(
-                        onTap: _collapseBar,
-                        child: AnimatedOpacity(
-                          opacity: _isBarExpanded ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 250),
-                          child: Container(
-                            color: Colors.black.withValues(alpha: 0.4),
+                          const SliverPersistentHeader(
+                            pinned: true,
+                            delegate: _TabBarDelegate(child: MatchTabBar()),
                           ),
+                        ];
+                      },
+                      body: Container(
+                        color: Colors.white,
+                        child: const TabBarView(
+                          children: [
+                            // 경기정보 탭
+                            SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  LineupSection(),
+                                  AttendanceSection(),
+                                  RecentRecordSection(),
+                                  SizedBox(
+                                    height: 120,
+                                  ), // Bottom padding to scroll past the fixed action bar
+                                ],
+                              ),
+                            ),
+                            // 상대전적 탭 (placeholder)
+                            Center(child: Text('상대전적')),
+                            // 채팅 탭 (placeholder)
+                            Center(child: Text('채팅')),
+                          ],
                         ),
                       ),
                     ),
-                  // Bottom action bar inside Stack so scrim covers behind rounded corners
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: BottomActionBar(
-                      key: _barKey,
-                      isJoined: _hasJoined,
-                      onExpandChanged: _onExpandChanged,
-                      onJoinRequested: _handleJoinRequest,
-                      onCancelJoined: _handleCancelJoin,
-                    ),
                   ),
-                  // 참가 완료 애니메이션 (토스 스타일)
-                  if (_isJoinComplete)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black.withValues(alpha: 0.3), // 배경 살짝 딤처리
-                        child: Center(
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const SizedBox(
-                                  width: 50,
-                                  height: 50,
-                                  child: CheckMark(
-                                    active: true,
-                                    curve: Curves.easeOutCubic,
-                                    duration: Duration(milliseconds: 500),
-                                    strokeWidth: 4,
-                                    activeColor: AppColors.accentBlue,
-                                    inactiveColor: Colors.transparent,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  '참가 완료',
-                                  style: AppTextStyles.title.copyWith(
-                                    fontSize: 15,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+                ),
               ),
             ),
-          ),
+            // Dark scrim overlay (covers full screen including behind bottom bar corners)
+            if (_isBarExpanded)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: _collapseBar,
+                  child: AnimatedOpacity(
+                    opacity: _isBarExpanded ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ),
+              ),
+            // Bottom action bar inside Stack so scrim covers behind rounded corners
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: BottomActionBar(
+                key: _barKey,
+                isJoined: _hasJoined,
+                onExpandChanged: _onExpandChanged,
+                onJoinRequested: _handleJoinRequest,
+                onCancelJoined: _handleCancelJoin,
+              ),
+            ),
+            // 참가 완료 애니메이션 (프리미엄 스타일)
+            if (_isJoinComplete)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: _showJoinAnimation ? 1.0 : 0.0,
+                    curve: Curves.easeInOut,
+                    child: Container(
+                      color: Colors.white.withValues(
+                        alpha: 0.2,
+                      ), // 전체 화면은 매우 옅은 흰색
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // V 표시와 텍스트 주변만 하얗게 잡아주는 부드러운 글로우(빛 번짐) 효과
+                          Container(
+                            width: 400,
+                            height: 400,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.white.withValues(
+                                    alpha: 1.0,
+                                  ), // 중앙은 완전 하얗게
+                                  Colors.white.withValues(alpha: 0.8),
+                                  Colors.white.withValues(
+                                    alpha: 0.0,
+                                  ), // 바깥으로 갈수록 투명하게 풀림
+                                ],
+                                stops: const [0.25, 0.55, 1.0],
+                              ),
+                            ),
+                          ),
+                          Center(
+                            child: TweenAnimationBuilder<double>(
+                              duration: const Duration(milliseconds: 700),
+                              curve: Curves.elasticOut,
+                              tween: Tween<double>(
+                                begin: 0.5,
+                                end: _showJoinAnimation ? 1.0 : 0.8,
+                              ),
+                              builder: (context, scale, child) {
+                                return Transform.scale(
+                                  scale: scale,
+                                  child: child,
+                                );
+                              },
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 96,
+                                    height: 96,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentBlue,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.accentBlue
+                                              .withValues(alpha: 0.4),
+                                          blurRadius: 32,
+                                          spreadRadius: 8,
+                                          offset: const Offset(0, 12),
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          blurRadius: 0,
+                                          spreadRadius: 2,
+                                          offset: const Offset(0, 0),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 44,
+                                        height: 44,
+                                        child: CheckMark(
+                                          active: _showJoinAnimation,
+                                          curve: Curves.easeOutQuart,
+                                          duration: const Duration(
+                                            milliseconds: 600,
+                                          ),
+                                          strokeWidth: 4.5,
+                                          activeColor: Colors.white,
+                                          inactiveColor: Colors.transparent,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 28),
+                                  Text(
+                                    '참가 확정 완료!',
+                                    style: AppTextStyles.title.copyWith(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '경기 일정을 놓치지 마세요',
+                                    style: AppTextStyles.body.copyWith(
+                                      fontSize: 16,
+                                      color: AppColors.textSecondary,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
