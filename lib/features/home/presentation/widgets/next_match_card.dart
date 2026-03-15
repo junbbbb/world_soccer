@@ -27,26 +27,6 @@ class NextMatchCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Top bar: NEXT MATCH
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'NEXT MATCH',
-                  style: GoogleFonts.barlowCondensed(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFFAD96D),
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white54,
-                  size: 16,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             // VS section
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -103,34 +83,45 @@ class NextMatchCard extends StatelessWidget {
                 ),
               ],
             ),
-            // 구분선
+            // 구분선 (그라데이션)
             Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: Divider(
-                color: Colors.white.withValues(alpha: 0.2),
+              child: Container(
                 height: 1,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                    colors: [
+                      Color(0x009CBAD9),
+                      Color(0xCC9CBAD9),
+                      Color(0xFF9CBAD9),
+                      Color(0xCC9CBAD9),
+                      Color(0x00FFFFFF),
+                    ],
+                  ),
+                ),
               ),
             ),
             // 참가하기 버튼
             Padding(
-              padding: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.only(top: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     '참가 하기',
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    size: 12,
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.arrow_right_alt_rounded,
+                    color: Colors.white,
+                    size: 20,
                   ),
                 ],
               ),

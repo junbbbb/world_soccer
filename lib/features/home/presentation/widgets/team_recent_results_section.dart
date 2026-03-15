@@ -33,7 +33,7 @@ class TeamRecentResultsSection extends StatelessWidget {
       children: [
         const Padding(
           padding: EdgeInsets.only(left: 24, right: 24, bottom: 4),
-          child: SectionTitle('팀 최근전적'),
+          child: SectionTitle('최근 전적'),
         ),
         SizedBox(
           height: 48,

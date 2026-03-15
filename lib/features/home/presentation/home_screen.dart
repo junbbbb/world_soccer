@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'home_tab.dart';
 
@@ -46,23 +47,55 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.white,
             elevation: 0,
             selectedItemColor: const Color(0xFF333D4B),
-            unselectedItemColor: const Color(0xFF8E97A3),
+            unselectedItemColor: const Color(0xFFD1D6DB),
+            selectedLabelStyle: const TextStyle(fontFamily: 'Pretendard', fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontFamily: 'Pretendard'),
             selectedFontSize: 12,
             unselectedFontSize: 12,
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.home_rounded),
+                icon: SvgPicture.asset(
+                  'assets/icons/mingcute_home-1-fill.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(
+                    _currentIndex == 0
+                        ? const Color(0xFF333D4B)
+                        : const Color(0xFFD1D6DB),
+                    BlendMode.srcIn,
+                  ),
+                ),
                 label: '홈',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.forum),
+                icon: SvgPicture.asset(
+                  'assets/icons/ri_chat-1-fill.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(
+                    _currentIndex == 1
+                        ? const Color(0xFF333D4B)
+                        : const Color(0xFFD1D6DB),
+                    BlendMode.srcIn,
+                  ),
+                ),
                 label: '채팅',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.leaderboard),
+                icon: SvgPicture.asset(
+                  'assets/icons/ic_round-bar-chart.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(
+                    _currentIndex == 2
+                        ? const Color(0xFF333D4B)
+                        : const Color(0xFFD1D6DB),
+                    BlendMode.srcIn,
+                  ),
+                ),
                 label: '스탯',
               ),
-              BottomNavigationBarItem(
+              const BottomNavigationBarItem(
                 icon: Icon(Icons.shield),
                 label: '팀',
               ),
