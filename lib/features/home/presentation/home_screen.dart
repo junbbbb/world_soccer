@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../chat/presentation/chat_tab.dart';
 import 'home_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _currentIndex,
           children: const [
             HomeTab(),
-            Center(child: Text('채팅')),
+            ChatTab(),
             Center(child: Text('스탯')),
             Center(child: Text('팀')),
           ],
