@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static const _heroFont = 'NanumSquareNeo';
   static const _contentFont = 'Pretendard';
 
   static const heading = TextStyle(
@@ -31,7 +30,7 @@ class AppTextStyles {
   );
 
   static const teamName = TextStyle(
-    fontFamily: _heroFont,
+    fontFamily: 'SCDream',
     fontSize: 14,
     fontWeight: FontWeight.w700,
     color: Colors.white,

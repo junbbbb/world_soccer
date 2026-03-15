@@ -6,13 +6,15 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
 
 class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const MatchHeaderDelegate();
+  const MatchHeaderDelegate({this.onBack});
+
+  final VoidCallback? onBack;
 
   @override
   double get minExtent => 60;
 
   @override
-  double get maxExtent => 160;
+  double get maxExtent => 196;
 
   @override
   Widget build(
@@ -27,7 +29,16 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
     final collapsedOpacity = ((progress - 0.8) * 5.0).clamp(0.0, 1.0);
 
     return Container(
-      decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+      decoration: BoxDecoration(
+        gradient: AppColors.headerGradient,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x406C849C),
+            offset: Offset(0, 2),
+            blurRadius: 8,
+          ),
+        ],
+      ),
       clipBehavior: Clip.hardEdge,
       child: Stack(
         children: [
@@ -57,10 +68,22 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget _buildCollapsed(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          if (onBack != null)
+            GestureDetector(
+              onTap: onBack,
+              child: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          const Spacer(),
           Row(
             children: [
               Text('칼로FC', style: AppTextStyles.teamName),
@@ -68,6 +91,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               Image.asset('assets/images/fc_calor.png', width: 28, height: 28),
             ],
           ),
+          const SizedBox(width: 16),
           Text(
             '오후 8:00',
             style: AppTextStyles.teamName.copyWith(
@@ -75,6 +99,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               fontWeight: FontWeight.w900,
             ),
           ),
+          const SizedBox(width: 16),
           Row(
             children: [
               Image.asset('assets/images/fc_bosong.png', width: 28, height: 28),
@@ -82,6 +107,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               Text('뽀잉FC', style: AppTextStyles.teamName),
             ],
           ),
+          const Spacer(),
         ],
       ),
     );
@@ -92,49 +118,42 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
       physics: const NeverScrollableScrollPhysics(),
       child: Column(
         children: [
-          // Top bar: NEXT MATCH + menu
+          // Top bar: back button + NEXT MATCH + menu
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 24, // Increased horizontal margin
-              vertical: 4, // Reduced from 12
+              horizontal: 24,
+              vertical: 4,
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment
-                  .center, // Ensure perfect horizontal alignment
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                if (onBack != null)
+                  GestureDetector(
+                    onTap: onBack,
+                    child: const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
                 Text(
                   'NEXT MATCH',
-                  style: GoogleFonts.antonSc(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w400,
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
                     color: const Color(0xFFFAD96D),
-                    shadows: [
-                      const Shadow(
-                        offset: Offset(1.0, 1.0),
-                        blurRadius: 0.0,
-                        color: Color(0xFFB90000),
-                      ),
-                    ],
                   ),
                 ),
+                const Spacer(),
                 GestureDetector(
                   onTap: () {},
-                  child: Container(
-                    width: 26, // Reduced size
-                    height: 26, // Reduced size
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.1), // 000000 10%
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(width: 14, height: 1.5, color: Colors.white),
-                        const SizedBox(height: 4), // Adjusted gap
-                        Container(width: 14, height: 1.5, color: Colors.white),
-                      ],
-                    ),
+                  child: const Icon(
+                    Icons.calendar_today,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
               ],
@@ -146,10 +165,11 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               left: 24, // Increased margin
               right: 24, // Increased margin
               top: 24, // Increased top padding
-              bottom: 32, // Increased bottom padding
+              bottom: 48, // Increased bottom padding
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 const TeamLogoBadge(
                   teamName: '칼로FC',
@@ -160,27 +180,38 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '오후 8:00',
-                      style: AppTextStyles.teamName.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: const Text(
+                        '오후',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          height: 0.8,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     Text(
-                      '2월 7일',
-                      style: AppTextStyles.teamName.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white70,
+                      '8:00',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
                     Text(
-                      '성내유수지',
-                      style: AppTextStyles.teamName.copyWith(
+                      '2/7(토) 성내유수지',
+                      style: const TextStyle(
+                        fontFamily: 'SCDream',
                         fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ],

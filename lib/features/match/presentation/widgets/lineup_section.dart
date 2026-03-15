@@ -14,7 +14,7 @@ class LineupSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle('라인업'),
+          const SectionTitle('라인업 & 전술'),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 32),
