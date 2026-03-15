@@ -144,7 +144,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                   style: GoogleFonts.barlowCondensed(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFFFAD96D),
+                    color: Colors.white,
                   ),
                 ),
                 const Spacer(),
@@ -175,7 +175,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                   teamName: '칼로FC',
                   logoPath: 'assets/images/fc_calor.png',
                 ),
-                const SizedBox(width: 60), // More controlled distance
+                const Spacer(),
                 // Match info center
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -216,7 +216,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ),
                   ],
                 ),
-                const SizedBox(width: 60), // More controlled distance
+                const Spacer(),
                 const TeamLogoBadge(
                   teamName: '뽀잉FC',
                   logoPath: 'assets/images/fc_bosong.png',

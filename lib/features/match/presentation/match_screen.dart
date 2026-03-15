@@ -34,6 +34,29 @@ class MatchDetailScreen extends StatelessWidget {
                         onBack: () => Navigator.of(context).pop(),
                       ),
                     ),
+                    // 그라데이션 구분선 (hero ↔ 탭바 경계)
+                    const SliverToBoxAdapter(
+                      child: ColoredBox(
+                        color: Colors.white,
+                        child: SizedBox(
+                          height: 2,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                                colors: [
+                                  Color(0x00FFFFFF),
+                                  Color(0x33BFDFFF),
+                                  Color(0xFFBFDFFF),
+                                  Color(0x33BFDFFF),
+                                  Color(0x00FFFFFF),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     const SliverPersistentHeader(
                       pinned: true,
                       delegate: _TabBarDelegate(child: MatchTabBar()),

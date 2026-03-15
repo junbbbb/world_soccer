@@ -21,7 +21,7 @@ class NextMatchCard extends StatelessWidget {
           gradient: AppColors.headerGradient,
           shape: SmoothRectangleBorder(
             borderRadius: SmoothBorderRadius.all(
-              SmoothRadius(cornerRadius: 20, cornerSmoothing: 1.0),
+              SmoothRadius(cornerRadius: 16, cornerSmoothing: 1.0),
             ),
           ),
         ),
@@ -54,7 +54,7 @@ class NextMatchCard extends StatelessWidget {
                         '오후',
                         style: TextStyle(
                           fontFamily: 'Pretendard',
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           height: 0.8,
                           color: Colors.white,
@@ -64,14 +64,19 @@ class NextMatchCard extends StatelessWidget {
                     Text(
                       '8:00',
                       style: GoogleFonts.barlowCondensed(
-                        fontSize: 28,
+                        fontSize: 36,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),
-                    Text(
+                    const Text(
                       '2/7(토) 성내유수지',
-                      style: AppTextStyles.teamName.copyWith(fontSize: 12),
+                      style: TextStyle(
+                        fontFamily: 'SCDream',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
