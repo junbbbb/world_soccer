@@ -39,7 +39,7 @@ class MatchDetailScreen extends StatelessWidget {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: SmoothRectangleBorder(
-                    borderRadius: AppRadius.smooth(AppRadius.button),
+                    borderRadius: AppRadius.smoothButton,
                   ),
                 ),
                 child: Text('참가하기', style: AppTextStyles.buttonPrimary),

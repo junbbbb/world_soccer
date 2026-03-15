@@ -25,7 +25,7 @@ class TeamLogoBadge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         ClipSmoothRect(
-          radius: AppRadius.smoothAll(AppRadius.sm),
+          radius: AppRadius.smoothSm,
           child: Image.asset(
             logoPath,
             width: size,

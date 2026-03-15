@@ -13,18 +13,33 @@ class AppRadius {
   static const double xl = 20;
   static const double full = 100;
 
-  /// figma_squircle SmoothBorderRadius 헬퍼
+  // ── Cached SmoothBorderRadius (빌드마다 재생성 방지) ──
+  static final smoothXs = SmoothBorderRadius(
+    cornerRadius: xs,
+    cornerSmoothing: 1.0,
+  );
+  static final smoothSm = SmoothBorderRadius(
+    cornerRadius: sm,
+    cornerSmoothing: 1.0,
+  );
+  static final smoothMd = SmoothBorderRadius(
+    cornerRadius: md,
+    cornerSmoothing: 1.0,
+  );
+  static final smoothButton = SmoothBorderRadius(
+    cornerRadius: button,
+    cornerSmoothing: 1.0,
+  );
+  static final smoothLg = SmoothBorderRadius(
+    cornerRadius: lg,
+    cornerSmoothing: 1.0,
+  );
+
+  /// 비표준 값용 팩토리
   static SmoothBorderRadius smooth(double radius) {
     return SmoothBorderRadius(
       cornerRadius: radius,
       cornerSmoothing: 1.0,
-    );
-  }
-
-  /// ClipSmoothRect 용 SmoothBorderRadius.all 헬퍼
-  static SmoothBorderRadius smoothAll(double radius) {
-    return SmoothBorderRadius.all(
-      SmoothRadius(cornerRadius: radius, cornerSmoothing: 1.0),
     );
   }
 }

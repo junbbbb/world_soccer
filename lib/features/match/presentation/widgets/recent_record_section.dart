@@ -12,10 +12,7 @@ class RecentRecordSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.xl,
-      ),
+      padding: AppSpacing.paddingSection,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -26,7 +23,7 @@ class RecentRecordSection extends StatelessWidget {
             decoration: ShapeDecoration(
               color: AppColors.surface,
               shape: SmoothRectangleBorder(
-                borderRadius: AppRadius.smooth(AppRadius.md),
+                borderRadius: AppRadius.smoothMd,
               ),
             ),
           ),

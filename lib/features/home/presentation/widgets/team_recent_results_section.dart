@@ -106,7 +106,7 @@ class _ResultCapsule extends StatelessWidget {
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
         shape: SmoothRectangleBorder(
-          borderRadius: AppRadius.smoothAll(AppRadius.sm),
+          borderRadius: AppRadius.smoothSm,
         ),
       ),
       child: Row(
@@ -127,7 +127,7 @@ class _ResultCapsule extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           ClipSmoothRect(
-            radius: AppRadius.smoothAll(AppRadius.xs),
+            radius: AppRadius.smoothXs,
             child: Image.asset(
               result.opponentLogo,
               width: 22,

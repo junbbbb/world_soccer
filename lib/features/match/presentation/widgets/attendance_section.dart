@@ -13,10 +13,7 @@ class AttendanceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.xl,
-      ),
+      padding: AppSpacing.paddingSection,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -46,7 +43,7 @@ class AttendanceSection extends StatelessWidget {
                 foregroundColor: AppColors.textPrimary,
                 elevation: 0,
                 shape: SmoothRectangleBorder(
-                  borderRadius: AppRadius.smooth(AppRadius.md),
+                  borderRadius: AppRadius.smoothMd,
                 ),
               ),
               child: Text('용병초대', style: AppTextStyles.buttonSecondary),

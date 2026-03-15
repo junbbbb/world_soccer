@@ -39,7 +39,7 @@ class AppColors {
     Color(0xCC9CBAD9),
     Color(0xFF9CBAD9),
     Color(0xCC9CBAD9),
-    Color(0x009CBAD9),
+    Color(0x00FFFFFF),
   ];
 
   static const headerDividerColors = [
