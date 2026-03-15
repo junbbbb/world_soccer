@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:figma_squircle/figma_squircle.dart';
+
 import '../../../core/theme/app_colors.dart';
 import 'widgets/attendance_section.dart';
+import 'widgets/bottom_action_bar.dart';
 import 'widgets/lineup_section.dart';
 import 'widgets/match_header.dart';
 import 'widgets/match_tab_bar.dart';
@@ -17,6 +20,37 @@ class MatchDetailScreen extends StatelessWidget {
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: Colors.white,
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1572D1),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: SmoothRectangleBorder(
+                    borderRadius: SmoothBorderRadius(
+                      cornerRadius: 14,
+                      cornerSmoothing: 1.0,
+                    ),
+                  ),
+                ),
+                child: const Text(
+                  '참가하기',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
         body: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.headerGradient,

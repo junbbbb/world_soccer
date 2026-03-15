@@ -91,7 +91,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               Image.asset('assets/images/fc_calor.png', width: 28, height: 28),
             ],
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 32),
           Text(
             '오후 8:00',
             style: AppTextStyles.teamName.copyWith(
@@ -99,7 +99,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 32),
           Row(
             children: [
               Image.asset('assets/images/fc_bosong.png', width: 28, height: 28),
@@ -130,23 +130,12 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                 if (onBack != null)
                   GestureDetector(
                     onTap: onBack,
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
-                Text(
-                  'NEXT MATCH',
-                  style: GoogleFonts.barlowCondensed(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () {},
@@ -175,7 +164,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                   teamName: '칼로FC',
                   logoPath: 'assets/images/fc_calor.png',
                 ),
-                const Spacer(),
+                const SizedBox(width: 32),
                 // Match info center
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -216,7 +205,7 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ),
                   ],
                 ),
-                const Spacer(),
+                const SizedBox(width: 32),
                 const TeamLogoBadge(
                   teamName: '뽀잉FC',
                   logoPath: 'assets/images/fc_bosong.png',
