@@ -200,7 +200,8 @@ class BottomActionBarState extends State<BottomActionBar>
                       children: [
                         Text(
                           '3자리 남았어요',
-                          style: AppTextStyles.title.copyWith(
+                          style: AppTextStyles.heading.copyWith(
+                            fontWeight: FontWeight.w900,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -226,13 +227,13 @@ class BottomActionBarState extends State<BottomActionBar>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.isJoined && !_isExpanded
                             ? AppColors.surface
-                            : AppColors.accentBlue,
+                            : AppColors.primary,
                         foregroundColor: widget.isJoined && !_isExpanded
                             ? AppColors.textSecondary
                             : Colors.white,
                         disabledBackgroundColor: widget.isJoined && !_isExpanded
                             ? AppColors.surface
-                            : AppColors.accentBlue.withValues(alpha: 0.4),
+                            : AppColors.primary.withValues(alpha: 0.4),
                         disabledForegroundColor: widget.isJoined && !_isExpanded
                             ? AppColors.textSecondary
                             : Colors.white.withValues(alpha: 0.6),
@@ -249,7 +250,7 @@ class BottomActionBarState extends State<BottomActionBar>
                         widget.isJoined && !_isExpanded
                             ? '참가 완료'
                             : (_isExpanded ? '참가 확정' : '참가하기'),
-                        style: AppTextStyles.buttonText.copyWith(
+                        style: AppTextStyles.heading.copyWith(
                           color: widget.isJoined && !_isExpanded
                               ? AppColors.textSecondary
                               : Colors.white,
@@ -318,7 +319,7 @@ class BottomActionBarState extends State<BottomActionBar>
               ),
               child: Text(
                 '참가 취소',
-                style: AppTextStyles.buttonText.copyWith(
+                style: AppTextStyles.heading.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),

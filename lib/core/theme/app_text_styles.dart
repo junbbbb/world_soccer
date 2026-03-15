@@ -1,58 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTextStyles {
   AppTextStyles._();
 
-  static const _contentFont = 'Pretendard';
+  static const _pretendard = 'Pretendard';
+  static const _scDream = 'SCDream';
 
+  // ── Titles ──
+  static const pageTitle = TextStyle(
+    fontFamily: _scDream,
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+  );
+
+  static const sectionTitle = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+  );
+
+  // ── Heading ──
   static const heading = TextStyle(
-    fontFamily: _contentFont,
+    fontFamily: _pretendard,
     fontSize: 16,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w700,
   );
 
-  static const title = TextStyle(
-    fontFamily: _contentFont,
-    fontSize: 16,
-    fontWeight: FontWeight.w900,
-  );
-
+  // ── Body (15px) ──
   static const body = TextStyle(
-    fontFamily: _contentFont,
+    fontFamily: _pretendard,
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
+  );
+
+  static const bodyRegular = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+  );
+
+  // ── Labels (14px) ──
+  static const label = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+  );
+
+  static const labelMedium = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const labelRegular = TextStyle(
+    fontFamily: _pretendard,
     fontSize: 14,
     fontWeight: FontWeight.w400,
+  );
+
+  // ── Captions (12~13px) ──
+  static const captionBold = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 13,
+    fontWeight: FontWeight.w800,
+  );
+
+  static const captionMedium = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
   );
 
   static const caption = TextStyle(
-    fontFamily: _contentFont,
+    fontFamily: _pretendard,
     fontSize: 12,
     fontWeight: FontWeight.w400,
   );
 
-  static const teamName = TextStyle(
-    fontFamily: 'SCDream',
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
-    color: Colors.white,
-  );
-
-  static const playerName = TextStyle(
-    fontFamily: _contentFont,
-    fontSize: 14,
+  // ── Buttons ──
+  static const buttonPrimary = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 17,
     fontWeight: FontWeight.w700,
   );
 
-  static const badgeNumber = TextStyle(
-    fontFamily: _contentFont,
-    fontSize: 12,
-    fontWeight: FontWeight.w900,
-    color: Colors.white,
-  );
-
-  static const buttonText = TextStyle(
-    fontFamily: _contentFont,
+  static const buttonSecondary = TextStyle(
+    fontFamily: _pretendard,
     fontSize: 16,
+    fontWeight: FontWeight.w600,
+  );
+
+  // ── Match-specific ──
+  static const teamName = TextStyle(
+    fontFamily: _scDream,
+    fontSize: 14,
     fontWeight: FontWeight.w700,
+    color: Colors.white,
+  );
+
+  static const matchInfo = TextStyle(
+    fontFamily: _scDream,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: Colors.white,
+  );
+
+  static const timeBadge = TextStyle(
+    fontFamily: _pretendard,
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 0.8,
+    color: Colors.white,
+  );
+
+  static final timeDisplay = GoogleFonts.barlowCondensed(
+    fontSize: 36,
+    fontWeight: FontWeight.w800,
     color: Colors.white,
   );
 }

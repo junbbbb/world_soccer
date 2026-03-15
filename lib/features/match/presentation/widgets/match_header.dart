@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
 
@@ -23,21 +25,13 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    // Fade out original layout near the end (70% ~ 100%)
     final expandedOpacity = 1.0 - ((progress - 0.7) * 3.33).clamp(0.0, 1.0);
-    // Fade in collapsed layout at the very end (80% ~ 100%)
     final collapsedOpacity = ((progress - 0.8) * 5.0).clamp(0.0, 1.0);
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: AppColors.headerGradient,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x406C849C),
-            offset: Offset(0, 2),
-            blurRadius: 8,
-          ),
-        ],
+        boxShadow: AppShadows.header,
       ),
       clipBehavior: Clip.hardEdge,
       child: Stack(
@@ -68,14 +62,14 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget _buildCollapsed(BuildContext context) {
     return Container(
       alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Row(
         children: [
           if (onBack != null)
             GestureDetector(
               onTap: onBack,
               child: const Padding(
-                padding: EdgeInsets.only(right: 12),
+                padding: EdgeInsets.only(right: AppSpacing.md),
                 child: Icon(
                   Icons.arrow_back_ios_new_rounded,
                   color: Colors.white,
@@ -87,23 +81,22 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
           Row(
             children: [
               Text('칼로FC', style: AppTextStyles.teamName),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Image.asset('assets/images/fc_calor.png', width: 28, height: 28),
             ],
           ),
-          const SizedBox(width: 32),
+          const SizedBox(width: AppSpacing.xxl),
           Text(
             '오후 8:00',
             style: AppTextStyles.teamName.copyWith(
-              fontSize: 14,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(width: 32),
+          const SizedBox(width: AppSpacing.xxl),
           Row(
             children: [
               Image.asset('assets/images/fc_bosong.png', width: 28, height: 28),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text('뽀잉FC', style: AppTextStyles.teamName),
             ],
           ),
@@ -118,11 +111,11 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
       physics: const NeverScrollableScrollPhysics(),
       child: Column(
         children: [
-          // Top bar: back button + NEXT MATCH + menu
+          // Top bar: back button + menu
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 4,
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.sm,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -151,10 +144,10 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
           // VS section
           Padding(
             padding: const EdgeInsets.only(
-              left: 24, // Increased margin
-              right: 24, // Increased margin
-              top: 24, // Increased top padding
-              bottom: 48, // Increased bottom padding
+              left: AppSpacing.xl,
+              right: AppSpacing.xl,
+              top: AppSpacing.base,
+              bottom: AppSpacing.xxxl,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -164,48 +157,27 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
                   teamName: '칼로FC',
                   logoPath: 'assets/images/fc_calor.png',
                 ),
-                const SizedBox(width: 32),
+                const SizedBox(width: AppSpacing.xxl),
                 // Match info center
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.sm,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(100),
+                        color: AppColors.overlayDark,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                       ),
-                      child: const Text(
-                        '오후',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          height: 0.8,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: Text('오후', style: AppTextStyles.timeBadge),
                     ),
-                    Text(
-                      '8:00',
-                      style: GoogleFonts.barlowCondensed(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '2/7(토) 성내유수지',
-                      style: const TextStyle(
-                        fontFamily: 'SCDream',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
+                    Text('8:00', style: AppTextStyles.timeDisplay),
+                    Text('2/7(토) 성내유수지', style: AppTextStyles.matchInfo),
                   ],
                 ),
-                const SizedBox(width: 32),
+                const SizedBox(width: AppSpacing.xxl),
                 const TeamLogoBadge(
                   teamName: '뽀잉FC',
                   logoPath: 'assets/images/fc_bosong.png',

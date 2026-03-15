@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_text_styles.dart';
 import 'home_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -30,15 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         bottomNavigationBar: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                offset: const Offset(0, -1),
-                blurRadius: 4,
-              ),
-            ],
+            boxShadow: AppShadows.bottomBar,
           ),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
@@ -46,10 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
             elevation: 0,
-            selectedItemColor: const Color(0xFF333D4B),
-            unselectedItemColor: const Color(0xFFD1D6DB),
-            selectedLabelStyle: const TextStyle(fontFamily: 'Pretendard', fontWeight: FontWeight.w600),
-            unselectedLabelStyle: const TextStyle(fontFamily: 'Pretendard'),
+            selectedItemColor: AppColors.textPrimary,
+            unselectedItemColor: AppColors.iconInactive,
+            selectedLabelStyle: AppTextStyles.caption.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: AppTextStyles.caption,
             selectedFontSize: 12,
             unselectedFontSize: 12,
             items: [
@@ -60,8 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 24,
                   colorFilter: ColorFilter.mode(
                     _currentIndex == 0
-                        ? const Color(0xFF333D4B)
-                        : const Color(0xFFD1D6DB),
+                        ? AppColors.textPrimary
+                        : AppColors.iconInactive,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -74,8 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 24,
                   colorFilter: ColorFilter.mode(
                     _currentIndex == 1
-                        ? const Color(0xFF333D4B)
-                        : const Color(0xFFD1D6DB),
+                        ? AppColors.textPrimary
+                        : AppColors.iconInactive,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -88,8 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 24,
                   colorFilter: ColorFilter.mode(
                     _currentIndex == 2
-                        ? const Color(0xFF333D4B)
-                        : const Color(0xFFD1D6DB),
+                        ? AppColors.textPrimary
+                        : AppColors.iconInactive,
                     BlendMode.srcIn,
                   ),
                 ),

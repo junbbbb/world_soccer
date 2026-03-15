@@ -1,6 +1,10 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/section_title.dart';
 
 class AttendanceSection extends StatelessWidget {
@@ -9,55 +13,43 @@ class AttendanceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xl,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionTitle('상세 정보'),
-          const SizedBox(height: 16),
-          // 일정
           _InfoRow(
             icon: Icons.calendar_today,
             text: '3월 7일 토요일 10:00 ~ 12:00',
           ),
-          const SizedBox(height: 16),
-          // 위치
+          const SizedBox(height: AppSpacing.base),
           _InfoRow(
             icon: Icons.location_on_outlined,
             text: '강동구 성내유수지',
           ),
-          const SizedBox(height: 16),
-          // 참가 인원
+          const SizedBox(height: AppSpacing.base),
           _InfoRow(
             icon: Icons.people_outline,
             text: '13/16명 참가',
           ),
-          const SizedBox(height: 24),
-          // 용병초대 버튼
+          const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF2F4F6),
-                foregroundColor: const Color(0xFF333D4B),
+                backgroundColor: AppColors.surface,
+                foregroundColor: AppColors.textPrimary,
                 elevation: 0,
                 shape: SmoothRectangleBorder(
-                  borderRadius: SmoothBorderRadius(
-                    cornerRadius: 12,
-                    cornerSmoothing: 1.0,
-                  ),
+                  borderRadius: AppRadius.smooth(AppRadius.md),
                 ),
               ),
-              child: const Text(
-                '용병초대',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text('용병초대', style: AppTextStyles.buttonSecondary),
             ),
           ),
         ],
@@ -76,16 +68,11 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF8E97A3)),
-        const SizedBox(width: 12),
+        Icon(icon, size: 20, color: AppColors.textTertiary),
+        const SizedBox(width: AppSpacing.md),
         Text(
           text,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF333D4B),
-          ),
+          style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
         ),
       ],
     );

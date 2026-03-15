@@ -1,11 +1,12 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:figma_squircle/figma_squircle.dart';
-
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_radius.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import 'widgets/attendance_section.dart';
-import 'widgets/bottom_action_bar.dart';
 import 'widgets/lineup_section.dart';
 import 'widgets/match_header.dart';
 import 'widgets/match_tab_bar.dart';
@@ -22,31 +23,26 @@ class MatchDetailScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         bottomNavigationBar: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.base,
+              AppSpacing.xl,
+              AppSpacing.sm,
+            ),
             child: SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1572D1),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: SmoothRectangleBorder(
-                    borderRadius: SmoothBorderRadius(
-                      cornerRadius: 14,
-                      cornerSmoothing: 1.0,
-                    ),
+                    borderRadius: AppRadius.smooth(AppRadius.button),
                   ),
                 ),
-                child: const Text(
-                  '참가하기',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Text('참가하기', style: AppTextStyles.buttonPrimary),
               ),
             ),
           ),
@@ -68,7 +64,7 @@ class MatchDetailScreen extends StatelessWidget {
                         onBack: () => Navigator.of(context).pop(),
                       ),
                     ),
-                    // 그라데이션 구분선 (hero ↔ 탭바 경계)
+                    // 그라데이션 구분선 (hero <-> 탭바 경계)
                     const SliverToBoxAdapter(
                       child: ColoredBox(
                         color: Colors.white,
@@ -78,13 +74,7 @@ class MatchDetailScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 stops: [0.0, 0.25, 0.5, 0.75, 1.0],
-                                colors: [
-                                  Color(0x00FFFFFF),
-                                  Color(0x33BFDFFF),
-                                  Color(0xFFBFDFFF),
-                                  Color(0x33BFDFFF),
-                                  Color(0x00FFFFFF),
-                                ],
+                                colors: AppColors.headerDividerColors,
                               ),
                             ),
                           ),
@@ -101,26 +91,23 @@ class MatchDetailScreen extends StatelessWidget {
                   color: Colors.white,
                   child: const TabBarView(
                     children: [
-                      // 경기정보 탭
                       SingleChildScrollView(
                         child: Column(
                           children: [
                             LineupSection(),
                             AttendanceSection(),
-                            SizedBox(height: 40),
+                            SizedBox(height: AppSpacing.xxxxl),
                           ],
                         ),
                       ),
-                      // 상대전적 탭
                       SingleChildScrollView(
                         child: Column(
                           children: [
                             RecentRecordSection(),
-                            SizedBox(height: 40),
+                            SizedBox(height: AppSpacing.xxxxl),
                           ],
                         ),
                       ),
-                      // 스탯 탭 (placeholder)
                       Center(child: Text('스탯')),
                     ],
                   ),
@@ -140,10 +127,10 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
 
   @override
-  double get minExtent => 72;
+  double get minExtent => 80;
 
   @override
-  double get maxExtent => 72;
+  double get maxExtent => 80;
 
   @override
   Widget build(

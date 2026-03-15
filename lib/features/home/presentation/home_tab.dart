@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text_styles.dart';
 import 'widgets/next_match_card.dart';
 import 'widgets/team_posts_section.dart';
 import 'widgets/team_recent_results_section.dart';
@@ -15,7 +18,12 @@ class HomeTab extends StatelessWidget {
         children: [
           // 상단 헤더 (로고 영역)
           Padding(
-            padding: const EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 16),
+            padding: const EdgeInsets.only(
+              left: AppSpacing.xl,
+              right: AppSpacing.xl,
+              top: AppSpacing.sm,
+              bottom: AppSpacing.base,
+            ),
             child: Row(
               children: [
                 Image.asset(
@@ -23,35 +31,32 @@ class HomeTab extends StatelessWidget {
                   width: 32,
                   height: 32,
                 ),
-                const SizedBox(width: 10),
-                const Text(
+                const SizedBox(width: AppSpacing.sm),
+                Text(
                   '칼로FC',
-                  style: TextStyle(
-                    fontFamily: 'SCDream',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF333D4B),
+                  style: AppTextStyles.pageTitle.copyWith(
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const Spacer(),
                 const Icon(
                   Icons.notifications_none_rounded,
-                  color: Color(0xFF8E97A3),
+                  color: AppColors.textTertiary,
                   size: 24,
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: const SingleChildScrollView(
+          const Expanded(
+            child: SingleChildScrollView(
               child: Column(
                 children: [
                   NextMatchCard(),
-                  SizedBox(height: 32),
+                  SizedBox(height: AppSpacing.xxl),
                   TeamRecentResultsSection(),
-                  SizedBox(height: 32),
+                  SizedBox(height: AppSpacing.xxl),
                   TeamPostsSection(),
-                  SizedBox(height: 48),
+                  SizedBox(height: AppSpacing.xxxl),
                 ],
               ),
             ),

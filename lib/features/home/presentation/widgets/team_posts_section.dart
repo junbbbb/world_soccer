@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/section_title.dart';
 
 class _Post {
@@ -55,7 +58,7 @@ class TeamPostsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -64,14 +67,14 @@ class TeamPostsSection extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
                   child: _PostItem(post: _dummyPosts[index]),
                 ),
                 if (index < _dummyPosts.length - 1)
                   Divider(
                     height: 1,
                     thickness: 1,
-                    color: const Color(0xFF333D4B).withValues(alpha: 0.06),
+                    color: AppColors.textPrimary.withValues(alpha: 0.06),
                   ),
               ],
             );
@@ -92,78 +95,59 @@ class _PostItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 아바타 (원형 프로필 이미지)
         ClipOval(
           child: SizedBox(
             width: 40,
             height: 40,
-            child: Image.asset(
-              post.avatarPath,
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset(post.avatarPath, fit: BoxFit.cover),
           ),
         ),
-        const SizedBox(width: 12),
-        // 콘텐츠
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 이름 (검정)
               Text(
                 post.author,
-                style: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 15,
+                style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF333D4B),
+                  color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
-              // 본문
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 post.content,
-                style: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF333D4B),
+                style: AppTextStyles.bodyRegular.copyWith(
+                  color: AppColors.textPrimary,
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 12),
-              // 좋아요(하트) + 댓글(말풍선) 아이콘
+              const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
                   const Icon(
                     Icons.favorite_border_rounded,
                     size: 22,
-                    color: Color(0xFF8E97A3),
+                    color: AppColors.textTertiary,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${post.likes}',
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF8E97A3),
+                    style: AppTextStyles.labelRegular.copyWith(
+                      color: AppColors.textTertiary,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.base),
                   const Icon(
                     Icons.chat_bubble_outline_rounded,
                     size: 20,
-                    color: Color(0xFF8E97A3),
+                    color: AppColors.textTertiary,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${post.comments}',
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF8E97A3),
+                    style: AppTextStyles.labelRegular.copyWith(
+                      color: AppColors.textTertiary,
                     ),
                   ),
                 ],

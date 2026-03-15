@@ -1,5 +1,8 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class TeamLogoBadge extends StatelessWidget {
@@ -22,9 +25,7 @@ class TeamLogoBadge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         ClipSmoothRect(
-          radius: const SmoothBorderRadius.all(
-            SmoothRadius(cornerRadius: 8, cornerSmoothing: 1.0),
-          ),
+          radius: AppRadius.smoothAll(AppRadius.sm),
           child: Image.asset(
             logoPath,
             width: size,
@@ -33,7 +34,7 @@ class TeamLogoBadge extends StatelessWidget {
           ),
         ),
         if (showName) ...[
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.xxs),
           Text(teamName, style: AppTextStyles.teamName),
         ],
       ],

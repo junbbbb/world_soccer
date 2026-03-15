@@ -1,9 +1,10 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
 
@@ -15,13 +16,21 @@ class NextMatchCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/match'),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.lg,
+          AppSpacing.xl,
+          AppSpacing.base,
+        ),
         decoration: ShapeDecoration(
           gradient: AppColors.headerGradient,
           shape: SmoothRectangleBorder(
             borderRadius: SmoothBorderRadius.all(
-              SmoothRadius(cornerRadius: 16, cornerSmoothing: 1.0),
+              SmoothRadius(
+                cornerRadius: AppRadius.lg,
+                cornerSmoothing: 1.0,
+              ),
             ),
           ),
         ),
@@ -43,41 +52,17 @@ class NextMatchCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.sm,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(100),
+                        color: AppColors.overlayDark,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                       ),
-                      child: const Text(
-                        '오후',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          height: 0.8,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: Text('오후', style: AppTextStyles.timeBadge),
                     ),
-                    Text(
-                      '8:00',
-                      style: GoogleFonts.barlowCondensed(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      '2/7(토) 성내유수지',
-                      style: TextStyle(
-                        fontFamily: 'SCDream',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
+                    Text('8:00', style: AppTextStyles.timeDisplay),
+                    Text('2/7(토) 성내유수지', style: AppTextStyles.matchInfo),
                   ],
                 ),
                 const SizedBox(width: 40),
@@ -90,39 +75,28 @@ class NextMatchCard extends StatelessWidget {
             ),
             // 구분선 (그라데이션)
             Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.only(top: AppSpacing.base),
               child: Container(
                 height: 1,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     stops: [0.0, 0.25, 0.5, 0.75, 1.0],
-                    colors: [
-                      Color(0x009CBAD9),
-                      Color(0xCC9CBAD9),
-                      Color(0xFF9CBAD9),
-                      Color(0xCC9CBAD9),
-                      Color(0x00FFFFFF),
-                    ],
+                    colors: AppColors.dividerGradientColors,
                   ),
                 ),
               ),
             ),
             // 참가하기 버튼
             Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.only(top: AppSpacing.base),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     '참가 하기',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+                    style: AppTextStyles.label.copyWith(color: Colors.white),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.xs),
                   const Icon(
                     Icons.arrow_right_alt_rounded,
                     color: Colors.white,

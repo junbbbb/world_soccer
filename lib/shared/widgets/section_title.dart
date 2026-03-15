@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
+
 class SectionTitle extends StatelessWidget {
   const SectionTitle(this.title, {super.key, this.trailing});
 
@@ -9,16 +13,13 @@ class SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.base),
       child: Row(
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF333D4B),
+            style: AppTextStyles.sectionTitle.copyWith(
+              color: AppColors.textPrimary,
             ),
           ),
           if (trailing != null) ...[const Spacer(), trailing!],

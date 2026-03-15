@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class PlayerChip extends StatelessWidget {
@@ -15,16 +17,18 @@ class PlayerChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Row(
         children: [
           Text(
             '$number',
-            style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w900),
+            style: AppTextStyles.labelRegular.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const Spacer(),
-          Text(name, style: AppTextStyles.body),
+          Text(name, style: AppTextStyles.labelRegular),
         ],
       ),
     );
@@ -44,16 +48,18 @@ class MoreChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(50),
+          borderRadius: BorderRadius.circular(AppRadius.full),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add, size: 16, color: Colors.grey[600]),
-            const SizedBox(width: 4),
+            Icon(Icons.add, size: 16, color: AppColors.textTertiary),
+            const SizedBox(width: AppSpacing.xs),
             Text(
               '더보기',
-              style: AppTextStyles.body.copyWith(color: Colors.grey[600]),
+              style: AppTextStyles.labelRegular.copyWith(
+                color: AppColors.textTertiary,
+              ),
             ),
           ],
         ),
