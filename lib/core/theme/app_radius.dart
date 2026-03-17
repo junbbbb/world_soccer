@@ -34,6 +34,14 @@ class AppRadius {
     cornerRadius: lg,
     cornerSmoothing: 1.0,
   );
+  static final smoothXl = SmoothBorderRadius(
+    cornerRadius: xl,
+    cornerSmoothing: 1.0,
+  );
+  static final smoothFull = SmoothBorderRadius(
+    cornerRadius: full,
+    cornerSmoothing: 1.0,
+  );
 
   /// 비표준 값용 팩토리
   static SmoothBorderRadius smooth(double radius) {

@@ -19,8 +19,8 @@ class HomeTab extends StatelessWidget {
           // 상단 헤더 (로고 영역)
           Padding(
             padding: const EdgeInsets.only(
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
               top: AppSpacing.sm,
               bottom: AppSpacing.base,
             ),

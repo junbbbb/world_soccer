@@ -38,7 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.white,
             boxShadow: AppShadows.bottomBar,
           ),
-          child: BottomNavigationBar(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
@@ -100,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: '팀',
               ),
             ],
+          ),
           ),
         ),
       ),

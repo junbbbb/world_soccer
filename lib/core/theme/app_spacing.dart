@@ -17,7 +17,7 @@ class AppSpacing {
   static const double xxxxl = 80;
 
   // ── Common EdgeInsets ──
-  static const EdgeInsets paddingPage = EdgeInsets.symmetric(horizontal: xl);
+  static const EdgeInsets paddingPage = EdgeInsets.symmetric(horizontal: lg);
   static const EdgeInsets paddingSection =
-      EdgeInsets.symmetric(horizontal: xl, vertical: xl);
+      EdgeInsets.symmetric(horizontal: lg, vertical: xl);
 }

@@ -2,6 +2,9 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../shared/widgets/info_capsule.dart';
+import '../../../../shared/widgets/match_time_info.dart';
+import '../../../../shared/widgets/team_logo_badge.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -9,6 +12,7 @@ import '../../../core/theme/app_text_styles.dart';
 import 'widgets/attendance_section.dart';
 import 'widgets/lineup_section.dart';
 import 'widgets/match_header.dart';
+import 'widgets/participation_section.dart';
 import 'widgets/match_tab_bar.dart';
 import 'widgets/recent_record_section.dart';
 
@@ -24,32 +28,32 @@ class MatchDetailScreen extends StatelessWidget {
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
+              AppSpacing.lg,
               AppSpacing.base,
-              AppSpacing.xl,
+              AppSpacing.lg,
               AppSpacing.sm,
             ),
             child: SizedBox(
               width: double.infinity,
-              height: 52,
               child: ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   shape: SmoothRectangleBorder(
                     borderRadius: AppRadius.smoothButton,
                   ),
                 ),
-                child: Text('참가하기', style: AppTextStyles.buttonPrimary),
+                child: const Text('참가하기', style: AppTextStyles.buttonPrimary),
               ),
             ),
           ),
         ),
-        body: Container(
+        body: DecoratedBox(
           decoration: const BoxDecoration(
-            gradient: AppColors.headerGradient,
+            gradient: AppColors.matchHeroGradient,
           ),
           child: SafeArea(
             bottom: false,
@@ -60,26 +64,13 @@ class MatchDetailScreen extends StatelessWidget {
                   return [
                     SliverPersistentHeader(
                       pinned: true,
-                      delegate: MatchHeaderDelegate(
+                      delegate: MatchTopBarDelegate(
                         onBack: () => Navigator.of(context).pop(),
                       ),
                     ),
-                    // 그라데이션 구분선 (hero <-> 탭바 경계)
+                    // Hero VS 섹션 — 자연스럽게 스크롤
                     const SliverToBoxAdapter(
-                      child: ColoredBox(
-                        color: Colors.white,
-                        child: SizedBox(
-                          height: 2,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
-                                colors: AppColors.headerDividerColors,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: _HeroSection(),
                     ),
                     const SliverPersistentHeader(
                       pinned: true,
@@ -96,6 +87,7 @@ class MatchDetailScreen extends StatelessWidget {
                           children: [
                             LineupSection(),
                             AttendanceSection(),
+                            ParticipationSection(),
                             SizedBox(height: AppSpacing.xxxxl),
                           ],
                         ),
@@ -121,16 +113,77 @@ class MatchDetailScreen extends StatelessWidget {
   }
 }
 
+class _HeroSection extends StatelessWidget {
+  const _HeroSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.matchHeroGradient,
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.base,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Center(
+                  child: TeamLogoBadge(
+                    teamName: '칼로FC',
+                    logoPath: 'assets/images/fc_calor.png',
+                    size: 64,
+                  ),
+                ),
+              ),
+              MatchTimeInfo(
+                time: '20:00',
+                datePlace: '2/7(토) 성내유수지',
+              ),
+              Expanded(
+                child: Center(
+                  child: TeamLogoBadge(
+                    teamName: '뽀잉FC',
+                    logoPath: 'assets/images/fc_bosong.png',
+                    size: 64,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Row(
+            children: [
+              InfoCapsule(text: '13/16명'),
+              SizedBox(width: AppSpacing.sm),
+              InfoCapsule(text: '참가완료'),
+              SizedBox(width: AppSpacing.sm),
+              InfoCapsule(text: '리벤지 매치'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   const _TabBarDelegate({required this.child});
 
   final Widget child;
 
   @override
-  double get minExtent => 80;
+  double get minExtent => 58;
 
   @override
-  double get maxExtent => 80;
+  double get maxExtent => 58;
 
   @override
   Widget build(
@@ -138,9 +191,26 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
+    return ColoredBox(
       color: Colors.white,
-      child: child,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 그라데이션 구분선 (hero ↔ 탭바 경계)
+          const SizedBox(
+            height: 2,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                  colors: AppColors.headerDividerColors,
+                ),
+              ),
+            ),
+          ),
+          Expanded(child: child),
+        ],
+      ),
     );
   }
 

@@ -2,6 +2,8 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class BottomActionBar extends StatefulWidget {
@@ -157,7 +159,7 @@ class BottomActionBarState extends State<BottomActionBar>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: _isExpanded
-            ? const BorderRadius.vertical(top: Radius.circular(20))
+            ? const BorderRadius.vertical(top: Radius.circular(AppRadius.xl))
             : BorderRadius.zero,
         boxShadow: [
           BoxShadow(
@@ -171,10 +173,10 @@ class BottomActionBarState extends State<BottomActionBar>
         top: false,
         child: Padding(
           padding: const EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: 12,
+            left: AppSpacing.xl,
+            right: AppSpacing.xl,
+            top: AppSpacing.xl,
+            bottom: AppSpacing.md,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -205,7 +207,7 @@ class BottomActionBarState extends State<BottomActionBar>
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.xxs),
                         Text(
                           '13 / 16명',
                           style: AppTextStyles.body.copyWith(
@@ -216,9 +218,7 @@ class BottomActionBarState extends State<BottomActionBar>
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 54,
-                    child: ElevatedButton(
+                  ElevatedButton(
                       onPressed: widget.isJoined && !_isExpanded
                           ? _toggleExpand
                           : (_isExpanded
@@ -238,12 +238,12 @@ class BottomActionBarState extends State<BottomActionBar>
                             ? AppColors.textSecondary
                             : Colors.white.withValues(alpha: 0.6),
                         shape: SmoothRectangleBorder(
-                          borderRadius: SmoothBorderRadius(
-                            cornerRadius: 12,
-                            cornerSmoothing: 1.0,
-                          ),
+                          borderRadius: AppRadius.smoothMd,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xxxl,
+                          vertical: AppSpacing.base,
+                        ),
                         elevation: 0,
                       ),
                       child: Text(
@@ -256,7 +256,6 @@ class BottomActionBarState extends State<BottomActionBar>
                               : Colors.white,
                         ),
                       ),
-                    ),
                   ),
                 ],
               ),
@@ -277,10 +276,7 @@ class BottomActionBarState extends State<BottomActionBar>
           children: [
             Text(
               '참가 정보를 선택해주세요',
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: AppTextStyles.heading.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
@@ -296,10 +292,9 @@ class BottomActionBarState extends State<BottomActionBar>
         ),
 
         if (widget.isJoined) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.base),
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: ElevatedButton(
               onPressed: _cancelJoin,
               style: ElevatedButton.styleFrom(
@@ -309,12 +304,9 @@ class BottomActionBarState extends State<BottomActionBar>
                   color: AppColors.textSecondary.withValues(alpha: 0.5),
                 ),
                 shape: SmoothRectangleBorder(
-                  borderRadius: SmoothBorderRadius(
-                    cornerRadius: 12,
-                    cornerSmoothing: 1.0,
-                  ),
+                  borderRadius: AppRadius.smoothMd,
                 ),
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 elevation: 0,
               ),
               child: Text(
@@ -327,32 +319,30 @@ class BottomActionBarState extends State<BottomActionBar>
           ),
         ],
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.lg),
 
         // Position section
         Text(
           '포지션',
-          style: AppTextStyles.caption.copyWith(
+          style: AppTextStyles.labelRegular.copyWith(
             color: AppColors.textSecondary,
-            fontSize: 14,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         _buildPositionRow('공격수', _attackers),
         _buildPositionRow('미드필더', _midfielders),
         _buildPositionRow('수비수', _defenders),
         _buildPositionRow('골키퍼', _goalkeepers),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.base),
 
         // Squad section
         Text(
           '스쿼드',
-          style: AppTextStyles.caption.copyWith(
+          style: AppTextStyles.labelRegular.copyWith(
             color: AppColors.textSecondary,
-            fontSize: 14,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           children: _squads.map((squad) {
             final isSelected = _selectedSquads.contains(squad);
@@ -368,10 +358,10 @@ class BottomActionBarState extends State<BottomActionBar>
             );
           }).toList(),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.lg),
 
-        Divider(color: Colors.grey.withValues(alpha: 0.15), height: 1),
-        const SizedBox(height: 16),
+        Divider(color: AppColors.iconInactive.withValues(alpha: 0.3), height: 1),
+        const SizedBox(height: AppSpacing.base),
       ],
     );
   }
@@ -384,7 +374,7 @@ class BottomActionBarState extends State<BottomActionBar>
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -392,14 +382,13 @@ class BottomActionBarState extends State<BottomActionBar>
             width: 48,
             child: Text(
               category,
-              style: AppTextStyles.caption.copyWith(
+              style: AppTextStyles.labelRegular.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Row(
               children: paddedPositions.asMap().entries.map((entry) {
@@ -448,12 +437,9 @@ class BottomActionBarState extends State<BottomActionBar>
         decoration: ShapeDecoration(
           color: AppColors.surface,
           shape: SmoothRectangleBorder(
-            borderRadius: SmoothBorderRadius(
-              cornerRadius: 100, // 완전히 둥근 캡슐 형태
-              cornerSmoothing: 1.0,
-            ),
+            borderRadius: AppRadius.smoothFull,
             side: BorderSide(
-              color: isSelected ? const Color(0xFF444444) : Colors.transparent,
+              color: isSelected ? AppColors.textPrimary : Colors.transparent,
               width: 1.2,
             ),
           ),
@@ -470,7 +456,7 @@ class BottomActionBarState extends State<BottomActionBar>
                       child: Icon(
                         Icons.check_rounded,
                         size: 14,
-                        color: Color(0xFF444444),
+                        color: AppColors.textPrimary,
                       ),
                     )
                   : const SizedBox.shrink(),

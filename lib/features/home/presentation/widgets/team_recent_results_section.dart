@@ -57,20 +57,54 @@ class TeamRecentResultsSection extends StatelessWidget {
       children: [
         const Padding(
           padding: EdgeInsets.only(
-            left: AppSpacing.xl,
-            right: AppSpacing.xl,
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
             bottom: AppSpacing.xs,
           ),
           child: SectionTitle('최근 전적'),
         ),
         SizedBox(
-          height: 48,
+          height: 52,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-            itemCount: _dummyResults.length,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            itemCount: _dummyResults.length + 1,
             separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (context, index) {
+              if (index == _dummyResults.length) {
+                return GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                      vertical: 10,
+                    ),
+                    decoration: ShapeDecoration(
+                      color: AppColors.surfaceLight,
+                      shape: SmoothRectangleBorder(
+                        borderRadius: AppRadius.smoothSm,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '더보기',
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: AppColors.textTertiary,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
               return _ResultCapsule(result: _dummyResults[index]);
             },
           ),
@@ -102,7 +136,7 @@ class _ResultCapsule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 10),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
         shape: SmoothRectangleBorder(
@@ -114,18 +148,20 @@ class _ResultCapsule extends StatelessWidget {
         children: [
           Text(
             _resultLabel,
-            style: AppTextStyles.captionBold.copyWith(
+            style: AppTextStyles.body.copyWith(
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.base),
           Text(
             result.score,
-            style: AppTextStyles.captionMedium.copyWith(
-              color: AppColors.textSecondary,
+            style: AppTextStyles.body.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.base),
           ClipSmoothRect(
             radius: AppRadius.smoothXs,
             child: Image.asset(

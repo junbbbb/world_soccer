@@ -6,91 +6,144 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/info_capsule.dart';
 import '../../../../shared/widgets/match_time_info.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
 
 class NextMatchCard extends StatelessWidget {
   const NextMatchCard({super.key});
 
+  static final _cardRadius = SmoothBorderRadius(
+    cornerRadius: AppRadius.md,
+    cornerSmoothing: 1.0,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/match'),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.lg,
-          AppSpacing.xl,
-          AppSpacing.base,
-        ),
-        decoration: ShapeDecoration(
-          gradient: AppColors.headerGradient,
-          shape: SmoothRectangleBorder(
-            borderRadius: AppRadius.smoothLg,
-          ),
-        ),
-        child: Column(
-          children: [
-            // VS section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const TeamLogoBadge(
-                  teamName: '칼로FC',
-                  logoPath: 'assets/images/fc_calor.png',
-                  size: 44,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: GestureDetector(
+        onTap: () => context.push('/match'),
+        child: ClipSmoothRect(
+          radius: _cardRadius,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── 상단: VS 영역 ──
+              DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
                 ),
-                const SizedBox(width: 40),
-                const MatchTimeInfo(
-                  period: '오후',
-                  time: '8:00',
-                  datePlace: '2/7(토) 성내유수지',
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.sm,
+                    AppSpacing.xxl,
+                    AppSpacing.sm,
+                    AppSpacing.xl,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: TeamLogoBadge(
+                                teamName: '칼로FC',
+                                logoPath: 'assets/images/fc_calor.png',
+                                size: 52,
+                              ),
+                            ),
+                          ),
+                          MatchTimeInfo(
+                            time: '20:00',
+                            datePlace: '2/7(토) 성내유수지',
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: TeamLogoBadge(
+                                teamName: '뽀잉FC',
+                                logoPath: 'assets/images/fc_bosong.png',
+                                size: 52,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            InfoCapsule(text: '13/16명'),
+                            const SizedBox(width: AppSpacing.sm),
+                            InfoCapsule(text: '참가완료'),
+                            const SizedBox(width: AppSpacing.sm),
+                            InfoCapsule(text: '리벤지 매치'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 40),
-                const TeamLogoBadge(
-                  teamName: '뽀잉FC',
-                  logoPath: 'assets/images/fc_bosong.png',
-                  size: 44,
-                ),
-              ],
-            ),
-            // 구분선 (그라데이션)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.base),
-              child: Container(
+              ),
+
+              // ── 구분선 (2px, 그라데이션) ──
+              Container(
                 height: 1,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF1572D1), // 0%
+                      Color(0xFF1E64AC), // 25%
+                      Color(0xFF1E64AC), // 50%
+                      Color(0xFF1E64AC), // 75%
+                      Color(0xFF1572D1), // 100%
+                    ],
                     stops: [0.0, 0.25, 0.5, 0.75, 1.0],
-                    colors: AppColors.dividerGradientColors,
                   ),
                 ),
               ),
-            ),
-            // 참가하기 버튼
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.base),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '참가 하기',
-                    style: AppTextStyles.label.copyWith(color: Colors.white),
+
+              // ── 하단: 참가하기 버튼 ──
+              Container(
+                height: 55,
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0.02, -0.78),
+                    radius: 3.5,
+                    colors: [
+                      Color(0xFF1869BE),
+                      AppColors.primary,
+                    ],
+                    stops: [0.4375, 1.0],
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  const Icon(
-                    Icons.arrow_right_alt_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '참가 하기',
+                      style:
+                          AppTextStyles.body.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(
+                      Icons.arrow_right_alt_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
+

@@ -33,6 +33,18 @@ class AppColors {
     colors: [primaryDark, primary],
   );
 
+  /// 상세 페이지 히어로 그라데이션 (좌→우)
+  static const matchHeroGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    stops: [0.0, 0.5, 1.0],
+    colors: [
+      Color(0xFF1572D1),
+      Color(0xFF1D74CD),
+      Color(0xFF1562B2),
+    ],
+  );
+
   // ── Divider Gradients ──
   static const dividerGradientColors = [
     Color(0x009CBAD9),

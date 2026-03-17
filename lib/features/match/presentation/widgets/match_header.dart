@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets/match_time_info.dart';
-import '../../../../shared/widgets/team_logo_badge.dart';
 
-class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const MatchHeaderDelegate({this.onBack});
+/// 상단 바 (뒤로가기 + 공유/일정) — pinned
+class MatchTopBarDelegate extends SliverPersistentHeaderDelegate {
+  const MatchTopBarDelegate({this.onBack});
 
   final VoidCallback? onBack;
 
   @override
-  double get minExtent => 60;
+  double get minExtent => 52;
 
   @override
-  double get maxExtent => 196;
+  double get maxExtent => 52;
 
   @override
   Widget build(
@@ -24,158 +21,71 @@ class MatchHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    final expandedOpacity = 1.0 - ((progress - 0.7) * 3.33).clamp(0.0, 1.0);
-    final collapsedOpacity = ((progress - 0.8) * 5.0).clamp(0.0, 1.0);
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.headerGradient,
-        boxShadow: AppShadows.header,
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Stack(
-        children: [
-          if (expandedOpacity > 0)
-            Positioned(
-              top: -shrinkOffset,
-              left: 0,
-              right: 0,
-              height: maxExtent,
-              child: Opacity(
-                opacity: expandedOpacity,
-                child: _buildExpanded(context),
-              ),
-            ),
-          if (collapsedOpacity > 0)
-            Positioned.fill(
-              child: Opacity(
-                opacity: collapsedOpacity,
-                child: _buildCollapsed(context),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCollapsed(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Row(
-        children: [
-          if (onBack != null)
-            GestureDetector(
-              onTap: onBack,
-              child: const Padding(
-                padding: EdgeInsets.only(right: AppSpacing.md),
-                child: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          const Spacer(),
-          Row(
+    return SizedBox.expand(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: AppColors.matchHeroGradient,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
             children: [
-              Text('칼로FC', style: AppTextStyles.teamName),
+              if (onBack != null)
+                _CircleIconButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onTap: onBack!,
+                ),
+              const Spacer(),
+              _CircleIconButton(
+                icon: Icons.share_outlined,
+                onTap: () {},
+              ),
               const SizedBox(width: AppSpacing.sm),
-              Image.asset('assets/images/fc_calor.png', width: 28, height: 28),
+              _CircleIconButton(
+                icon: Icons.calendar_today_outlined,
+                onTap: () {},
+              ),
             ],
           ),
-          const SizedBox(width: AppSpacing.xxl),
-          Text(
-            '오후 8:00',
-            style: AppTextStyles.teamName.copyWith(
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xxl),
-          Row(
-            children: [
-              Image.asset('assets/images/fc_bosong.png', width: 28, height: 28),
-              const SizedBox(width: AppSpacing.sm),
-              Text('뽀잉FC', style: AppTextStyles.teamName),
-            ],
-          ),
-          const Spacer(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExpanded(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      child: Column(
-        children: [
-          // Top bar: back button + menu
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.sm,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (onBack != null)
-                  GestureDetector(
-                    onTap: onBack,
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {},
-                  child: const Icon(
-                    Icons.calendar_today,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // VS section
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              top: AppSpacing.base,
-              bottom: AppSpacing.xxxl,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const TeamLogoBadge(
-                  teamName: '칼로FC',
-                  logoPath: 'assets/images/fc_calor.png',
-                ),
-                const SizedBox(width: AppSpacing.xxl),
-                const MatchTimeInfo(
-                  period: '오후',
-                  time: '8:00',
-                  datePlace: '2/7(토) 성내유수지',
-                ),
-                const SizedBox(width: AppSpacing.xxl),
-                const TeamLogoBadge(
-                  teamName: '뽀잉FC',
-                  logoPath: 'assets/images/fc_bosong.png',
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   @override
-  bool shouldRebuild(covariant MatchHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant MatchTopBarDelegate oldDelegate) => false;
+}
+
+/// 반투명 검정 원형 배경 위의 아이콘 버튼
+class _CircleIconButton extends StatelessWidget {
+  const _CircleIconButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: const BoxDecoration(
+          color: Color(0x30000000), // #000000 19%
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            size: 20,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
 }

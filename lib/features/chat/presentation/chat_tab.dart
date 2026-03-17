@@ -135,7 +135,7 @@ class ChatTab extends StatelessWidget {
               itemCount: _rooms.length,
               separatorBuilder: (_, __) => Divider(
                 height: 0.5,
-                indent: 16 + 52 + 12, // 좌패딩 + 아바타 + 간격
+                indent: AppSpacing.base + 52 + AppSpacing.md, // 좌패딩 + 아바타 + 간격
                 color: AppColors.iconInactive.withValues(alpha: 0.3),
               ),
               itemBuilder: (context, index) {

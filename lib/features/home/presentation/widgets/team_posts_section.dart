@@ -1,6 +1,8 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/section_title.dart';
@@ -23,14 +25,14 @@ class _Post {
 
 const _dummyPosts = [
   _Post(
-    author: '벤 화이트',
+    author: '이병준',
     avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
     content: '이번주 토요일 경기 다들 참석 가능한지 확인 부탁드립니다! 유니폼 꼭 챙겨오세요 🙏',
     likes: 5,
     comments: 3,
   ),
   _Post(
-    author: '라야',
+    author: '한별',
     avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif',
     content: '지난 경기 하이라이트 영상 올렸습니다. 3번째 골 진짜 미쳤음 ㅋㅋ',
     likes: 12,
@@ -58,7 +60,7 @@ class TeamPostsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: AppSpacing.paddingPage,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -95,7 +97,8 @@ class _PostItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipOval(
+        ClipSmoothRect(
+          radius: AppRadius.smoothSm,
           child: SizedBox(
             width: 40,
             height: 40,
@@ -114,9 +117,11 @@ class _PostItem extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 post.content,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodyRegular.copyWith(
                   color: AppColors.textPrimary,
                   height: 1.5,
@@ -128,26 +133,26 @@ class _PostItem extends StatelessWidget {
                   const Icon(
                     Icons.favorite_border_rounded,
                     size: 22,
-                    color: AppColors.textTertiary,
+                    color: AppColors.textPrimary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${post.likes}',
-                    style: AppTextStyles.labelRegular.copyWith(
-                      color: AppColors.textTertiary,
+                    style: AppTextStyles.bodyRegular.copyWith(
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.base),
                   const Icon(
                     Icons.chat_bubble_outline_rounded,
                     size: 20,
-                    color: AppColors.textTertiary,
+                    color: AppColors.textPrimary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     '${post.comments}',
-                    style: AppTextStyles.labelRegular.copyWith(
-                      color: AppColors.textTertiary,
+                    style: AppTextStyles.bodyRegular.copyWith(
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],

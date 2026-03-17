@@ -9,6 +9,8 @@ class AppTheme {
       brightness: Brightness.light,
     ),
     scaffoldBackgroundColor: AppColors.background,
+    splashFactory: NoSplash.splashFactory,
+    highlightColor: Colors.transparent,
     fontFamily: 'Pretendard',
     appBarTheme: const AppBarTheme(
       centerTitle: true,

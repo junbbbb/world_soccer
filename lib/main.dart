@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(const ProviderScope(child: WorldSoccerApp()));
 }
 
@@ -21,6 +27,16 @@ class WorldSoccerApp extends ConsumerWidget {
       themeMode: ThemeMode.system, // Support dark mode
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: MediaQuery.of(context).textScaler.clamp(
+              maxScaleFactor: 1.3,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

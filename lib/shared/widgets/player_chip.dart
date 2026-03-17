@@ -17,18 +17,18 @@ class PlayerChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.full),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Row(
         children: [
           Text(
             '$number',
-            style: AppTextStyles.labelRegular.copyWith(
+            style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.w900,
             ),
           ),
           const Spacer(),
-          Text(name, style: AppTextStyles.labelRegular),
+          Text(name, style: AppTextStyles.body),
         ],
       ),
     );
