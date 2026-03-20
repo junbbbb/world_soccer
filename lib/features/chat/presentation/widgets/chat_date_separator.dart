@@ -1,35 +1,50 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
 
 class ChatDateSeparator extends StatelessWidget {
   const ChatDateSeparator({super.key, required this.date});
 
   final DateTime date;
 
-  static const _weekdays = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
-
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDay = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(messageDay).inDays;
+
+    String label;
+    if (diff == 0) {
+      label = 'Today';
+    } else if (diff == 1) {
+      label = 'Yesterday';
+    } else {
+      label = '${date.month}/${date.day}/${date.year}';
+    }
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
+      padding: const EdgeInsets.only(top: 23, bottom: 1),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
+          constraints: const BoxConstraints(minWidth: 100),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
           decoration: BoxDecoration(
-            color: AppColors.textTertiary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(AppRadius.full),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppColors.bubbleBorder,
+              width: 0.66,
+            ),
           ),
           child: Text(
-            '${date.month}월 ${date.day}일 ${_weekdays[date.weekday - 1]}',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textTertiary,
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.chatTextPrimary,
             ),
           ),
         ),

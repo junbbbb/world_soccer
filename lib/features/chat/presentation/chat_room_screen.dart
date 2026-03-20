@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_text_styles.dart';
 import 'chat_tab.dart';
 import 'widgets/chat_bubble.dart';
 import 'widgets/chat_date_separator.dart';
@@ -35,7 +34,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       id: '2',
       senderId: 2,
       senderName: '이준호',
-      text: '넵! 준비 완료입니다',
+      text: '넵! 준비 완료입니다 💪',
       timestamp: DateTime(2026, 3, 14, 20, 31),
       isMe: false,
     ),
@@ -70,6 +69,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       text: '저는 조금 늦을 것 같습니다 ㅠㅠ 10분만 기다려주세요',
       timestamp: DateTime(2026, 3, 15, 15, 42),
       isMe: false,
+      reaction: '😫',
     ),
     ChatMessage(
       id: '7',
@@ -102,6 +102,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       text: '빨리 오세요~',
       timestamp: DateTime(2026, 3, 15, 15, 46),
       isMe: false,
+      reaction: '👍',
     ),
     ChatMessage(
       id: '11',
@@ -134,6 +135,25 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       text: '👍',
       timestamp: DateTime(2026, 3, 15, 16, 1),
       isMe: true,
+    ),
+    ChatMessage(
+      id: '15',
+      senderId: 3,
+      senderName: '박성진',
+      text: '경기 끝나고 뒷풀이 갈 사람?',
+      timestamp: DateTime(2026, 3, 15, 17, 30),
+      isMe: false,
+    ),
+    ChatMessage(
+      id: '16',
+      senderId: 2,
+      senderName: '이준호',
+      replyToSender: '박성진',
+      replyToText: '경기 끝나고 뒷풀이 갈 사람?',
+      text: '저요! 🙋‍♂️',
+      timestamp: DateTime(2026, 3, 15, 17, 32),
+      isMe: false,
+      reaction: '❤️',
     ),
   ];
 
@@ -171,32 +191,46 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: Container(
-                  color: AppColors.surfaceLight,
-                  child: ListView.builder(
+        backgroundColor: AppColors.chatBackground,
+        body: Column(
+          children: [
+            _buildTopBar(context),
+            Expanded(
+              child: Stack(
+                children: [
+                  // WhatsApp 배경: 단색(#F5F2EB) 위에 타일 패턴
+                  // CSS: background-blend-mode: difference, normal
+                  // 타일: 80%, 온도 최좌측(푸른느낌), 불투명도 10%
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: 0.10,
+                      child: Image.asset(
+                        'assets/images/chat_bg_pattern.png',
+                        repeat: ImageRepeat.repeat,
+                        color: AppColors.chatBackground,
+                        colorBlendMode: BlendMode.difference,
+                      ),
+                    ),
+                  ),
+                  // 채팅 메시지 리스트
+                  ListView.builder(
                     controller: _scrollController,
                     reverse: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.base,
-                      vertical: AppSpacing.sm,
+                    padding: const EdgeInsets.only(
+                      top: AppSpacing.sm,
+                      bottom: AppSpacing.sm,
                     ),
                     itemCount: _messages.length,
                     itemBuilder: _buildItem,
                   ),
-                ),
+                ],
               ),
-              ChatInputBar(
-                controller: _textController,
-                onSend: _handleSend,
-              ),
-            ],
-          ),
+            ),
+            ChatInputBar(
+              controller: _textController,
+              onSend: _handleSend,
+            ),
+          ],
         ),
       ),
     );
@@ -220,6 +254,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         newerMessage.senderId != message.senderId ||
         !_isSameDay(message.timestamp, newerMessage.timestamp);
 
+    // 꼬리: 그룹 내 마지막 메시지에만 표시
+    final showTail = isLastInGroup;
+
     final showDateSeparator = olderMessage == null ||
         !_isSameDay(message.timestamp, olderMessage.timestamp);
 
@@ -230,77 +267,130 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           message: message,
           isFirstInGroup: isFirstInGroup,
           isLastInGroup: isLastInGroup,
+          showTail: showTail,
+          isGroup: widget.room.isGroup,
         ),
       ],
     );
   }
 
-  Widget _buildHeader() {
+  // ── WhatsApp 스타일 상단 바 ──
+  Widget _buildTopBar(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.only(
-        left: AppSpacing.xs,
-        right: AppSpacing.base,
-        top: AppSpacing.xs,
-        bottom: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          // 뒤로가기
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 20,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          // 팀 로고
-          if (widget.room.logoPath != null)
-            ClipOval(
-              child: Image.asset(
-                widget.room.logoPath!,
+      color: AppColors.chatPanel,
+      padding: EdgeInsets.only(top: topPadding),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 4,
+          right: 22,
+          top: 4,
+          bottom: 4,
+        ),
+        child: Row(
+          children: [
+            // 뒤로가기 + 읽지 않은 수
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: const SizedBox(
                 width: 32,
                 height: 32,
-                fit: BoxFit.cover,
-              ),
-            )
-          else
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primary,
-              child: Text(
-                widget.room.name[0],
-                style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
+                child: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  size: 20,
+                  color: AppColors.chatTextPrimary,
+                ),
               ),
             ),
-          const SizedBox(width: AppSpacing.sm),
-          // 방 이름 + 멤버 수
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.room.name,
-                  style: AppTextStyles.heading.copyWith(
-                    color: AppColors.textPrimary,
+            // 그룹 아이콘
+            _buildGroupAvatar(),
+            const SizedBox(width: 10),
+            // 이름 + 멤버
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.room.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.32,
+                      color: AppColors.chatTextPrimary,
+                    ),
                   ),
-                ),
-                Text(
-                  '멤버 ${widget.room.memberCount}명',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ],
+                  if (widget.room.memberNames != null)
+                    Text(
+                      widget.room.memberNames!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.12,
+                        color: AppColors.chatTextSecondary,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const Icon(
-            Icons.search_rounded,
-            color: AppColors.textTertiary,
-            size: 22,
-          ),
-        ],
+            const SizedBox(width: 16),
+            // 영상통화
+            const Icon(
+              Icons.videocam_rounded,
+              size: 26,
+              color: AppColors.chatTextSecondary,
+            ),
+            const SizedBox(width: 16),
+            // 음성통화
+            const Icon(
+              Icons.phone_rounded,
+              size: 22,
+              color: AppColors.chatTextSecondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupAvatar() {
+    if (widget.room.logoPath != null) {
+      return ClipOval(
+        child: Image.asset(
+          widget.room.logoPath!,
+          width: 36,
+          height: 36,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    // 기본 그룹 아바타
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Colors.grey.shade400,
+            Colors.grey.shade500,
+          ],
+        ),
+      ),
+      child: const Icon(
+        Icons.group_rounded,
+        size: 20,
+        color: Colors.white,
       ),
     );
   }

@@ -45,6 +45,32 @@ class AppColors {
     ],
   );
 
+  // ── Chat (WhatsApp-style) ──
+  static const chatBackground = Color(0xFFF5F2EB);
+  static const bubbleMe = Color(0xFFD0FECF);
+  static const bubbleFriend = Colors.white;
+  static const bubbleBorder = Color(0x0F000000);
+  static const chatTextPrimary = Color(0xFF0A0A0A);
+  static const chatTextSecondary = Color(0x800A0A0A);
+  static const chatPanel = Color(0xCCF5F2EB);
+  static const chatInputBorder = Color(0xFFB2B2B2);
+  static const reactionBorder = Color(0xFFF0E9DF);
+  static const quoteBar = Color(0xFFD42A66);
+  static const quoteText = Color(0xFF232626);
+  static const quoteBg = Color(0x0A0A0A0A);
+  static const checkRead = Color(0xFF53BDEB);
+
+  /// 그룹 채팅 이름 색상 (7색 순환)
+  static const groupNameColors = [
+    Color(0xFF7F66FF),
+    Color(0xFF02A698),
+    Color(0xFFA46918),
+    Color(0xFFD42A66),
+    Color(0xFFFA6533),
+    Color(0xFF3D8BFF),
+    Color(0xFF2DAF54),
+  ];
+
   // ── Divider Gradients ──
   static const dividerGradientColors = [
     Color(0x009CBAD9),

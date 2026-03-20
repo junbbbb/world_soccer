@@ -15,6 +15,10 @@ class ChatMessage {
     required this.text,
     required this.timestamp,
     required this.isMe,
+    this.reaction,
+    this.replyToText,
+    this.replyToSender,
+    this.imageUrl,
   });
 
   final String id;
@@ -23,6 +27,10 @@ class ChatMessage {
   final String text;
   final DateTime timestamp;
   final bool isMe;
+  final String? reaction;
+  final String? replyToText;
+  final String? replyToSender;
+  final String? imageUrl;
 }
 
 /// 채팅방 모델 (더미)
@@ -38,6 +46,8 @@ class ChatRoom {
     this.unreadCount = 0,
     this.isPinned = false,
     this.isMuted = false,
+    this.isGroup = false,
+    this.memberNames,
   });
 
   final String id;
@@ -50,6 +60,8 @@ class ChatRoom {
   final int unreadCount;
   final bool isPinned;
   final bool isMuted;
+  final bool isGroup;
+  final String? memberNames;
 }
 
 class ChatTab extends StatelessWidget {
@@ -66,6 +78,8 @@ class ChatTab extends StatelessWidget {
       memberCount: 24,
       unreadCount: 3,
       isPinned: true,
+      isGroup: true,
+      memberNames: '김민수, 이준호, 박성진, 최영훈, 정우성',
     ),
     ChatRoom(
       id: 'bosong',
@@ -76,6 +90,8 @@ class ChatTab extends StatelessWidget {
       lastMessageTime: DateTime(2026, 3, 15, 14, 22),
       memberCount: 18,
       unreadCount: 0,
+      isGroup: true,
+      memberNames: '홍길동, 이영수, 장현우',
     ),
     ChatRoom(
       id: 'futsal',
@@ -85,6 +101,8 @@ class ChatTab extends StatelessWidget {
       lastMessageTime: DateTime(2026, 3, 14, 21, 15),
       memberCount: 12,
       unreadCount: 5,
+      isGroup: true,
+      memberNames: '최영훈, 박준형, 강민호',
     ),
     ChatRoom(
       id: 'notice',
@@ -95,6 +113,8 @@ class ChatTab extends StatelessWidget {
       memberCount: 45,
       unreadCount: 1,
       isMuted: true,
+      isGroup: true,
+      memberNames: '관리자, 김민수',
     ),
   ];
 
