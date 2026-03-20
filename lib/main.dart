@@ -19,14 +19,13 @@ class WorldSoccerApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(goRouterProvider);
-
     return MaterialApp.router(
       title: 'World Soccer',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Support dark mode
-      routerConfig: router,
+      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
+      routerConfig: router,
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

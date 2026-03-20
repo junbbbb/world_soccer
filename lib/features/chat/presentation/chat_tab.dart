@@ -6,23 +6,37 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import 'widgets/chat_room_cell.dart';
 
+/// 읽음 상태 (WhatsApp 체크마크)
+enum MessageReadStatus { sent, delivered, read }
+
+/// 메시지 타입
+enum MessageType { text, event }
+
 /// 채팅 메시지 모델 (더미)
 class ChatMessage {
   const ChatMessage({
     required this.id,
     required this.senderId,
     required this.senderName,
+    this.memberTag,
+    this.avatarPath,
     required this.text,
     required this.timestamp,
     required this.isMe,
+    this.readStatus = MessageReadStatus.read,
+    this.type = MessageType.text,
   });
 
   final String id;
   final int senderId;
   final String senderName;
+  final String? memberTag;
+  final String? avatarPath;
   final String text;
   final DateTime timestamp;
   final bool isMe;
+  final MessageReadStatus readStatus;
+  final MessageType type;
 }
 
 /// 채팅방 모델 (더미)

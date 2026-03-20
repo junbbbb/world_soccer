@@ -1,8 +1,7 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../chat_tab.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -17,148 +16,121 @@ class ChatBubble extends StatelessWidget {
   final bool isFirstInGroup;
   final bool isLastInGroup;
 
-  // Telegram 스타일 7색 아바타 배경
   static const _avatarColors = [
-    Color(0xFFE57373), // Red
-    Color(0xFFFFB74D), // Orange
-    Color(0xFF9575CD), // Violet
-    Color(0xFF81C784), // Green
-    Color(0xFF4DD0E1), // Cyan
-    Color(0xFF64B5F6), // Blue
-    Color(0xFFF06292), // Pink
+    Color(0xFFE57373),
+    Color(0xFFFFB74D),
+    Color(0xFF9575CD),
+    Color(0xFF81C784),
+    Color(0xFF4DD0E1),
+    Color(0xFF64B5F6),
+    Color(0xFFF06292),
   ];
 
-  // 이름 표시 색상 (아바타보다 약간 진하게)
-  static const _nameColors = [
-    Color(0xFFE17076), // Red
-    Color(0xFFE09B55), // Orange
-    Color(0xFF7B72E9), // Violet
-    Color(0xFF55B561), // Green
-    Color(0xFF42B5CF), // Cyan
-    Color(0xFF549BD2), // Blue
-    Color(0xFFEE7AAE), // Pink
-  ];
+  // Messenger 색상
+  static const _sentColor = Color(0xFF007AFF);
+  static const _receivedColor = Color(0xFFF1F2F6);
+  static const _sentTextColor = Colors.white;
+  static const _receivedTextColor = Color(0xFF000000);
+  static const _nameColor = Color(0xFF8A8D92);
+  static const _avatarSize = 28.0;
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = MediaQuery.of(context).size.width * 0.72;
-
     return Padding(
       padding: EdgeInsets.only(
         top: isFirstInGroup ? AppSpacing.md : AppSpacing.xxs,
       ),
-      child: message.isMe ? _buildMyBubble(maxWidth) : _buildOtherBubble(maxWidth),
+      child: message.isMe ? _buildSent(context) : _buildReceived(context),
     );
   }
 
-  Widget _buildMyBubble(double maxWidth) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 56),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: Radius.circular(isFirstInGroup ? 18 : 6),
-              bottomLeft: const Radius.circular(18),
-              bottomRight: Radius.circular(isLastInGroup ? 4 : 6),
+  Widget _buildSent(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 56, right: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * .72,
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              decoration: BoxDecoration(
+                color: _sentColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: const Radius.circular(18),
+                  bottomRight: Radius.circular(isLastInGroup ? 4 : 18),
+                ),
+              ),
+              child: Text(
+                message.text,
+                style: _msgStyle(isSent: true),
+              ),
             ),
-          ),
-          child: _buildContent(
-            textColor: Colors.white,
-            timeColor: Colors.white70,
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildOtherBubble(double maxWidth) {
-    const avatarSize = 36.0;
+  Widget _buildReceived(BuildContext context) {
     final colorIndex = message.senderId % _avatarColors.length;
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 56),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // 아바타 (그룹 마지막 메시지에만 표시)
-          if (isLastInGroup)
-            CircleAvatar(
-              radius: avatarSize / 2,
-              backgroundColor: _avatarColors[colorIndex],
-              child: Text(
-                message.senderName[0],
-                style: AppTextStyles.labelMedium.copyWith(color: Colors.white),
-              ),
-            )
-          else
-            const SizedBox(width: avatarSize),
-          const SizedBox(width: AppSpacing.sm),
-          // 이름 + 버블
-          Flexible(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 2),
+          child: SizedBox(
+            width: _avatarSize,
+            height: _avatarSize,
+            child: isLastInGroup ? _buildAvatar(colorIndex) : null,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 56),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (isFirstInGroup)
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: AppSpacing.xs,
-                      bottom: AppSpacing.xxs,
-                    ),
+                    padding: const EdgeInsets.only(bottom: 4, left: 4),
                     child: Text(
                       message.senderName,
-                      style: AppTextStyles.captionMedium.copyWith(
-                        color: _nameColors[colorIndex],
+                      style: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: _nameColor,
                       ),
                     ),
                   ),
                 Container(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * .72,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: _receivedColor,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(isFirstInGroup ? 18 : 6),
+                      topLeft: const Radius.circular(18),
                       topRight: const Radius.circular(18),
-                      bottomLeft: Radius.circular(isLastInGroup ? 4 : 6),
+                      bottomLeft: Radius.circular(isLastInGroup ? 4 : 18),
                       bottomRight: const Radius.circular(18),
                     ),
                   ),
-                  child: _buildContent(
-                    textColor: AppColors.textPrimary,
-                    timeColor: AppColors.textTertiary,
+                  child: Text(
+                    message.text,
+                    style: _msgStyle(isSent: false),
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContent({required Color textColor, required Color timeColor}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          message.text,
-          style: AppTextStyles.bodyRegular.copyWith(color: textColor),
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Align(
-          alignment: Alignment.bottomRight,
-          child: Text(
-            _formatTime(message.timestamp),
-            style: AppTextStyles.caption.copyWith(
-              color: timeColor,
-              fontSize: 11,
             ),
           ),
         ),
@@ -166,9 +138,44 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
-  static String _formatTime(DateTime time) {
-    final period = time.hour < 12 ? '오전' : '오후';
-    final hour = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
-    return '$period $hour:${time.minute.toString().padLeft(2, '0')}';
+  Widget _buildAvatar(int colorIndex) {
+    if (message.avatarPath != null) {
+      return ClipSmoothRect(
+        radius: AppRadius.smoothSm,
+        child: Image.asset(
+          message.avatarPath!,
+          width: _avatarSize,
+          height: _avatarSize,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return ClipSmoothRect(
+      radius: AppRadius.smoothSm,
+      child: Container(
+        width: _avatarSize,
+        height: _avatarSize,
+        color: _avatarColors[colorIndex],
+        alignment: Alignment.center,
+        child: Text(
+          message.senderName[0],
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
   }
+
+  static TextStyle _msgStyle({required bool isSent}) => TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 17,
+        fontWeight: FontWeight.w400,
+        height: 1.29,
+        color: isSent ? _sentTextColor : _receivedTextColor,
+      );
+
 }

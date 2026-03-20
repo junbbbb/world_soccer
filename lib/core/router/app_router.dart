@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../features/chat/presentation/chat_room_screen.dart';
 import '../../features/chat/presentation/chat_tab.dart';
+import '../../features/chat/presentation/group_info_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/match/presentation/match_screen.dart';
 
@@ -25,6 +26,13 @@ GoRouter goRouter(Ref ref) {
         builder: (context, state) {
           final room = state.extra as ChatRoom;
           return ChatRoomScreen(room: room);
+        },
+      ),
+      GoRoute(
+        path: '/group-info',
+        builder: (context, state) {
+          final room = state.extra as ChatRoom;
+          return GroupInfoScreen(room: room);
         },
       ),
     ],

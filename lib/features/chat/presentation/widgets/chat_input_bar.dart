@@ -45,38 +45,51 @@ class _ChatInputBarState extends State<ChatInputBar> {
     widget.onSend(widget.controller.text);
   }
 
+  // Messenger 파랑
+  static const _messengerBlue = Color(0xFF007AFF);
+
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x08000000),
-            offset: Offset(0, -1),
-            blurRadius: 4,
+        border: Border(
+          top: BorderSide(
+            color: Color(0xFFE5E5EA),
+            width: 0.5,
           ),
-        ],
+        ),
       ),
       padding: const EdgeInsets.only(
-        left: AppSpacing.base,
+        left: AppSpacing.md,
         right: AppSpacing.sm,
-        top: AppSpacing.sm,
+        top: AppSpacing.xs,
         bottom: AppSpacing.sm,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // + 버튼
+          const Padding(
+            padding: EdgeInsets.only(bottom: 6),
+            child: Icon(
+              Icons.add_circle,
+              color: _messengerBlue,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // 입력 필드
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: const Color(0xFFF2F4F6),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: TextField(
                 controller: widget.controller,
                 decoration: InputDecoration(
-                  hintText: '메시지를 입력하세요',
+                  hintText: 'Aa',
                   hintStyle: AppTextStyles.bodyRegular.copyWith(
                     color: AppColors.textTertiary,
                   ),
@@ -86,6 +99,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     vertical: AppSpacing.md,
                   ),
                   isDense: true,
+                  suffixIcon: const Padding(
+                    padding: EdgeInsets.only(right: 8),
+                    child: Icon(
+                      Icons.emoji_emotions_outlined,
+                      color: AppColors.textTertiary,
+                      size: 22,
+                    ),
+                  ),
+                  suffixIconConstraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 22,
+                  ),
                 ),
                 style: AppTextStyles.bodyRegular.copyWith(
                   color: AppColors.textPrimary,
@@ -97,21 +122,31 @@ class _ChatInputBarState extends State<ChatInputBar> {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          GestureDetector(
-            onTap: _hasText ? _send : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: _hasText ? AppColors.primary : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.arrow_upward_rounded,
-                color: _hasText ? Colors.white : AppColors.textTertiary,
-                size: 20,
+          const SizedBox(width: AppSpacing.xs),
+          // 전송 / 좋아요
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: GestureDetector(
+              onTap: _hasText ? _send : null,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: animation,
+                  child: child,
+                ),
+                child: _hasText
+                    ? const Icon(
+                        key: ValueKey('send'),
+                        Icons.send_rounded,
+                        color: _messengerBlue,
+                        size: 28,
+                      )
+                    : const Icon(
+                        key: ValueKey('like'),
+                        Icons.thumb_up_outlined,
+                        color: _messengerBlue,
+                        size: 26,
+                      ),
               ),
             ),
           ),
