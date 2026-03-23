@@ -16,8 +16,49 @@ import 'widgets/participation_section.dart';
 import 'widgets/match_tab_bar.dart';
 import 'widgets/recent_record_section.dart';
 
-class MatchDetailScreen extends StatelessWidget {
+class MatchDetailScreen extends StatefulWidget {
   const MatchDetailScreen({super.key});
+
+  @override
+  State<MatchDetailScreen> createState() => _MatchDetailScreenState();
+}
+
+class _MatchDetailScreenState extends State<MatchDetailScreen>
+    with SingleTickerProviderStateMixin {
+  bool _isJoined = false;
+  late final AnimationController _animController;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.92), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 0.92, end: 1.05), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.05, end: 1.0), weight: 25),
+    ]).animate(CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _toggleJoin() {
+    setState(() => _isJoined = !_isJoined);
+    _animController.forward(from: 0);
+    if (_isJoined) {
+      HapticFeedback.mediumImpact();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +74,48 @@ class MatchDetailScreen extends StatelessWidget {
               AppSpacing.lg,
               AppSpacing.sm,
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  shape: SmoothRectangleBorder(
-                    borderRadius: AppRadius.smoothButton,
+            child: ScaleTransition(
+              scale: _scaleAnim,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _toggleJoin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _isJoined ? AppColors.surface : AppColors.primary,
+                    foregroundColor:
+                        _isJoined ? AppColors.textSecondary : Colors.white,
+                    elevation: 0,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    shape: SmoothRectangleBorder(
+                      borderRadius: AppRadius.smoothButton,
+                    ),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: _isJoined
+                        ? Row(
+                            key: const ValueKey('joined'),
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check_circle_rounded, size: 20),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                '참가완료',
+                                style: AppTextStyles.buttonPrimary.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            '참가하기',
+                            key: const ValueKey('join'),
+                            style: AppTextStyles.buttonPrimary,
+                          ),
                   ),
                 ),
-                child: const Text('참가하기', style: AppTextStyles.buttonPrimary),
               ),
             ),
           ),
@@ -137,8 +206,8 @@ class _HeroSection extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: TeamLogoBadge(
-                    teamName: '칼로FC',
-                    logoPath: 'assets/images/fc_calor.png',
+                    teamName: 'FC칼로',
+                    logoPath: 'assets/images/logo_calo.png',
                     size: 64,
                   ),
                 ),
@@ -150,8 +219,8 @@ class _HeroSection extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: TeamLogoBadge(
-                    teamName: '뽀잉FC',
-                    logoPath: 'assets/images/fc_bosong.png',
+                    teamName: 'FC쏘아',
+                    logoPath: 'assets/images/logo_ssoa.png',
                     size: 64,
                   ),
                 ),

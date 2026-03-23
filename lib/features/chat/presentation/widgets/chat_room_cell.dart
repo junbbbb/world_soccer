@@ -156,7 +156,7 @@ class ChatRoomCell extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 20),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: room.isMuted ? AppColors.textTertiary : AppColors.primary,
+        color: room.isMuted ? AppColors.textTertiary : const Color(0xFFE5484D),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(

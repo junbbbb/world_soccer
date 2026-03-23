@@ -31,8 +31,7 @@ class ChatBubble extends StatelessWidget {
   static const _receivedColor = Color(0xFFF1F2F6);
   static const _sentTextColor = Colors.white;
   static const _receivedTextColor = Color(0xFF000000);
-  static const _nameColor = Color(0xFF8A8D92);
-  static const _avatarSize = 28.0;
+  static const _avatarSize = 42.0;
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +60,9 @@ class ChatBubble extends StatelessWidget {
                 color: _sentColor,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
+                  topRight: Radius.circular(isFirstInGroup ? 18 : 4),
                   bottomLeft: const Radius.circular(18),
-                  bottomRight: Radius.circular(isLastInGroup ? 4 : 18),
+                  bottomRight: const Radius.circular(4),
                 ),
               ),
               child: Text(
@@ -71,6 +70,14 @@ class ChatBubble extends StatelessWidget {
                 style: _msgStyle(isSent: true),
               ),
             ),
+            if (isLastInGroup)
+              Padding(
+                padding: const EdgeInsets.only(top: 3, right: 4),
+                child: Text(
+                  _formatTime(message.timestamp),
+                  style: _metaStyle,
+                ),
+              ),
           ],
         ),
       ),
@@ -80,48 +87,36 @@ class ChatBubble extends StatelessWidget {
   Widget _buildReceived(BuildContext context) {
     final colorIndex = message.senderId % _avatarColors.length;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 12, bottom: 2),
-          child: SizedBox(
-            width: _avatarSize,
-            height: _avatarSize,
-            child: isLastInGroup ? _buildAvatar(colorIndex) : null,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 56),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isFirstInGroup)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4, left: 4),
-                    child: Text(
-                      message.senderName,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _nameColor,
-                      ),
-                    ),
-                  ),
-                Container(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: SizedBox(
+                width: _avatarSize,
+                height: _avatarSize,
+                child: isLastInGroup ? _buildAvatar(colorIndex) : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 56),
+                child: Container(
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * .72,
+                    minHeight: _avatarSize,
                   ),
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                   decoration: BoxDecoration(
                     color: _receivedColor,
                     borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(18),
+                      topLeft: Radius.circular(isFirstInGroup ? 18 : 4),
                       topRight: const Radius.circular(18),
-                      bottomLeft: Radius.circular(isLastInGroup ? 4 : 18),
+                      bottomLeft: const Radius.circular(4),
                       bottomRight: const Radius.circular(18),
                     ),
                   ),
@@ -130,10 +125,18 @@ class ChatBubble extends StatelessWidget {
                     style: _msgStyle(isSent: false),
                   ),
                 ),
-              ],
+              ),
+            ),
+          ],
+        ),
+        if (isLastInGroup)
+          Padding(
+            padding: const EdgeInsets.only(top: 3, left: 66),
+            child: Text(
+              '${message.senderName} · ${_formatTime(message.timestamp)}',
+              style: _metaStyle,
             ),
           ),
-        ),
       ],
     );
   }
@@ -161,7 +164,7 @@ class ChatBubble extends StatelessWidget {
           message.senderName[0],
           style: const TextStyle(
             fontFamily: 'Pretendard',
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -178,4 +181,18 @@ class ChatBubble extends StatelessWidget {
         color: isSent ? _sentTextColor : _receivedTextColor,
       );
 
+  static const _metaStyle = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    color: Color(0xFF8A8D92),
+  );
+
+  static String _formatTime(DateTime dt) {
+    final h = dt.hour;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final period = h < 12 ? '오전' : '오후';
+    final hour12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+    return '$period $hour12:$m';
+  }
 }

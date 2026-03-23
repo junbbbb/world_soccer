@@ -23,27 +23,27 @@ const _dummyResults = [
   _MatchResult(
     result: 'W',
     score: '3 - 1',
-    opponentLogo: 'assets/images/fc_bosong.png',
+    opponentLogo: 'assets/images/logo_ssoa.png',
   ),
   _MatchResult(
     result: 'L',
     score: '1 - 2',
-    opponentLogo: 'assets/images/fc_calor.png',
+    opponentLogo: 'assets/images/logo_calo.png',
   ),
   _MatchResult(
     result: 'W',
     score: '4 - 0',
-    opponentLogo: 'assets/images/fc_bosong.png',
+    opponentLogo: 'assets/images/logo_ssoa.png',
   ),
   _MatchResult(
     result: 'D',
     score: '2 - 2',
-    opponentLogo: 'assets/images/fc_calor.png',
+    opponentLogo: 'assets/images/logo_calo.png',
   ),
   _MatchResult(
     result: 'W',
     score: '2 - 1',
-    opponentLogo: 'assets/images/fc_bosong.png',
+    opponentLogo: 'assets/images/logo_ssoa.png',
   ),
 ];
 

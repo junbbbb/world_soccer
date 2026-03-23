@@ -50,8 +50,8 @@ class NextMatchCard extends StatelessWidget {
                           Expanded(
                             child: Center(
                               child: TeamLogoBadge(
-                                teamName: '칼로FC',
-                                logoPath: 'assets/images/fc_calor.png',
+                                teamName: 'FC칼로',
+                                logoPath: 'assets/images/logo_calo.png',
                                 size: 52,
                               ),
                             ),
@@ -63,8 +63,8 @@ class NextMatchCard extends StatelessWidget {
                           Expanded(
                             child: Center(
                               child: TeamLogoBadge(
-                                teamName: '뽀잉FC',
-                                logoPath: 'assets/images/fc_bosong.png',
+                                teamName: 'FC쏘아',
+                                logoPath: 'assets/images/logo_ssoa.png',
                                 size: 52,
                               ),
                             ),

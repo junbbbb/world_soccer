@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -72,8 +74,8 @@ class ChatTab extends StatelessWidget {
   static final _rooms = [
     ChatRoom(
       id: 'calor',
-      name: '칼로FC',
-      logoPath: 'assets/images/fc_calor.png',
+      name: 'FC칼로',
+      logoPath: 'assets/images/logo_calo.png',
       lastMessage: '네 흰색 유니폼으로 통일하겠습니다',
       lastMessageSender: '김민수',
       lastMessageTime: DateTime(2026, 3, 15, 16, 0),
@@ -83,8 +85,8 @@ class ChatTab extends StatelessWidget {
     ),
     ChatRoom(
       id: 'bosong',
-      name: '보성FC',
-      logoPath: 'assets/images/fc_bosong.png',
+      name: 'FC쏘아',
+      logoPath: 'assets/images/logo_ssoa.png',
       lastMessage: '다음 주 연습경기 일정 확인해주세요',
       lastMessageSender: '홍길동',
       lastMessageTime: DateTime(2026, 3, 15, 14, 22),
@@ -112,57 +114,66 @@ class ChatTab extends StatelessWidget {
     ),
   ];
 
+  static const _headerHeight = 56.0;
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          // 헤더
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              top: AppSpacing.sm,
-              bottom: AppSpacing.base,
-            ),
-            child: Row(
-              children: [
-                Text(
-                  '채팅',
-                  style: AppTextStyles.pageTitle.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.edit_note_rounded,
-                  color: AppColors.textTertiary,
-                  size: 26,
-                ),
-              ],
-            ),
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    return Stack(
+      children: [
+        ListView.separated(
+          padding: EdgeInsets.only(top: topPadding + _headerHeight),
+          itemCount: _rooms.length,
+          separatorBuilder: (_, __) => Divider(
+            height: 0.5,
+            indent: AppSpacing.base + 52 + AppSpacing.md,
+            color: AppColors.iconInactive.withValues(alpha: 0.3),
           ),
-          // 채팅방 목록
-          Expanded(
-            child: ListView.separated(
-              itemCount: _rooms.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 0.5,
-                indent: AppSpacing.base + 52 + AppSpacing.md, // 좌패딩 + 아바타 + 간격
-                color: AppColors.iconInactive.withValues(alpha: 0.3),
+          itemBuilder: (context, index) {
+            final room = _rooms[index];
+            return ChatRoomCell(
+              room: room,
+              onTap: () => context.push('/chat', extra: room),
+            );
+          },
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.85),
+                padding: EdgeInsets.only(
+                  top: topPadding + AppSpacing.sm,
+                  left: AppSpacing.xl,
+                  right: AppSpacing.xl,
+                  bottom: AppSpacing.base,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '채팅',
+                      style: AppTextStyles.pageTitle.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(
+                      Icons.edit_note_rounded,
+                      color: AppColors.textTertiary,
+                      size: 26,
+                    ),
+                  ],
+                ),
               ),
-              itemBuilder: (context, index) {
-                final room = _rooms[index];
-                return ChatRoomCell(
-                  room: room,
-                  onTap: () => context.push('/chat', extra: room),
-                );
-              },
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

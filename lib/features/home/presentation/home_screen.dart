@@ -6,6 +6,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../chat/presentation/chat_tab.dart';
+import '../../match/presentation/match_tab.dart';
+import '../../stats/presentation/stats_tab.dart';
+import '../../team/presentation/team_tab.dart';
 import 'home_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,9 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
           index: _currentIndex,
           children: const [
             HomeTab(),
+            MatchTab(),
+            StatsTab(),
             ChatTab(),
-            Center(child: Text('스탯')),
-            Center(child: Text('팀')),
+            TeamTab(),
           ],
         ),
         bottomNavigationBar: Container(
@@ -39,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
             boxShadow: AppShadows.bottomBar,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
@@ -70,18 +74,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: '홈',
               ),
               BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/icons/ri_chat-1-fill.svg',
-                  width: 24,
-                  height: 24,
-                  colorFilter: ColorFilter.mode(
-                    _currentIndex == 1
-                        ? AppColors.textPrimary
-                        : AppColors.iconInactive,
-                    BlendMode.srcIn,
-                  ),
+                icon: Icon(
+                  Icons.calendar_month_rounded,
+                  size: 24,
+                  color: _currentIndex == 1
+                      ? AppColors.textPrimary
+                      : AppColors.iconInactive,
                 ),
-                label: '채팅',
+                label: '경기',
               ),
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
@@ -97,8 +97,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 label: '스탯',
               ),
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.shield),
+              BottomNavigationBarItem(
+                icon: Badge(
+                  label: const Text(
+                    '9',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  backgroundColor: const Color(0xFFE5484D),
+                  child: SvgPicture.asset(
+                    'assets/icons/ri_chat-1-fill.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(
+                      _currentIndex == 3
+                          ? AppColors.textPrimary
+                          : AppColors.iconInactive,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+                label: '채팅',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.shield,
+                  size: 24,
+                  color: _currentIndex == 4
+                      ? AppColors.textPrimary
+                      : AppColors.iconInactive,
+                ),
                 label: '팀',
               ),
             ],
