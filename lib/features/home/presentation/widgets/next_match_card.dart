@@ -1,4 +1,6 @@
-import 'package:figma_squircle/figma_squircle.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,10 +15,7 @@ import '../../../../shared/widgets/team_logo_badge.dart';
 class NextMatchCard extends StatelessWidget {
   const NextMatchCard({super.key});
 
-  static final _cardRadius = SmoothBorderRadius(
-    cornerRadius: AppRadius.md,
-    cornerSmoothing: 1.0,
-  );
+  static final _cardRadius = BorderRadius.circular(AppRadius.md);
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +23,8 @@ class NextMatchCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: GestureDetector(
         onTap: () => context.push('/match'),
-        child: ClipSmoothRect(
-          radius: _cardRadius,
+        child: ClipRRect(
+          borderRadius: _cardRadius,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -91,17 +90,17 @@ class NextMatchCard extends StatelessWidget {
                 ),
               ),
 
-              // ── 구분선 (2px, 그라데이션) ──
+              // ── 구분선 (그라데이션) ──
               Container(
                 height: 1,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFF1572D1), // 0%
-                      Color(0xFF1E64AC), // 25%
-                      Color(0xFF1E64AC), // 50%
-                      Color(0xFF1E64AC), // 75%
-                      Color(0xFF1572D1), // 100%
+                      Color(0xFF1572D1),
+                      Color(0xFF1E64AC),
+                      Color(0xFF1E64AC),
+                      Color(0xFF1E64AC),
+                      Color(0xFF1572D1),
                     ],
                     stops: [0.0, 0.25, 0.5, 0.75, 1.0],
                   ),
@@ -109,36 +108,7 @@ class NextMatchCard extends StatelessWidget {
               ),
 
               // ── 하단: 참가하기 버튼 ──
-              Container(
-                height: 55,
-                decoration: const BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(0.02, -0.78),
-                    radius: 3.5,
-                    colors: [
-                      Color(0xFF1869BE),
-                      AppColors.primary,
-                    ],
-                    stops: [0.4375, 1.0],
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '참가 하기',
-                      style:
-                          AppTextStyles.body.copyWith(color: Colors.white),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    const Icon(
-                      Icons.arrow_right_alt_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
+              _ParticipateButton(),
             ],
           ),
         ),
@@ -147,3 +117,84 @@ class NextMatchCard extends StatelessWidget {
   }
 }
 
+// ── 참가하기 버튼 (press 피드백 + 타원형 방사 그라데이션) ──
+
+class _ParticipateButton extends StatefulWidget {
+  @override
+  State<_ParticipateButton> createState() => _ParticipateButtonState();
+}
+
+class _ParticipateButtonState extends State<_ParticipateButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 100),
+        opacity: _pressed ? 0.7 : 1.0,
+        child: CustomPaint(
+          painter: const _EllipticalGradientPainter(),
+          child: const SizedBox(
+            height: 55,
+            width: double.infinity,
+            child: Center(
+              child: Text(
+                '참가하기',
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EllipticalGradientPainter extends CustomPainter {
+  const _EllipticalGradientPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    // 베이스: primary 파란색
+    canvas.drawRect(rect, Paint()..color = AppColors.primary);
+
+    // 타원형 방사 그라데이션
+    final center = Offset(size.width / 2, 0); // 중앙 상단
+    final hRadius = size.width / 2; // 가로 반지름 (좌측 끝까지)
+    final vRadius = size.height; // 세로 반지름 (버튼 높이)
+    final scaleY = vRadius / hRadius;
+
+    // Y축 압축 행렬
+    final matrix = Float64List(16);
+    Matrix4.identity()
+      ..translate(center.dx, center.dy)
+      ..scale(1.0, scaleY)
+      ..translate(-center.dx, -center.dy)
+      ..copyIntoArray(matrix);
+
+    final gradient = ui.Gradient.radial(
+      center,
+      hRadius,
+      [const Color(0xFF1869BE), AppColors.primary],
+      [0.4375, 1.0],
+      TileMode.clamp,
+      matrix,
+    );
+
+    canvas.drawRect(rect, Paint()..shader = gradient);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}

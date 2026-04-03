@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
@@ -25,14 +26,22 @@ class HomeTab extends StatelessWidget {
       children: [
         SingleChildScrollView(
           padding: EdgeInsets.only(top: topPadding + _headerHeight),
-          child: const Column(
+          child: Column(
             children: [
-              NextMatchCard(),
-              SizedBox(height: AppSpacing.xxl),
-              TeamRecentResultsSection(),
-              SizedBox(height: AppSpacing.xxl),
-              TeamPostsSection(),
-              SizedBox(height: AppSpacing.xxxl),
+              const NextMatchCard(),
+              const SizedBox(height: AppSpacing.base),
+              _MatchResultPromptCard(),
+              const SizedBox(height: AppSpacing.xxl),
+              const TeamRecentResultsSection(),
+              const SizedBox(height: AppSpacing.xxl),
+              // 두꺼운 섹션 구분선
+              Container(
+                height: 12,
+                color: AppColors.surface,
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              const TeamPostsSection(),
+              const SizedBox(height: AppSpacing.xxxl),
             ],
           ),
         ),
@@ -94,6 +103,46 @@ class HomeTab extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => const _ShareTicketSheet(),
+    );
+  }
+}
+
+// ── 경기 결과 입력 프롬프트 카드 ──
+
+class _MatchResultPromptCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: AppSpacing.paddingPage,
+      child: GestureDetector(
+        onTap: () => context.push('/match/result-input'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.base,
+            vertical: AppSpacing.md,
+          ),
+          decoration: ShapeDecoration(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                '3/21 vs FC쏘아 결과 입력',
+                style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppColors.primary.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

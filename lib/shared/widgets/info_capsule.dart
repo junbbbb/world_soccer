@@ -12,14 +12,14 @@ class InfoCapsule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF1264B8),
+        color: Colors.black.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Text(
         text,
-        style: AppTextStyles.body.copyWith(color: Colors.white),
+        style: AppTextStyles.labelRegular.copyWith(color: Colors.white),
       ),
     );
   }

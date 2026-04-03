@@ -20,6 +20,19 @@ class AppColors {
   static const surfaceLight = Color(0xFFF6F7F9);
   static const background = Colors.white;
 
+  // ── Semantic ──
+  static const error = Color(0xFFE5484D);
+
+  // ── Rank ──
+  static const rankGold = Color(0xFFFFC107);
+  static const rankSilver = Color(0xFFB0BEC5);
+  static const rankBronze = Color(0xFFBF8A54);
+
+  // ── MOM ──
+  static const momBackground = Color(0xFFFFF8E1);
+  static const momBorder = Color(0xFFFFD54F);
+  static const momText = Color(0xFFF57F17);
+
   // ── Icon ──
   static const iconInactive = Color(0xFFD1D6DB);
 
