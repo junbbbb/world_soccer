@@ -1,5 +1,7 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -48,7 +50,10 @@ const _dummyResults = [
 ];
 
 class TeamRecentResultsSection extends StatelessWidget {
-  const TeamRecentResultsSection({super.key});
+  const TeamRecentResultsSection({super.key, this.hasResults = true});
+
+  /// 신생팀(전적 없음) 케이스를 위한 빈 상태 토글.
+  final bool hasResults;
 
   @override
   Widget build(BuildContext context) {
@@ -63,54 +68,114 @@ class TeamRecentResultsSection extends StatelessWidget {
           ),
           child: SectionTitle('최근 전적'),
         ),
-        SizedBox(
-          height: 52,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            itemCount: _dummyResults.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              if (index == _dummyResults.length) {
-                return GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xl,
-                      vertical: 10,
-                    ),
-                    decoration: ShapeDecoration(
-                      color: AppColors.surfaceLight,
-                      shape: SmoothRectangleBorder(
-                        borderRadius: AppRadius.smoothSm,
+        if (hasResults)
+          SizedBox(
+            height: 52,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              itemCount: _dummyResults.length + 1,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                if (index == _dummyResults.length) {
+                  return GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xl,
+                        vertical: 10,
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '더보기',
-                          style: AppTextStyles.body.copyWith(
+                      decoration: ShapeDecoration(
+                        color: AppColors.surfaceLight,
+                        shape: SmoothRectangleBorder(
+                          borderRadius: AppRadius.smoothSm,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '더보기',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
                             color: AppColors.textTertiary,
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 14,
-                          color: AppColors.textTertiary,
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return _ResultCapsule(result: _dummyResults[index]);
+              },
+            ),
+          )
+        else
+          const _EmptyResultsCard(),
+      ],
+    );
+  }
+}
+
+// ── 빈 상태 (신생팀: 아직 전적 없음) ──
+// 데이터 있을 때 칩 행과 100% 동일한 시각 언어
+// (같은 SizedBox 높이, surfaceLight + smoothSm + 16/10 패딩 캡슐).
+// 단일 액션 칩 — "최근 전적" 섹션 헤더가 이미 컨텍스트를 제공하므로
+// 별도 정보 칩 없이 액션 하나로 충분.
+class _EmptyResultsCard extends StatelessWidget {
+  const _EmptyResultsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              context.push('/match/result-input');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: 10,
+              ),
+              decoration: ShapeDecoration(
+                color: AppColors.surfaceLight,
+                shape: SmoothRectangleBorder(
+                  borderRadius: AppRadius.smoothSm,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.add_rounded,
+                    size: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    '첫 기록 추가하기',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                );
-              }
-              return _ResultCapsule(result: _dummyResults[index]);
-            },
+                ],
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 0),
-      ],
+      ),
     );
   }
 }

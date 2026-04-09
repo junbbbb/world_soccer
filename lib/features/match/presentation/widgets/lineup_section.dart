@@ -1,5 +1,7 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -20,17 +22,64 @@ class LineupSection extends StatelessWidget {
       ),
       child: Container(
         width: double.infinity,
-        height: 160,
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.xxxl,
+          horizontal: AppSpacing.lg,
+        ),
         decoration: ShapeDecoration(
           color: AppColors.surface,
           shape: SmoothRectangleBorder(
             borderRadius: AppRadius.smoothMd,
           ),
         ),
-        alignment: Alignment.center,
-        child: Text(
-          '라인업&전술 공개 전이에요',
-          style: AppTextStyles.body.copyWith(color: AppColors.textTertiary),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '라인업 & 전술 공개 전이에요',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.base),
+            // 관리자용: 라인업 만들기 진입
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                context.push('/match/lineup-builder');
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: ShapeDecoration(
+                  color: AppColors.textPrimary,
+                  shape: SmoothRectangleBorder(
+                    borderRadius: AppRadius.smoothSm,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.add_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      '라인업 만들기',
+                      style: AppTextStyles.captionBold.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

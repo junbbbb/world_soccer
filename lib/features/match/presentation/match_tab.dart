@@ -184,13 +184,22 @@ class _MatchTabState extends State<MatchTab> {
                   ),
                   child: Row(
                     children: [
-                      Image.asset('assets/images/logo_calo.png',
-                          width: 32, height: 32),
-                      const SizedBox(width: AppSpacing.sm),
                       Text('경기',
                           style: AppTextStyles.pageTitle
                               .copyWith(color: AppColors.textPrimary)),
                       const Spacer(),
+                      GestureDetector(
+                        onTap: () => context.push('/match/create'),
+                        behavior: HitTestBehavior.opaque,
+                        child: const Padding(
+                          padding: EdgeInsets.all(AppSpacing.xs),
+                          child: Icon(
+                            Icons.add_rounded,
+                            size: 28,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
