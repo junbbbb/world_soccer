@@ -4,10 +4,11 @@ import '../../features/chat/presentation/chat_room_screen.dart';
 import '../../features/chat/presentation/chat_tab.dart';
 import '../../features/chat/presentation/group_info_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
-import '../../features/match/presentation/lineup_builder_screen.dart';
+import '../../features/match/presentation/lineup/lineup_builder_screen.dart';
 import '../../features/match/presentation/match_create_screen.dart';
 import '../../features/match/presentation/match_result_input_screen.dart';
 import '../../features/match/presentation/match_screen.dart';
+import '../../features/match/presentation/share/match_share_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -35,6 +36,10 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/match/lineup-builder',
         builder: (context, state) => const LineupBuilderScreen(),
+      ),
+      GoRoute(
+        path: '/match/share',
+        builder: (context, state) => const MatchShareScreen(),
       ),
       GoRoute(
         path: '/chat',

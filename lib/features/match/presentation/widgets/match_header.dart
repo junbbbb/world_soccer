@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -38,7 +39,7 @@ class MatchTopBarDelegate extends SliverPersistentHeaderDelegate {
               const Spacer(),
               _CircleIconButton(
                 icon: Icons.share_outlined,
-                onTap: () {},
+                onTap: () => context.push('/match/share'),
               ),
               const SizedBox(width: AppSpacing.sm),
               _CircleIconButton(

@@ -1,8 +1,6 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/section_title.dart';
@@ -97,8 +95,7 @@ class _PostItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipSmoothRect(
-          radius: AppRadius.smoothSm,
+        ClipOval(
           child: SizedBox(
             width: 40,
             height: 40,

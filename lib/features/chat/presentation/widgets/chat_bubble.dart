@@ -1,6 +1,4 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../chat_tab.dart';
 
@@ -143,8 +141,7 @@ class ChatBubble extends StatelessWidget {
 
   Widget _buildAvatar(int colorIndex) {
     if (message.avatarPath != null) {
-      return ClipSmoothRect(
-        radius: AppRadius.smoothSm,
+      return ClipOval(
         child: Image.asset(
           message.avatarPath!,
           width: _avatarSize,
@@ -153,21 +150,21 @@ class ChatBubble extends StatelessWidget {
         ),
       );
     }
-    return ClipSmoothRect(
-      radius: AppRadius.smoothSm,
-      child: Container(
-        width: _avatarSize,
-        height: _avatarSize,
+    return Container(
+      width: _avatarSize,
+      height: _avatarSize,
+      decoration: BoxDecoration(
         color: _avatarColors[colorIndex],
-        alignment: Alignment.center,
-        child: Text(
-          message.senderName[0],
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        message.senderName[0],
+        style: const TextStyle(
+          fontFamily: 'Pretendard',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
       ),
     );
