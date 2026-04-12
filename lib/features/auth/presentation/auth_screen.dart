@@ -59,7 +59,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         }
         await authRepo.signUp(email: email, password: password, name: name);
       }
-      if (mounted) context.go('/');
+
+      if (!mounted) return;
+
+      // 팀 소속 확인 → 없으면 온보딩
+      final teamRepo = ref.read(teamRepoProvider);
+      final userId =
+          ref.read(authRepoProvider).currentUser!.id;
+      final teams = await teamRepo.getMyTeams(userId);
+      if (mounted) {
+        context.go(teams.isEmpty ? '/onboarding' : '/');
+      }
     } catch (e) {
       setState(() {
         _error = _isLogin ? '이메일 또는 비밀번호를 확인해주세요' : '회원가입에 실패했습니다';

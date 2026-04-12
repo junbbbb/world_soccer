@@ -19,4 +19,14 @@ abstract class TeamRepo {
 
   /// 팀 통계.
   Future<TeamStats> getStats(String teamId);
+
+  /// 초대 코드 생성.
+  Future<String> createInviteCode({
+    required String teamId,
+    String role = 'member',
+  });
+
+  /// 초대 코드로 팀 가입.
+  /// 반환: {'team_id': '...', 'team_name': '...', 'role': '...'}
+  Future<Map<String, dynamic>> joinByInviteCode(String inviteCode);
 }

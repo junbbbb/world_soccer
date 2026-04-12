@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/chat/presentation/chat_room_screen.dart';
 import '../../features/chat/presentation/chat_tab.dart';
 import '../../features/chat/presentation/group_info_screen.dart';
@@ -31,6 +32,10 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/',

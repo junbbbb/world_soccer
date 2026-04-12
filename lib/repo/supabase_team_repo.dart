@@ -129,6 +129,43 @@ class SupabaseTeamRepo implements TeamRepo {
     );
   }
 
+  @override
+  Future<String> createInviteCode({
+    required String teamId,
+    String role = 'member',
+  }) async {
+    final code = _generateCode();
+    final userId = _client.auth.currentUser!.id;
+
+    await _client.from('team_invites').insert({
+      'team_id': teamId,
+      'invite_code': code,
+      'created_by': userId,
+      'role': role,
+    });
+
+    return code;
+  }
+
+  @override
+  Future<Map<String, dynamic>> joinByInviteCode(String inviteCode) async {
+    final response = await _client.rpc(
+      'join_team_by_invite',
+      params: {'p_invite_code': inviteCode},
+    );
+    return response as Map<String, dynamic>;
+  }
+
+  String _generateCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 혼동 문자 제외 (0/O, 1/I)
+    final random = DateTime.now().millisecondsSinceEpoch;
+    final buffer = StringBuffer();
+    for (var i = 0; i < 6; i++) {
+      buffer.write(chars[(random ~/ (i + 1) * 7 + i * 13) % chars.length]);
+    }
+    return buffer.toString();
+  }
+
   Team _teamFromRow(Map<String, dynamic> row) {
     return Team(
       id: row['id'] as String,
