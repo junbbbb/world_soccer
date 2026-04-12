@@ -12,6 +12,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/info_capsule.dart';
 import '../../../../shared/widgets/match_time_info.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
+import 'join_match_sheet.dart';
 
 class NextMatchCard extends StatefulWidget {
   const NextMatchCard({super.key, this.hasNextMatch = true});
@@ -27,10 +28,17 @@ class NextMatchCard extends StatefulWidget {
 class _NextMatchCardState extends State<NextMatchCard> {
   bool _isJoined = false;
 
-  // 참가/취소 토글 (단방향이 아닌 토글로 — 사용자가 실수해도 복구 가능)
-  void _toggleJoin() {
+  /// 참가하기 탭 → 바텀시트에서 포지션/쿼터 입력 받고 참가 완료로 전환.
+  /// (이미 참가 중이면 바로 취소)
+  Future<void> _onParticipateTap() async {
     HapticFeedback.mediumImpact();
-    setState(() => _isJoined = !_isJoined);
+    if (_isJoined) {
+      setState(() => _isJoined = false);
+      return;
+    }
+    final result = await showJoinMatchSheet(context);
+    if (!mounted || result == null) return;
+    setState(() => _isJoined = true);
   }
 
   static const _animDuration = Duration(milliseconds: 350);
@@ -150,7 +158,7 @@ class _NextMatchCardState extends State<NextMatchCard> {
                               ),
                             ),
                           ),
-                          _ParticipateButton(onTap: _toggleJoin),
+                          _ParticipateButton(onTap: _onParticipateTap),
                         ],
                       ),
               ),

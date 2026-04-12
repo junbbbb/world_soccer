@@ -183,15 +183,13 @@ class PlayerSlot extends StatelessWidget {
                 color: hasMember
                     ? Colors.white
                     : (hovering
-                        ? AppColors.surface
-                        : Colors.white),
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.08)),
                 border: Border.all(
                   color: hovering
-                      ? AppColors.primary
-                      : (hasMember
-                          ? AppColors.textPrimary
-                          : AppColors.iconInactive),
-                  width: hovering ? 1.8 : (hasMember ? 1.5 : 1.0),
+                      ? Colors.white
+                      : LineupColors.pitchBackground,
+                  width: hovering ? 1.0 : 0.3,
                 ),
               ),
               child: hasMember
@@ -247,7 +245,7 @@ class PlayerSlot extends StatelessWidget {
         const SizedBox(height: 6),
         // 라벨 (검은 박스 없음)
         ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: size + 28),
+          constraints: BoxConstraints(maxWidth: size + 36),
           child: Text(
             hasMember ? member!.name : position,
             textAlign: TextAlign.center,
@@ -255,11 +253,11 @@ class PlayerSlot extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Pretendard',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
               color: hasMember
-                  ? AppColors.textPrimary
-                  : AppColors.textTertiary,
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.6),
             ),
           ),
         ),

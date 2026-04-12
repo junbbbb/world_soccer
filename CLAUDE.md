@@ -1,163 +1,171 @@
 # World Soccer (칼로FC 팀 관리 앱)
 
 Flutter 기반 축구팀 관리 앱. 경기 참가, 전적, 팀 커뮤니티 기능 제공.
+Supabase 백엔드. 6-Layer 아키텍처 (OpenAI Layered) 마이그레이션 진행 중.
+
+> 프로젝트 구조/컨텍스트: `AGENTS.md`
+> 디자인 시스템 상세: `DESIGN.md`
+> 아키텍처 상세: `docs/architecture.md`
+> 마이그레이션 계획: `docs/migration-scenarios.md`
 
 ## Build & Run
 
 ```bash
 flutter pub get                              # 의존성 설치
-dart run build_runner build --delete-conflicting-outputs  # 코드 생성 (riverpod, freezed, json_serializable)
+dart run build_runner build --delete-conflicting-outputs  # 코드 생성
 flutter analyze                              # 정적 분석
 flutter run                                  # 앱 실행
 ```
 
+## 6-Layer Architecture Rules
+
+**의존성: Types → Config → Repo → Service → Runtime → UI (앞으로만)**
+
+- 뒤로 가는 import 발견 시 **즉시 수정**
+- 새 파일은 반드시 올바른 레이어에 배치
+- `core/theme/`는 예외 — 모든 레이어에서 접근 가능
+- Repo를 UI에서 직접 접근 지양 → Service를 통해
+- 상세 규칙 + 의존성 매트릭스: `docs/architecture.md`
+
 ## Tech Stack
 
-- **Flutter** + **Dart**
+- **Flutter** + **Dart** (SDK ^3.8.1)
+- **Supabase** — Postgres, Auth, Realtime, Storage (연동 예정)
 - **Riverpod** (상태관리, `riverpod_annotation` + code generation)
 - **GoRouter** (라우팅, `app_router.dart` → `app_router.g.dart`)
-- **Freezed** + **json_serializable** (모델)
+- **Freezed** + **json_serializable** (모델, 예정)
 - **figma_squircle** (iOS 스타일 squircle 라운딩)
-- **Google Fonts** (Barlow Condensed 등)
+- **Google Fonts** (Barlow Condensed)
 
 ## Architecture
 
+현재: `features/` 기반 (마이그레이션 진행 중)
+목표: 6-Layer (`docs/migration-scenarios.md` 참고)
+
 ```
 lib/
-├── core/
-│   ├── router/          # GoRouter 설정 (/ → HomeScreen, /match → MatchDetailScreen)
-│   └── theme/           # 디자인 시스템 (아래 Design System 섹션 참고)
-│       ├── app_colors.dart
-│       ├── app_text_styles.dart
-│       ├── app_spacing.dart
-│       ├── app_radius.dart
-│       ├── app_shadows.dart
-│       └── app_theme.dart
-├── features/
-│   ├── home/            # 홈 화면 (하단 네비 포함)
-│   │   └── presentation/
-│   │       ├── home_screen.dart      # 메인 셸 (BottomNavigationBar + IndexedStack)
-│   │       ├── home_tab.dart         # 홈 탭 (NextMatchCard, 최근전적, 게시물)
-│   │       └── widgets/
-│   │           ├── next_match_card.dart
-│   │           ├── team_recent_results_section.dart
-│   │           └── team_posts_section.dart
-│   ├── match/           # 경기 상세 (풀스크린, 하단바 없음)
-│   │   └── presentation/
-│   │       ├── match_screen.dart     # MatchDetailScreen
-│   │       └── widgets/             # MatchHeader, TabBar, Lineup, Attendance 등
-│   └── auth/
-└── shared/
-    └── widgets/         # 공용 위젯
-        ├── team_logo_badge.dart
-        ├── section_title.dart
-        ├── match_time_info.dart     # 경기 시간 블록 (오후 뱃지 + 시간 + 날짜/장소)
-        └── player_chip.dart
+├── types/          # Layer 0: 순수 데이터 모델, enum (의존: 없음)
+├── config/         # Layer 1: 설정, 상수 (의존: types)
+├── repo/           # Layer 2: 데이터 접근 — Supabase (의존: types, config)
+├── service/        # Layer 3: 비즈니스 로직 (의존: types, config, repo)
+├── runtime/        # Layer 4: 앱 초기화, 라우터, DI (의존: types~service)
+├── ui/             # Layer 5: 화면, 위젯 (의존: 전부)
+│   ├── home/
+│   ├── match/
+│   ├── profile/
+│   ├── chat/
+│   ├── stats/
+│   ├── team/
+│   └── shared/
+└── core/           # 예외: 디자인 시스템 (모든 레이어에서 접근)
+    └── theme/
 ```
 
 ## Navigation Flow
 
 ```
 앱 실행 → HomeScreen (하단바: 홈/채팅/스탯/팀)
-  → NextMatchCard 탭 → context.push('/match')
-  → MatchDetailScreen (풀스크린, 뒤로가기 버튼)
-  → 뒤로가기 → HomeScreen 복귀
+  홈 → NextMatchCard 탭 → /match (경기 상세)
+  홈 → 참가하기 → 바텀시트 (포지션+쿼터)
+  홈 → 프로필 아이콘 → /profile
+  홈 → 팀명 탭 → 팀 전환 시트
+  경기 상세 → 라인업 만들기 → /match/lineup-builder
+  경기 상세 → 결과 입력 → /match/result-input
+  프로필 → ⚙️ → 프로필 편집 (풀스크린)
 ```
 
-## Design System
+## Design Tokens (요약)
+
+상세 디자인 시스템: `DESIGN.md`
 
 ### 색상 (`AppColors`)
 
 | 토큰 | 값 | 용도 |
 |------|-----|------|
-| `primary` | `#1572D1` | 브랜드 파란색, CTA 버튼 |
-| `primaryDark` | `#1C6EC3` | 그라데이션 시작 |
+| `primary` | `#1572D1` | 브랜드, CTA |
+| `primaryDark` | `#1C6EC3` | 그라데이션 |
 | `textPrimary` | `#333D4B` | 기본 텍스트 |
 | `textSecondary` | `#6B7684` | 보조 텍스트 |
-| `textTertiary` | `#8E97A3` | 비활성 텍스트, 아이콘 |
-| `surface` | `#F2F4F6` | 카드/칩 배경 |
-| `surfaceLight` | `#F6F7F9` | 더 밝은 배경 |
-| `iconInactive` | `#D1D6DB` | 비활성 네비 아이콘 |
-| `overlayDark` | black 30% | 오버레이 뱃지 배경 |
+| `textTertiary` | `#8E97A3` | 비활성, 캡션 |
+| `surface` | `#F2F4F6` | 회색 배경 |
+| `surfaceLight` | `#F6F7F9` | 카드/입력 배경 |
+| `error` | `#E5484D` | 에러, 패배 |
+| `iconInactive` | `#D1D6DB` | 비활성 아이콘 |
+| `badgeBlue` | `#2563EB` | 뱃지 파란색 |
+| `momBackground` | `#FFF8E1` | MOM 배지 배경 |
+| `momText` | `#F57F17` | MOM 배지 텍스트 |
+| `rankGold` | `#FFC107` | 랭킹 금 |
+| `rankSilver` | `#B0BEC5` | 랭킹 은 |
+| `rankBronze` | `#BF8A54` | 랭킹 동 |
 
 ### 텍스트 스타일 (`AppTextStyles`)
 
-| 토큰 | 크기/굵기 | 폰트 | 용도 |
-|------|-----------|------|------|
-| `pageTitle` | 20/w700 | SCDream | 페이지 제목 (홈 "칼로FC") |
-| `sectionTitle` | 20/w700 | Pretendard | 섹션 제목 |
-| `heading` | 16/w700 | Pretendard | 중간 제목 |
-| `body` | 15/w500 | Pretendard | 본문 기본 |
-| `bodyRegular` | 15/w400 | Pretendard | 본문 레귤러 |
-| `label` | 14/w700 | Pretendard | 라벨 굵은 |
-| `labelMedium` | 14/w600 | Pretendard | 라벨 중간 |
-| `labelRegular` | 14/w400 | Pretendard | 라벨 기본 |
-| `captionBold` | 13/w800 | Pretendard | 캡션 굵은 |
-| `captionMedium` | 13/w600 | Pretendard | 캡션 중간 |
-| `caption` | 12/w400 | Pretendard | 캡션 |
-| `buttonPrimary` | 17/w700 | Pretendard | 메인 CTA |
-| `buttonSecondary` | 16/w600 | Pretendard | 보조 버튼 |
-| `teamName` | 14/w700 | SCDream | 팀명 (white) |
-| `matchInfo` | 14/w500 | SCDream | 경기 날짜/장소 (white) |
-| `timeBadge` | 14/w700 | Pretendard | 오후/오전 뱃지 (white) |
-| `timeDisplay` | 36/w800 | Barlow Condensed | 경기 시간 (white, static final) |
+| 토큰 | 크기/굵기 | 폰트 |
+|------|-----------|------|
+| `pageTitle` | 20/w700 | SCDream |
+| `sectionTitle` | 20/w700 | Pretendard |
+| `heading` | 16/w700 | Pretendard |
+| `body` | 15/w500 | Pretendard |
+| `bodyRegular` | 15/w400 | Pretendard |
+| `label` | 14/w700 | Pretendard |
+| `labelMedium` | 14/w600 | Pretendard |
+| `labelRegular` | 14/w400 | Pretendard |
+| `captionBold` | 13/w800 | Pretendard |
+| `captionMedium` | 13/w600 | Pretendard |
+| `caption` | 12/w400 | Pretendard |
+| `buttonPrimary` | 17/w700 | Pretendard |
+| `buttonSecondary` | 16/w600 | Pretendard |
+| `timeDisplay` | 36/w800 | Barlow Condensed |
 
 ### 여백 (`AppSpacing`) — 8px 그리드
 
-| 토큰 | 값 | 용도 |
+| 토큰 | 값 |
+|------|----|
+| `xs` | 4 |
+| `sm` | 8 |
+| `md` | 12 |
+| `base` | 16 |
+| `lg` | 20 |
+| `xl` | 24 |
+| `xxl` | 32 |
+| `xxxl` | 48 |
+| `paddingPage` | **h:20** (= lg) |
+| `paddingSection` | **h:20, v:24** (= lg, xl) |
+
+### 라운딩 (`AppRadius`) — squircle
+
+| 토큰 | 값 | 캐시 |
 |------|-----|------|
-| `xxs` | 2 | 미세 간격 |
-| `xs` | 4 | 아이콘↔텍스트 |
-| `sm` | 8 | 기본 소 간격 |
-| `md` | 12 | 아이콘↔텍스트 (큰) |
-| `base` | 16 | 기본 간격 |
-| `lg` | 20 | 탭 라벨 패딩 |
-| `xl` | 24 | 좌우 페이지 패딩, 섹션 패딩 |
-| `xxl` | 32 | 섹션 간 간격 |
-| `xxxl` | 48 | 큰 여백 |
-| `xxxxl` | 80 | 스크롤 하단 여유 |
-| `paddingPage` | h:24 | 페이지 좌우 패딩 |
-| `paddingSection` | h:24, v:24 | 섹션 전체 패딩 |
-
-### 라운딩 (`AppRadius`) — squircle 기본
-
-| 토큰 | 값 | 용도 |
-|------|-----|------|
-| `xs` | 4 | 작은 로고 클립 |
-| `sm` | 8 | 팀 로고, 캡슐 |
-| `md` | 12 | 버튼, 컨테이너 |
-| `button` | 14 | CTA 버튼 |
-| `lg` | 16 | 카드 |
-| `xl` | 20 | 바텀시트 |
-| `full` | 100 | 캡슐/원형 |
-| `smoothXs`~`smoothLg` | cached | 캐시된 SmoothBorderRadius (빌드마다 재생성 방지) |
-
-### 그림자 (`AppShadows`)
-
-| 토큰 | 용도 |
-|------|------|
-| `header` | 매치 헤더 |
-| `bottomBar` | 하단 네비게이션 |
-| `elevated` | 플로팅 요소 |
+| `xs` | 4 | `smoothXs` |
+| `sm` | 8 | `smoothSm` |
+| `md` | 12 | `smoothMd` |
+| `button` | 14 | `smoothButton` |
+| `lg` | 16 | `smoothLg` |
+| `xl` | 20 | `smoothXl` |
+| `full` | 100 | `smoothFull` |
 
 ## Code Style
 
-- 폰트: `Pretendard` (본문), `SCDream` (팀명/강조), `Barlow Condensed` (영문 타이틀)
-- 라운딩: `AppRadius.smoothXx` 캐시 사용 우선, 비표준 값은 `AppRadius.smooth(값)`
-- 여백: `AppSpacing` 토큰 사용, 하드코딩 금지 (예외: 칩 내부 14/10 같은 컴포넌트 고유 값)
+- 폰트: `Pretendard` (본문), `SCDream` (팀명), `Barlow Condensed` (큰 숫자)
+- 라운딩: `AppRadius.smoothXx` 캐시 사용 우선
+- 여백: `AppSpacing` 토큰 사용, 하드코딩 금지
 - 색상: `AppColors` 사용, 하드코딩 금지
-- 텍스트: `AppTextStyles` 사용, 색상은 `.copyWith(color:)`로 적용
-- EdgeInsets: 반복 패턴은 `AppSpacing.paddingPage` / `AppSpacing.paddingSection` 사용
+- 텍스트: `AppTextStyles` + `.copyWith(color:)` 패턴
+- 선택 요소: outline pill (배경 유지 + 테두리로 선택 표현)
+- CTA: `textPrimary`(검정) 배경 = 저장/확인, `primary`(파랑) = 참가하기
+- 컴포넌트 패턴 상세: `DESIGN.md`
 
 ## Assets
 
-- `assets/images/` — 팀 로고 (fc_calor.png, fc_bosong.png), 아바타 이미지
+- `assets/images/` — 팀 로고, 아바타 이미지
 - `assets/icons/` — SVG 아이콘 (하단 네비)
-- `assets/fonts/` — SCDream 1~9
+- `assets/fonts/` — SCDream 1~9, Pretendard, Barlow Condensed
 
 ## Important Notes
 
 - `app_router.dart` 수정 후 반드시 `build_runner` 실행
 - 한국어 UI, 응답도 한국어로
-- `bottom_action_bar.dart`는 현재 미사용 (match_screen에서 직접 버튼 구현)
 - 새 위젯 추가 시 디자인 토큰 사용 필수, 하드코딩 절대 금지
+- 하네스 명령: `/build`, `/status`, `/changes`, `/cleanup` (AGENTS.md 참고)
+- 변경 위험도: `docs/blast-radius.md` (Core/Mid/Shell)
+- 기술 결정 기록: `docs/decisions/`

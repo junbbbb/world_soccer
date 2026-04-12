@@ -1,57 +1,50 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 
-// ── 더미 참가자 데이터 (참가 확인에서 자동 로드된 것으로 가정) ──
+// ══════════════════════════════════════════════
+// 더미 데이터
+// ══════════════════════════════════════════════
 
 class _Player {
   final String name;
-  final String position;
   final int number;
   final String avatarPath;
-
   const _Player({
     required this.name,
-    required this.position,
     required this.number,
     required this.avatarPath,
   });
 }
 
-/// 참가 확인 완료된 선수 목록 (자동 로드)
 const _participants = [
-  _Player(name: '박서준', position: 'GK', number: 1, avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif'),
-  _Player(name: '윤태경', position: 'DF', number: 2, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Player(name: '정도현', position: 'DF', number: 4, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Player(name: '김재윤', position: 'DF', number: 5, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Player(name: '이병준', position: 'MF', number: 7, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Player(name: '최민수', position: 'MF', number: 8, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Player(name: '김태호', position: 'FW', number: 9, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-  _Player(name: '윤서준', position: 'MF', number: 10, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Player(name: '박정우', position: 'FW', number: 11, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-  _Player(name: '강지훈', position: 'MF', number: 14, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Player(name: '이현우', position: 'DF', number: 15, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Player(name: '조원빈', position: 'MF', number: 16, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Player(name: '신유찬', position: 'FW', number: 17, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-  _Player(name: '한준혁', position: 'GK', number: 21, avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif'),
-  _Player(name: '송민호', position: 'DF', number: 23, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
+  _Player(name: '박서준', number: 1, avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif'),
+  _Player(name: '윤태경', number: 2, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
+  _Player(name: '정도현', number: 4, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
+  _Player(name: '김재윤', number: 5, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
+  _Player(name: '이병준', number: 7, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
+  _Player(name: '최민수', number: 8, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
+  _Player(name: '김태호', number: 9, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
+  _Player(name: '윤서준', number: 10, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
+  _Player(name: '박정우', number: 11, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
+  _Player(name: '강지훈', number: 14, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
+  _Player(name: '이현우', number: 15, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
+  _Player(name: '조원빈', number: 16, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
+  _Player(name: '신유찬', number: 17, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
 ];
 
-// ── 골/어시 기록 ──
-
-class _StatEntry {
-  int goals;
-  int assists;
-
-  _StatEntry({this.goals = 0, this.assists = 0});
-}
-
-// ── 메인 화면 (2단계: 스코어 → 골/어시) ──
+// ══════════════════════════════════════════════
+// MatchResultInputScreen
+//
+// 한 화면에 전부. 스텝 없음.
+// 위: 스코어 (큰 숫자 + -) → 아래: 선수별 골/어시 카운터
+// ══════════════════════════════════════════════
 
 class MatchResultInputScreen extends StatefulWidget {
   const MatchResultInputScreen({super.key});
@@ -61,34 +54,12 @@ class MatchResultInputScreen extends StatefulWidget {
 }
 
 class _MatchResultInputScreenState extends State<MatchResultInputScreen> {
-  int _currentStep = 0;
-  static const _totalSteps = 2;
-
-  // Step 1: 스코어
   int _ourScore = 0;
-  int _opponentScore = 0;
-  String _opponentName = 'FC쏘아';
+  int _theirScore = 0;
+  final Map<int, int> _goals = {};
+  final Map<int, int> _assists = {};
 
-  // Step 2: 골/어시 (참가자 자동 로드)
-  final Map<int, _StatEntry> _playerStats = {};
-
-  static const _stepLabels = ['스코어', '기록'];
-
-  void _next() {
-    if (_currentStep < _totalSteps - 1) {
-      setState(() => _currentStep++);
-    }
-  }
-
-  void _back() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _onSave() {
+  void _save() {
     HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -102,342 +73,325 @@ class _MatchResultInputScreenState extends State<MatchResultInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final isLastStep = _currentStep == _totalSteps - 1;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            // 헤더
-            Container(
-              padding: EdgeInsets.only(top: topPadding),
-              color: Colors.white,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 56,
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: _back,
-                          behavior: HitTestBehavior.opaque,
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-                            child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            '경기 결과 입력',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.heading.copyWith(color: AppColors.textPrimary),
-                          ),
-                        ),
-                        const SizedBox(width: 52),
-                      ],
-                    ),
-                  ),
-                  // 스텝 인디케이터
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
-                    child: _StepIndicator(
-                      currentStep: _currentStep,
-                      totalSteps: _totalSteps,
-                      labels: _stepLabels,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-              ),
-            ),
-            // 콘텐츠
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: _currentStep == 0
-                    ? _ScoreStep(
-                        key: const ValueKey('score'),
-                        ourScore: _ourScore,
-                        opponentScore: _opponentScore,
-                        opponentName: _opponentName,
-                        onOurScoreChanged: (v) => setState(() => _ourScore = v),
-                        onOpponentScoreChanged: (v) => setState(() => _opponentScore = v),
-                        onOpponentNameChanged: (v) => setState(() => _opponentName = v),
-                      )
-                    : _StatsStep(
-                        key: const ValueKey('stats'),
-                        playerStats: _playerStats,
-                        onStatsChanged: () => setState(() {}),
-                      ),
-              ),
-            ),
-            // 하단 버튼
-            Container(
-              padding: EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.base, AppSpacing.xl, bottomPadding + AppSpacing.base),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: AppColors.surface)),
-              ),
-              child: SizedBox(
-                width: double.infinity,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // 헤더
+              SizedBox(
                 height: 52,
-                child: GestureDetector(
-                  onTap: isLastStep ? _onSave : _next,
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: ShapeDecoration(
-                      color: AppColors.primary,
-                      shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothButton),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      behavior: HitTestBehavior.opaque,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.base,
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 20,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      isLastStep ? '저장하기' : '다음',
-                      style: AppTextStyles.buttonPrimary.copyWith(color: Colors.white),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          '경기 결과',
+                          style: AppTextStyles.heading.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 52),
+                  ],
                 ),
               ),
+
+              // 스코어 영역
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.lg,
+                ),
+                child: Row(
+                  children: [
+                    // 우리팀
+                    Expanded(
+                      child: _TeamScore(
+                        logo: 'assets/images/logo_calo.png',
+                        name: 'FC칼로',
+                        score: _ourScore,
+                        onMinus: _ourScore > 0
+                            ? () => setState(() => _ourScore--)
+                            : null,
+                        onPlus: () => setState(() => _ourScore++),
+                      ),
+                    ),
+                    // 콜론
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      child: Text(
+                        ':',
+                        style: GoogleFonts.barlowCondensed(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ),
+                    // 상대팀
+                    Expanded(
+                      child: _TeamScore(
+                        logo: 'assets/images/logo_ssoa.png',
+                        name: 'FC쏘아',
+                        score: _theirScore,
+                        onMinus: _theirScore > 0
+                            ? () => setState(() => _theirScore--)
+                            : null,
+                        onPlus: () => setState(() => _theirScore++),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 구분
+              const Divider(
+                height: 1,
+                thickness: 0.5,
+                color: AppColors.surface,
+              ),
+
+              // 선수별 기록
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.base,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '개인 기록',
+                      style: AppTextStyles.heading.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${_participants.length}명',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 컬럼 헤더
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(child: SizedBox()),
+                    SizedBox(
+                      width: 72,
+                      child: Center(
+                        child: Text(
+                          '골',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textTertiary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 72,
+                      child: Center(
+                        child: Text(
+                          '도움',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textTertiary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // 선수 리스트
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    bottomPadding + 80,
+                  ),
+                  itemCount: _participants.length,
+                  separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    thickness: 0.5,
+                    color: AppColors.textPrimary.withValues(alpha: 0.06),
+                  ),
+                  itemBuilder: (_, i) {
+                    final p = _participants[i];
+                    final g = _goals[i] ?? 0;
+                    final a = _assists[i] ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                      ),
+                      child: Row(
+                        children: [
+                          ClipOval(
+                            child: Image.asset(
+                              p.avatarPath,
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Text(
+                              p.name,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          _Counter(
+                            value: g,
+                            onChanged: (v) =>
+                                setState(() => _goals[i] = v),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          _Counter(
+                            value: a,
+                            onChanged: (v) =>
+                                setState(() => _assists[i] = v),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 저장 버튼
+        bottomNavigationBar: Container(
+          color: Colors.white,
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            bottomPadding + AppSpacing.sm,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.textPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.md,
+                ),
+                shape: SmoothRectangleBorder(
+                  borderRadius: AppRadius.smoothButton,
+                ),
+              ),
+              child:
+                  const Text('저장하기', style: AppTextStyles.buttonPrimary),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ── 스텝 인디케이터 (2단계) ──
+// ══════════════════════════════════════════════
+// Team Score — 로고 + 이름 + 큰 숫자 + ± 버튼
+// ══════════════════════════════════════════════
 
-class _StepIndicator extends StatelessWidget {
-  const _StepIndicator({
-    required this.currentStep,
-    required this.totalSteps,
-    required this.labels,
-  });
-
-  final int currentStep;
-  final int totalSteps;
-  final List<String> labels;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(totalSteps * 2 - 1, (i) {
-        if (i.isOdd) {
-          final stepBefore = i ~/ 2;
-          return Expanded(
-            child: Container(
-              height: 2,
-              color: stepBefore < currentStep ? AppColors.primary : AppColors.surface,
-            ),
-          );
-        }
-        final stepIndex = i ~/ 2;
-        final isActive = stepIndex <= currentStep;
-        final isCurrent = stepIndex == currentStep;
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.primary : AppColors.surface,
-                shape: BoxShape.circle,
-                border: isCurrent
-                    ? Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 3)
-                    : null,
-              ),
-              child: Text(
-                '${stepIndex + 1}',
-                style: AppTextStyles.captionBold.copyWith(
-                  color: isActive ? Colors.white : AppColors.textTertiary,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              labels[stepIndex],
-              style: AppTextStyles.caption.copyWith(
-                color: isCurrent ? AppColors.primary : AppColors.textTertiary,
-                fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ],
-        );
-      }),
-    );
-  }
-}
-
-// ── Step 1: 스코어 입력 ──
-
-class _ScoreStep extends StatelessWidget {
-  const _ScoreStep({
-    super.key,
-    required this.ourScore,
-    required this.opponentScore,
-    required this.opponentName,
-    required this.onOurScoreChanged,
-    required this.onOpponentScoreChanged,
-    required this.onOpponentNameChanged,
-  });
-
-  final int ourScore;
-  final int opponentScore;
-  final String opponentName;
-  final ValueChanged<int> onOurScoreChanged;
-  final ValueChanged<int> onOpponentScoreChanged;
-  final ValueChanged<String> onOpponentNameChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xl),
-      child: Column(
-        children: [
-          Text(
-            '경기 스코어를 입력해주세요',
-            style: AppTextStyles.heading.copyWith(color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: AppSpacing.xxxl),
-          // 스코어 보드
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            decoration: ShapeDecoration(
-              color: AppColors.surfaceLight,
-              shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothLg),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _TeamScoreColumn(
-                    teamLogo: 'assets/images/logo_calo.png',
-                    teamName: 'FC칼로',
-                    score: ourScore,
-                    onScoreChanged: onOurScoreChanged,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
-                  child: Text(
-                    ':',
-                    style: AppTextStyles.timeDisplay.copyWith(color: AppColors.textTertiary, fontSize: 40),
-                  ),
-                ),
-                Expanded(
-                  child: _TeamScoreColumn(
-                    teamLogo: 'assets/images/logo_ssoa.png',
-                    teamName: opponentName,
-                    score: opponentScore,
-                    onScoreChanged: onOpponentScoreChanged,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-          // 상대팀 선택
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.base),
-            decoration: ShapeDecoration(
-              color: AppColors.surfaceLight,
-              shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('상대팀', style: AppTextStyles.captionMedium.copyWith(color: AppColors.textSecondary)),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: ['FC쏘아', '올스타FC', '드림FC'].map((name) {
-                    final selected = opponentName == name;
-                    return GestureDetector(
-                      onTap: () => onOpponentNameChanged(name),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: ShapeDecoration(
-                          color: selected ? AppColors.primary : Colors.white,
-                          shape: SmoothRectangleBorder(
-                            borderRadius: AppRadius.smoothSm,
-                            side: BorderSide(
-                              color: selected ? AppColors.primary : AppColors.iconInactive,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          name,
-                          style: AppTextStyles.labelRegular.copyWith(
-                            color: selected ? Colors.white : AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TeamScoreColumn extends StatelessWidget {
-  const _TeamScoreColumn({
-    required this.teamLogo,
-    required this.teamName,
+class _TeamScore extends StatelessWidget {
+  const _TeamScore({
+    required this.logo,
+    required this.name,
     required this.score,
-    required this.onScoreChanged,
+    required this.onMinus,
+    required this.onPlus,
   });
 
-  final String teamLogo;
-  final String teamName;
+  final String logo;
+  final String name;
   final int score;
-  final ValueChanged<int> onScoreChanged;
+  final VoidCallback? onMinus;
+  final VoidCallback onPlus;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         ClipSmoothRect(
-          radius: AppRadius.smoothSm,
-          child: Image.asset(teamLogo, width: 48, height: 48, fit: BoxFit.cover),
+          radius: AppRadius.smoothXs,
+          child: Image.asset(logo, width: 36, height: 36, fit: BoxFit.cover),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         Text(
-          teamName,
-          style: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary),
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
+          name,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(height: AppSpacing.base),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          '$score',
+          style: GoogleFonts.barlowCondensed(
+            fontSize: 48,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.0,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _ScoreButton(
+            _RoundButton(
               icon: Icons.remove_rounded,
-              onTap: score > 0 ? () => onScoreChanged(score - 1) : null,
+              onTap: onMinus,
             ),
-            SizedBox(
-              width: 48,
-              child: Text(
-                '$score',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.timeDisplay.copyWith(color: AppColors.textPrimary, fontSize: 36),
-              ),
-            ),
-            _ScoreButton(
+            const SizedBox(width: AppSpacing.base),
+            _RoundButton(
               icon: Icons.add_rounded,
-              onTap: () => onScoreChanged(score + 1),
+              onTap: onPlus,
             ),
           ],
         ),
@@ -446,9 +400,8 @@ class _TeamScoreColumn extends StatelessWidget {
   }
 }
 
-class _ScoreButton extends StatelessWidget {
-  const _ScoreButton({required this.icon, this.onTap});
-
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({required this.icon, this.onTap});
   final IconData icon;
   final VoidCallback? onTap;
 
@@ -457,7 +410,7 @@ class _ScoreButton extends StatelessWidget {
     final enabled = onTap != null;
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
+        if (enabled) HapticFeedback.lightImpact();
         onTap?.call();
       },
       child: Container(
@@ -465,165 +418,79 @@ class _ScoreButton extends StatelessWidget {
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: enabled ? AppColors.primary : AppColors.surface,
+          color: enabled ? AppColors.surfaceLight : AppColors.surface,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 20, color: enabled ? Colors.white : AppColors.iconInactive),
+        child: Icon(
+          icon,
+          size: 18,
+          color: enabled ? AppColors.textPrimary : AppColors.iconInactive,
+        ),
       ),
     );
   }
 }
 
-// ── Step 2: 골/어시스트 입력 (참가자 자동 로드) ──
+// ══════════════════════════════════════════════
+// Counter — 심플 ±  카운터 (골/도움 공용)
+// ══════════════════════════════════════════════
 
-class _StatsStep extends StatelessWidget {
-  const _StatsStep({
-    super.key,
-    required this.playerStats,
-    required this.onStatsChanged,
-  });
-
-  final Map<int, _StatEntry> playerStats;
-  final VoidCallback onStatsChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: Text(
-            '골과 어시스트를 기록해주세요',
-            style: AppTextStyles.heading.copyWith(color: AppColors.textPrimary),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: Text(
-            '참가자 ${_participants.length}명 · 해당 없으면 그냥 넘어가세요',
-            style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.base),
-        // 헤더
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-          child: Row(
-            children: [
-              const Expanded(child: SizedBox()),
-              SizedBox(
-                width: 80,
-                child: Text('골', textAlign: TextAlign.center, style: AppTextStyles.captionBold.copyWith(color: AppColors.textSecondary)),
-              ),
-              SizedBox(
-                width: 80,
-                child: Text('어시스트', textAlign: TextAlign.center, style: AppTextStyles.captionBold.copyWith(color: AppColors.textSecondary)),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-            itemCount: _participants.length,
-            itemBuilder: (context, i) {
-              final player = _participants[i];
-              final stats = playerStats.putIfAbsent(i, () => _StatEntry());
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    ClipSmoothRect(
-                      radius: AppRadius.smoothSm,
-                      child: Image.asset(player.avatarPath, width: 32, height: 32, fit: BoxFit.cover),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(player.name, style: AppTextStyles.body.copyWith(color: AppColors.textPrimary)),
-                          Text(
-                            '${player.position} · #${player.number}',
-                            style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _MiniCounter(
-                      value: stats.goals,
-                      onChanged: (v) {
-                        stats.goals = v;
-                        onStatsChanged();
-                      },
-                    ),
-                    const SizedBox(width: AppSpacing.base),
-                    _MiniCounter(
-                      value: stats.assists,
-                      onChanged: (v) {
-                        stats.assists = v;
-                        onStatsChanged();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniCounter extends StatelessWidget {
-  const _MiniCounter({
-    required this.value,
-    required this.onChanged,
-  });
-
+class _Counter extends StatelessWidget {
+  const _Counter({required this.value, required this.onChanged});
   final int value;
   final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 32,
+      width: 72,
+      height: 34,
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
         shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothFull),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          GestureDetector(
-            onTap: value > 0
-                ? () {
-                    HapticFeedback.lightImpact();
-                    onChanged(value - 1);
-                  }
-                : null,
-            child: Icon(Icons.remove_rounded, size: 16, color: value > 0 ? AppColors.textSecondary : AppColors.iconInactive),
-          ),
-          SizedBox(
-            width: 28,
-            child: Text(
-              '$value',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.label.copyWith(color: value > 0 ? AppColors.primary : AppColors.textTertiary),
+          Expanded(
+            child: GestureDetector(
+              onTap: value > 0
+                  ? () {
+                      HapticFeedback.lightImpact();
+                      onChanged(value - 1);
+                    }
+                  : null,
+              behavior: HitTestBehavior.opaque,
+              child: Icon(
+                Icons.remove_rounded,
+                size: 14,
+                color: value > 0
+                    ? AppColors.textSecondary
+                    : AppColors.iconInactive,
+              ),
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onChanged(value + 1);
-            },
-            child: const Icon(Icons.add_rounded, size: 16, color: AppColors.textSecondary),
+          Text(
+            '$value',
+            style: AppTextStyles.label.copyWith(
+              color: value > 0
+                  ? AppColors.textPrimary
+                  : AppColors.textTertiary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onChanged(value + 1);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: const Icon(
+                Icons.add_rounded,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -27,9 +28,28 @@ class _HomeTabState extends State<HomeTab> {
   // 개발용: 프로필 완성 여부 (false = 첫 가입자 상태)
   bool _hasProfile = false;
 
-  // 알림 카드 dismiss 상태 (사용자가 X 버튼으로 닫음)
-  bool _isProfileCardDismissed = false;
+  // 알림 카드 dismiss 상태
   bool _isResultCardDismissed = false;
+
+  // 결과 입력 카드 지연 등장
+  bool _showResultCard = false;
+
+  void _showTeamSwitcher(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _TeamSwitcherSheet(),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // 400ms 후 슬라이드인 — "이벤트성 카드"라는 인식 부여
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) setState(() => _showResultCard = true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +63,22 @@ class _HomeTabState extends State<HomeTab> {
             children: [
               NextMatchCard(hasNextMatch: _hasNextMatch),
               const SizedBox(height: AppSpacing.base),
-              if (!_hasProfile && !_isProfileCardDismissed) ...[
-                _ProfileSetupCard(
-                  onDismiss: () =>
-                      setState(() => _isProfileCardDismissed = true),
-                ),
-                const SizedBox(height: AppSpacing.base),
-              ],
               if (_hasNextMatch && !_isResultCardDismissed)
-                _MatchResultPromptCard(
-                  onDismiss: () =>
-                      setState(() => _isResultCardDismissed = true),
+                AnimatedSlide(
+                  offset: _showResultCard
+                      ? Offset.zero
+                      : const Offset(0, 0.3),
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedOpacity(
+                    opacity: _showResultCard ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCubic,
+                    child: _MatchResultPromptCard(
+                      onDismiss: () =>
+                          setState(() => _isResultCardDismissed = true),
+                    ),
+                  ),
                 ),
               const SizedBox(height: AppSpacing.xxl),
               TeamRecentResultsSection(hasResults: _hasNextMatch),
@@ -86,16 +111,30 @@ class _HomeTabState extends State<HomeTab> {
                 ),
                 child: Row(
                   children: [
-                    Image.asset(
-                      'assets/images/logo_calo.png',
-                      width: 32,
-                      height: 32,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'FC칼로',
-                      style: AppTextStyles.pageTitle.copyWith(
-                        color: AppColors.textPrimary,
+                    GestureDetector(
+                      onTap: () => _showTeamSwitcher(context),
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/images/logo_calo.png',
+                            width: 32,
+                            height: 32,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'FC칼로',
+                            style: AppTextStyles.pageTitle.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 20,
+                            color: AppColors.textTertiary,
+                          ),
+                        ],
                       ),
                     ),
                     const Spacer(),
@@ -125,22 +164,43 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     GestureDetector(
-                      onTap: () {
-                        // TODO: 프로필 화면으로 이동
-                      },
+                      onTap: () => context.push('/profile'),
                       behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          size: 20,
-                          color: AppColors.textTertiary,
-                        ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              size: 20,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                          // 프로필 미완성 시 빨간 점
+                          if (!_hasProfile)
+                            Positioned(
+                              top: -2,
+                              right: -2,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: AppColors.error,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -154,33 +214,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 }
 
-// ── 알림 카드 (프로필/결과) 공통 스타일 ──
-// 일시성을 시각적으로 표현:
-// 1) surfaceLight 회색 배경 — 영구 콘텐츠와 구분
-// 2) 작은 패딩/폰트 — 보조 정보 톤
-// 3) 우측 X 버튼 — 사용자가 닫을 수 있음 = 영구 아님
-//    (가장 강력한 일시성 신호)
-// 카드 전체 = 액션, X = dismiss로 hit area 분리.
-
-class _ProfileSetupCard extends StatelessWidget {
-  const _ProfileSetupCard({required this.onDismiss});
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: AppSpacing.paddingPage,
-      child: _DismissibleNoticeCard(
-        title: '프로필을 완성해주세요',
-        subtitle: '팀원들이 나를 알아볼 수 있어요',
-        onTap: () {
-          // TODO: 프로필 편집 화면으로 이동
-        },
-        onDismiss: onDismiss,
-      ),
-    );
-  }
-}
+// ── 이벤트성 알림 카드 ──
 
 class _MatchResultPromptCard extends StatelessWidget {
   const _MatchResultPromptCard({required this.onDismiss});
@@ -205,13 +239,11 @@ class _MatchResultPromptCard extends StatelessWidget {
 class _DismissibleNoticeCard extends StatelessWidget {
   const _DismissibleNoticeCard({
     required this.title,
-    this.subtitle,
     required this.onTap,
     required this.onDismiss,
   });
 
   final String title;
-  final String? subtitle;
   final VoidCallback onTap;
   final VoidCallback onDismiss;
 
@@ -242,15 +274,6 @@ class _DismissibleNoticeCard extends StatelessWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 1),
-                    Text(
-                      subtitle!,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -274,3 +297,150 @@ class _DismissibleNoticeCard extends StatelessWidget {
   }
 }
 
+// ══════════════════════════════════════════════
+// Team Switcher Sheet — 소속팀 변경
+// ══════════════════════════════════════════════
+
+class _TeamSwitcherSheet extends StatelessWidget {
+  const _TeamSwitcherSheet();
+
+  static const _teams = <({String name, String logo, bool isCurrent})>[
+    (name: 'FC칼로', logo: 'assets/images/logo_calo.png', isCurrent: true),
+    (name: 'FC쏘아', logo: 'assets/images/logo_ssoa.png', isCurrent: false),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const ShapeDecoration(
+        color: Colors.white,
+        shape: SmoothRectangleBorder(
+          borderRadius: SmoothBorderRadius.only(
+            topLeft: SmoothRadius(
+              cornerRadius: AppRadius.xl,
+              cornerSmoothing: 1.0,
+            ),
+            topRight: SmoothRadius(
+              cornerRadius: AppRadius.xl,
+              cornerSmoothing: 1.0,
+            ),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.iconInactive,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.base),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Text(
+                '소속팀',
+                style: AppTextStyles.heading.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            for (final team in _teams)
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.of(context).pop();
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      ClipSmoothRect(
+                        radius: AppRadius.smoothXs,
+                        child: Image.asset(
+                          team.logo,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          team.name,
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: team.isCurrent
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (team.isCurrent)
+                        const Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: AppSpacing.base),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: ShapeDecoration(
+                    color: AppColors.surfaceLight,
+                    shape: SmoothRectangleBorder(
+                      borderRadius: AppRadius.smoothMd,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.add_rounded,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        '새 팀 참가하기',
+                        style: AppTextStyles.captionMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.base),
+          ],
+        ),
+      ),
+    );
+  }
+}

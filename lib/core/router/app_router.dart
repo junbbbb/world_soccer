@@ -9,6 +9,7 @@ import '../../features/match/presentation/match_create_screen.dart';
 import '../../features/match/presentation/match_result_input_screen.dart';
 import '../../features/match/presentation/match_screen.dart';
 import '../../features/match/presentation/share/match_share_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -40,6 +41,10 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/match/share',
         builder: (context, state) => const MatchShareScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/chat',

@@ -62,7 +62,7 @@ final class LineupControllerProvider
   }
 }
 
-String _$lineupControllerHash() => r'34c4c4e6ccf0cff49c118491366f9a0b3f5c6d84';
+String _$lineupControllerHash() => r'f38ec319c539af5bc95fd2b5083d9d2e228e1256';
 
 /// 라인업 빌더의 상태/액션을 모두 보유하는 컨트롤러.
 ///

@@ -10,11 +10,11 @@ class LineupColors {
   LineupColors._();
 
   // ── 피치 ──
-  /// 피치 배경. 흰 본문에서 살짝 회색 톤으로 분리.
-  static const pitchBackground = AppColors.surfaceLight;
+  /// 피치 배경. 딥 그린.
+  static const pitchBackground = Color(0xFF4F7E67);
 
-  /// 피치 라인. 매우 옅게.
-  static const pitchLine = Color(0x14333D4B); // textPrimary alpha ~8%
+  /// 피치 라인. 초록 배경 위 옅은 흰색.
+  static const pitchLine = Color(0x33FFFFFF); // white alpha 20%
 
   // ── 공정성 (출전 쿼터 수 기반) ──
   /// 적정(2~3쿼터). 유일한 채도 있는 색.
