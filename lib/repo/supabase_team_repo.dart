@@ -45,7 +45,11 @@ class SupabaseTeamRepo implements TeamRepo {
       return TeamMember(
         teamId: row['team_id'] as String,
         playerId: row['player_id'] as String,
-        role: row['role'] == 'admin' ? TeamRole.admin : TeamRole.member,
+        role: switch (row['role'] as String) {
+          'admin' => TeamRole.admin,
+          'mercenary' => TeamRole.mercenary,
+          _ => TeamRole.member,
+        },
         joinedAt: DateTime.parse(row['joined_at'] as String),
         playerName: player?['name'] as String?,
         playerAvatarUrl: player?['avatar_url'] as String?,

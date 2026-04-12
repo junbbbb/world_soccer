@@ -27,6 +27,7 @@
 
 ## 설계 결정
 
+- 권한 3단계: admin(운영진), member(일반유저), mercenary(용병 — 가입 후부터 기록)
 - 쿼터 인덱싱: DB는 1-indexed (1~4), UI에서 변환
 - 라인업 저장: 정규화 (quarter_lineups + slot_assignments) — FK 무결성 + 집계 쿼리 용이
 - Auth: players.id = auth.uid 구조, signup trigger로 자동 생성

@@ -45,10 +45,11 @@ enum MatchStatus {
   completed,
 }
 
-/// 팀 내 역할.
+/// 팀 내 역할 (3단계).
 enum TeamRole {
-  admin,
-  member,
+  admin,     // 운영진: 경기 생성, 라인업 편성, 결과 입력, 멤버 관리
+  member,    // 일반유저: 참가 신청, 조회, 프로필 관리
+  mercenary, // 용병: 조회만, 가입 후 기록 쌓기 시작
 }
 
 /// 주발.
