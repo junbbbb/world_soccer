@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/chat/presentation/chat_room_screen.dart';
 import '../../features/chat/presentation/chat_tab.dart';
 import '../../features/chat/presentation/group_info_screen.dart';
@@ -17,7 +19,19 @@ part 'app_router.g.dart';
 GoRouter goRouter(Ref ref) {
   return GoRouter(
     initialLocation: '/',
+    redirect: (context, state) {
+      final loggedIn = Supabase.instance.client.auth.currentUser != null;
+      final isAuthRoute = state.matchedLocation == '/auth';
+
+      if (!loggedIn && !isAuthRoute) return '/auth';
+      if (loggedIn && isAuthRoute) return '/';
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/auth',
+        builder: (context, state) => const AuthScreen(),
+      ),
       GoRoute(
         path: '/',
         builder: (context, state) => const HomeScreen(),
