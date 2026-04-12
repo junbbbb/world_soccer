@@ -79,8 +79,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   Future<void> _signInWithProvider(String provider) async {
-    // TODO: Supabase 대시보드에서 provider 활성화 후 구현
-    setState(() => _error = '$provider 로그인은 준비 중입니다');
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final authRepo = ref.read(authRepoProvider);
+      await authRepo.signInWithOAuth(provider);
+      // OAuth는 브라우저로 리다이렉트되므로 여기서 추가 처리 불필요
+      // deep link 콜백이 앱으로 돌아오면 GoRouter redirect가 처리
+    } catch (e) {
+      setState(() {
+        _error = '소셜 로그인에 실패했습니다';
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -195,17 +209,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           icon: Icons.chat_bubble_rounded,
           backgroundColor: const Color(0xFFFEE500),
           textColor: const Color(0xFF191919),
-          onTap: () => _signInWithProvider('카카오'),
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        // 네이버
-        _SocialButton(
-          label: '네이버로 시작하기',
-          icon: Icons.north_east_rounded,
-          backgroundColor: const Color(0xFF03C75A),
-          textColor: Colors.white,
-          onTap: () => _signInWithProvider('네이버'),
+          onTap: () => _signInWithProvider('kakao'),
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -215,7 +219,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           icon: Icons.g_mobiledata_rounded,
           backgroundColor: Colors.white,
           textColor: AppColors.textPrimary,
-          onTap: () => _signInWithProvider('Google'),
+          onTap: () => _signInWithProvider('google'),
         ),
       ],
     );

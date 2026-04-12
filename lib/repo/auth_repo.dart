@@ -21,6 +21,9 @@ abstract class AuthRepo {
   /// 로그아웃.
   Future<void> signOut();
 
+  /// 소셜 로그인 (Google, Kakao 등).
+  Future<bool> signInWithOAuth(String provider);
+
   /// 인증 상태 변화 스트림.
   Stream<User?> onAuthStateChange();
 }

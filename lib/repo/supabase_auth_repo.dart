@@ -39,6 +39,20 @@ class SupabaseAuthRepo implements AuthRepo {
   Future<void> signOut() => _client.auth.signOut();
 
   @override
+  Future<bool> signInWithOAuth(String provider) {
+    final oauthProvider = switch (provider) {
+      'google' => OAuthProvider.google,
+      'kakao' => OAuthProvider.kakao,
+      _ => throw ArgumentError('Unsupported provider: $provider'),
+    };
+
+    return _client.auth.signInWithOAuth(
+      oauthProvider,
+      redirectTo: 'io.supabase.worldsoccer://login-callback',
+    );
+  }
+
+  @override
   Stream<User?> onAuthStateChange() {
     return _client.auth.onAuthStateChange.map((event) => event.session?.user);
   }
