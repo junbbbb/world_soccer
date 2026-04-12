@@ -6,17 +6,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-
-/// 참가 신청 결과.
-class JoinMatchResult {
-  final Set<String> preferredPositions; // {'CM', 'DM', ...}
-  final Set<int> availableQuarters; // {0, 1, 2, 3}
-
-  const JoinMatchResult({
-    required this.preferredPositions,
-    required this.availableQuarters,
-  });
-}
+import '../../../../types/enums.dart';
+import '../../../../types/match.dart';
 
 /// 참가하기 바텀시트.
 Future<JoinMatchResult?> showJoinMatchSheet(BuildContext context) {
@@ -28,11 +19,7 @@ Future<JoinMatchResult?> showJoinMatchSheet(BuildContext context) {
   );
 }
 
-const _allPositions = [
-  'GK', 'LB', 'CB', 'RB',
-  'DM', 'CM', 'AM',
-  'LW', 'ST', 'RW',
-];
+// allPositionLabels, Position → config/types 에서 import
 
 class _JoinMatchSheet extends StatefulWidget {
   const _JoinMatchSheet();
@@ -42,10 +29,10 @@ class _JoinMatchSheet extends StatefulWidget {
 }
 
 class _JoinMatchSheetState extends State<_JoinMatchSheet> {
-  final Set<String> _positions = {'CM'};
+  final Set<Position> _positions = {Position.cm};
   final Set<int> _quarters = {0, 1, 2, 3};
 
-  void _togglePosition(String p) {
+  void _togglePosition(Position p) {
     HapticFeedback.selectionClick();
     setState(() {
       if (_positions.contains(p)) {
@@ -72,7 +59,7 @@ class _JoinMatchSheetState extends State<_JoinMatchSheet> {
     HapticFeedback.mediumImpact();
     Navigator.of(context).pop(
       JoinMatchResult(
-        preferredPositions: Set<String>.from(_positions),
+        preferredPositions: Set<Position>.from(_positions),
         availableQuarters: Set<int>.from(_quarters),
       ),
     );
@@ -138,9 +125,9 @@ class _JoinMatchSheetState extends State<_JoinMatchSheet> {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
-                for (final p in _allPositions)
+                for (final p in Position.values)
                   _OutlinePill(
-                    label: p,
+                    label: p.label,
                     isSelected: _positions.contains(p),
                     onTap: () => _togglePosition(p),
                   ),

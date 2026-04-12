@@ -9,6 +9,8 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/section_title.dart';
+import '../../../types/profile.dart';
+import '../../../types/team.dart';
 
 // ── 더미 데이터 ──
 
@@ -22,7 +24,7 @@ const _teamInfo = _TeamInfo(
   seasonBest: '5연승',
 );
 
-const _teamStats = _TeamStatsData(
+const _teamStats = TeamStats(
   totalMatches: 12,
   wins: 7,
   draws: 2,
@@ -33,19 +35,19 @@ const _teamStats = _TeamStatsData(
 );
 
 const _topScorers = [
-  _PlayerRank(name: '이병준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 5),
-  _PlayerRank(name: '김태호', position: 'FW', avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif', value: 4),
-  _PlayerRank(name: '박정우', position: 'FW', avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif', value: 3),
-  _PlayerRank(name: '최민수', position: 'MF', avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif', value: 3),
-  _PlayerRank(name: '윤서준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 2),
+  PlayerRank(name: '이병준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 5),
+  PlayerRank(name: '김태호', position: 'FW', avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif', value: 4),
+  PlayerRank(name: '박정우', position: 'FW', avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif', value: 3),
+  PlayerRank(name: '최민수', position: 'MF', avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif', value: 3),
+  PlayerRank(name: '윤서준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 2),
 ];
 
 const _topAssisters = [
-  _PlayerRank(name: '윤서준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 5),
-  _PlayerRank(name: '이병준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 3),
-  _PlayerRank(name: '김태호', position: 'FW', avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif', value: 2),
-  _PlayerRank(name: '박정우', position: 'FW', avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif', value: 2),
-  _PlayerRank(name: '최민수', position: 'MF', avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif', value: 1),
+  PlayerRank(name: '윤서준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 5),
+  PlayerRank(name: '이병준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 3),
+  PlayerRank(name: '김태호', position: 'FW', avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif', value: 2),
+  PlayerRank(name: '박정우', position: 'FW', avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif', value: 2),
+  PlayerRank(name: '최민수', position: 'MF', avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif', value: 1),
 ];
 
 const _dummyMembers = [
@@ -91,43 +93,7 @@ class _TeamInfo {
   });
 }
 
-class _TeamStatsData {
-  final int totalMatches;
-  final int wins;
-  final int draws;
-  final int losses;
-  final int goalsFor;
-  final int goalsAgainst;
-  final int cleanSheets;
-
-  const _TeamStatsData({
-    required this.totalMatches,
-    required this.wins,
-    required this.draws,
-    required this.losses,
-    required this.goalsFor,
-    required this.goalsAgainst,
-    required this.cleanSheets,
-  });
-
-  double get winRate => wins / totalMatches;
-  double get avgGoalsFor => goalsFor / totalMatches;
-  double get avgGoalsAgainst => goalsAgainst / totalMatches;
-}
-
-class _PlayerRank {
-  final String name;
-  final String position;
-  final String avatarPath;
-  final int value;
-
-  const _PlayerRank({
-    required this.name,
-    required this.position,
-    required this.avatarPath,
-    required this.value,
-  });
-}
+// TeamStats, PlayerRank → types/ 에서 import
 
 class _Member {
   final String name;
@@ -779,7 +745,7 @@ class _TeamStatsView extends StatelessWidget {
 
 class _RecordOverviewCard extends StatelessWidget {
   const _RecordOverviewCard({required this.stats});
-  final _TeamStatsData stats;
+  final TeamStats stats;
 
   @override
   Widget build(BuildContext context) {
@@ -874,7 +840,7 @@ class _RankingRow extends StatelessWidget {
   });
 
   final int rank;
-  final _PlayerRank player;
+  final PlayerRank player;
   final String unit;
 
   @override
@@ -897,7 +863,7 @@ class _RankingRow extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           ClipSmoothRect(
             radius: AppRadius.smoothSm,
-            child: Image.asset(player.avatarPath,
+            child: Image.asset(player.avatarPath ?? '',
                 width: 36, height: 36, fit: BoxFit.cover),
           ),
           const SizedBox(width: AppSpacing.md),
