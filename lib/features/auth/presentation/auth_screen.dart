@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:figma_squircle/figma_squircle.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +22,8 @@ class AuthScreen extends ConsumerStatefulWidget {
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends ConsumerState<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen>
+    with WidgetsBindingObserver {
   bool _isLogin = true;
   bool _showEmailForm = false;
   bool _loading = false;
@@ -33,11 +35,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _nameController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // OAuth 브라우저에서 돌아왔을 때 spinner가 남아있으면 리셋.
+    // 실제 인증 성공 시에는 라우터가 자동 리다이렉트하므로 이 화면이 사라짐.
+    if (state == AppLifecycleState.resumed && _loading && mounted) {
+      setState(() {
+        _loading = false;
+        _loadingProvider = null;
+      });
+    }
   }
 
   Future<void> _submitEmail() async {
@@ -92,9 +113,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (!mounted) return;
       setState(() {
         _error = 'Google 로그인에 실패했습니다';
-        _loading = false;
-        _loadingProvider = null;
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadingProvider = null;
+        });
+      }
     }
   }
 
@@ -108,10 +134,38 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       final authRepo = ref.read(authRepoProvider);
       await authRepo.signInWithOAuth('kakao');
+      // signInWithOAuth는 브라우저를 띄우고 즉시 반환.
+      // 딥링크 콜백 → onAuthStateChange → GoRouter가 자동 리다이렉트 처리.
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = '카카오 로그인에 실패했습니다';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadingProvider = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _signInAsDev() async {
+    setState(() {
+      _loading = true;
+      _loadingProvider = 'dev';
+      _error = null;
+    });
+
+    try {
+      final authRepo = ref.read(authRepoProvider);
+      await authRepo.signInAnonymously();
+    } catch (e) {
+      debugPrint('개발용 로그인 에러: $e');
+      if (!mounted) return;
+      setState(() {
+        _error = '개발용 로그인에 실패했습니다';
         _loading = false;
         _loadingProvider = null;
       });
@@ -155,6 +209,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   _showEmailForm = true;
                   _error = null;
                 }),
+                onDev: kDebugMode ? _signInAsDev : null,
                 bottomPadding: bottom,
               ),
       ),
@@ -174,6 +229,7 @@ class _LandingView extends StatelessWidget {
     required this.onGoogle,
     required this.onKakao,
     required this.onEmail,
+    required this.onDev,
     required this.bottomPadding,
   });
 
@@ -183,6 +239,7 @@ class _LandingView extends StatelessWidget {
   final VoidCallback onGoogle;
   final VoidCallback onKakao;
   final VoidCallback onEmail;
+  final VoidCallback? onDev;
   final double bottomPadding;
 
   @override
@@ -280,23 +337,63 @@ class _LandingView extends StatelessWidget {
 
                 const SizedBox(height: AppSpacing.xl),
 
-                // ── 이메일 (텍스트 링크 — Progressive disclosure) ──
-                GestureDetector(
-                  onTap: loading ? null : onEmail,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Text(
-                      '이메일로 로그인',
-                      style: AppTextStyles.labelRegular.copyWith(
-                        color: AppColors.textTertiary,
-                        decoration: TextDecoration.underline,
-                        decorationColor: AppColors.iconInactive,
+                // ── 이메일 + 개발용 링크 ──
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: loading ? null : onEmail,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm,
+                          horizontal: AppSpacing.sm,
+                        ),
+                        child: Text(
+                          '이메일로 로그인',
+                          style: AppTextStyles.labelRegular.copyWith(
+                            color: AppColors.textTertiary,
+                            decoration: TextDecoration.underline,
+                            decorationColor: AppColors.iconInactive,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    if (onDev != null) ...[
+                      Container(
+                        width: 1,
+                        height: 12,
+                        color: AppColors.iconInactive,
+                      ),
+                      GestureDetector(
+                        onTap: loading ? null : onDev,
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                            horizontal: AppSpacing.sm,
+                          ),
+                          child: loadingProvider == 'dev'
+                              ? const SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: AppColors.textTertiary,
+                                  ),
+                                )
+                              : Text(
+                                  'DEV 로그인',
+                                  style: AppTextStyles.captionMedium.copyWith(
+                                    color: AppColors.textTertiary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AppColors.iconInactive,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
 
                 const SizedBox(height: AppSpacing.sm),

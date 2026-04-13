@@ -27,6 +27,9 @@ abstract class AuthRepo {
   /// 소셜 로그인 (Kakao 등 — 브라우저 기반).
   Future<bool> signInWithOAuth(String provider);
 
+  /// 개발용 익명 로그인 (프로덕션에서는 숨김).
+  Future<AuthResponse> signInAnonymously();
+
   /// 인증 상태 변화 스트림.
   Stream<User?> onAuthStateChange();
 }

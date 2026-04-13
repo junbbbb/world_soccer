@@ -68,28 +68,23 @@ class SupabaseAuthRepo implements AuthRepo {
   }
 
   @override
-  Future<bool> signInWithOAuth(String provider) async {
-    // TODO: 카카오 로그인은 비즈 앱 심사 후 활성화 예정 (docs/decisions/kakao-login-pending.md)
-    // 임시로 익명 로그인 처리하여 앱 진입 허용.
-    if (provider == 'kakao') {
-      await _client.auth.signInAnonymously();
-      return true;
-    }
+  Future<bool> signInWithOAuth(String provider) {
+    final oauthProvider = switch (provider) {
+      'kakao' => OAuthProvider.kakao,
+      _ => throw ArgumentError('Unsupported provider: $provider'),
+    };
 
-    // 원래 OAuth 플로우 (카카오 비즈 앱 전환 후 복원):
-    // final oauthProvider = switch (provider) {
-    //   'kakao' => OAuthProvider.kakao,
-    //   _ => throw ArgumentError('Unsupported provider: $provider'),
-    // };
-    //
-    // return _client.auth.signInWithOAuth(
-    //   oauthProvider,
-    //   redirectTo: 'io.supabase.worldsoccer://login-callback',
-    //   authScreenLaunchMode: LaunchMode.inAppBrowserView,
-    //   scopes: provider == 'kakao' ? 'profile_nickname profile_image' : null,
-    // );
+    return _client.auth.signInWithOAuth(
+      oauthProvider,
+      redirectTo: 'io.supabase.worldsoccer://login-callback',
+      authScreenLaunchMode: LaunchMode.inAppBrowserView,
+      scopes: provider == 'kakao' ? 'profile_nickname profile_image' : null,
+    );
+  }
 
-    throw ArgumentError('Unsupported provider: $provider');
+  @override
+  Future<AuthResponse> signInAnonymously() {
+    return _client.auth.signInAnonymously();
   }
 
   @override
