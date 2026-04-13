@@ -44,14 +44,29 @@ GoRouter goRouter(Ref ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: authNotifier,
-    redirect: (context, state) {
-      final loggedIn = Supabase.instance.client.auth.currentUser != null;
+    redirect: (context, state) async {
+      final client = Supabase.instance.client;
+      final loggedIn = client.auth.currentUser != null;
       final isAuthRoute = state.matchedLocation == '/auth';
       final isOnboarding = state.matchedLocation == '/onboarding';
 
       if (!loggedIn && !isAuthRoute) return '/auth';
-      if (loggedIn && isAuthRoute) return '/';
       if (!loggedIn && isOnboarding) return '/auth';
+      if (loggedIn && isAuthRoute) {
+        // 로그인 직후: 팀이 있는지 확인
+        try {
+          final userId = client.auth.currentUser!.id;
+          final teams = await client
+              .from('team_members')
+              .select('team_id')
+              .eq('player_id', userId)
+              .limit(1);
+          if (teams.isEmpty) return '/onboarding';
+        } catch (_) {
+          return '/onboarding';
+        }
+        return '/';
+      }
       return null;
     },
     routes: [
@@ -69,7 +84,10 @@ GoRouter goRouter(Ref ref) {
       ),
       GoRoute(
         path: '/match',
-        builder: (context, state) => const MatchDetailScreen(),
+        builder: (context, state) {
+          final matchId = state.extra as String?;
+          return MatchDetailScreen(matchId: matchId);
+        },
       ),
       GoRoute(
         path: '/match/result-input',

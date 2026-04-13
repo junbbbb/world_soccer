@@ -86,16 +86,29 @@ LineupService lineupService(Ref ref) {
 
 // ── Data Providers ──
 
+/// 현재 유저의 팀 목록.
+@riverpod
+Future<List<Team>> myTeams(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return [];
+  final teamRepo = ref.watch(teamRepoProvider);
+  return teamRepo.getMyTeams(user.id);
+}
+
+/// 현재 선택된 팀.
+@riverpod
+Future<Team?> currentTeam(Ref ref) async {
+  final teams = await ref.watch(myTeamsProvider.future);
+  if (teams.isEmpty) return null;
+  return teams.first;
+}
+
 /// 현재 유저의 첫 번째 팀 ID.
 @riverpod
 Future<String?> currentTeamId(Ref ref) async {
-  final client = ref.watch(supabaseClientProvider);
-  final user = client.auth.currentUser;
-  if (user == null) return null;
-  final teamRepo = ref.watch(teamRepoProvider);
-  final teams = await teamRepo.getMyTeams(user.id);
-  if (teams.isEmpty) return null;
-  return teams.first.id;
+  final team = await ref.watch(currentTeamProvider.future);
+  return team?.id;
 }
 
 /// 팀의 전체 경기 목록 (최신순).

@@ -70,6 +70,7 @@ class MockMatchRepo extends _i1.Mock implements _i4.MatchRepo {
     required String? location,
     required String? opponentName,
     String? opponentLogoUrl,
+    int? durationMinutes = 120,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#create, [], {
@@ -78,6 +79,7 @@ class MockMatchRepo extends _i1.Mock implements _i4.MatchRepo {
               #location: location,
               #opponentName: opponentName,
               #opponentLogoUrl: opponentLogoUrl,
+              #durationMinutes: durationMinutes,
             }),
             returnValue: _i5.Future<_i2.Match>.value(
               _FakeMatch_0(
@@ -88,6 +90,7 @@ class MockMatchRepo extends _i1.Mock implements _i4.MatchRepo {
                   #location: location,
                   #opponentName: opponentName,
                   #opponentLogoUrl: opponentLogoUrl,
+                  #durationMinutes: durationMinutes,
                 }),
               ),
             ),
@@ -105,6 +108,42 @@ class MockMatchRepo extends _i1.Mock implements _i4.MatchRepo {
               #matchId: matchId,
               #ourScore: ourScore,
               #opponentScore: opponentScore,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> updateInfo({
+    required String? matchId,
+    DateTime? date,
+    String? location,
+    String? opponentName,
+    int? durationMinutes,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateInfo, [], {
+              #matchId: matchId,
+              #date: date,
+              #location: location,
+              #opponentName: opponentName,
+              #durationMinutes: durationMinutes,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> updateStatus({
+    required String? matchId,
+    required String? status,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateStatus, [], {
+              #matchId: matchId,
+              #status: status,
             }),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),

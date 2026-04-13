@@ -13,6 +13,9 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../runtime/providers.dart';
 import '../../../types/enums.dart';
+import '../../../types/match.dart' show Match;
+import '../../match/presentation/match_result_input_screen.dart';
+import '../../../types/team.dart' show Team;
 import 'widgets/next_match_card.dart';
 import 'widgets/team_posts_section.dart';
 import 'widgets/team_recent_results_section.dart';
@@ -53,20 +56,43 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     });
   }
 
+  static Widget _defaultTeamLogo() {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        Icons.shield_rounded,
+        size: 18,
+        color: AppColors.textTertiary,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
+    // 팀 데이터 (한 번만 watch)
+    final team = ref.watch(currentTeamProvider).when<Team?>(
+          data: (t) => t,
+          loading: () => null,
+          error: (_, __) => null,
+        );
+
     // 실제 데이터: 예정 경기가 있는지 확인
     final asyncMatches = ref.watch(teamMatchesProvider);
-    final realMatchList = asyncMatches.when(
+    final realMatchList = asyncMatches.when<List<Match>>(
       data: (list) => list,
-      loading: () => <dynamic>[],
-      error: (_, __) => <dynamic>[],
+      loading: () => <Match>[],
+      error: (_, __) => <Match>[],
     );
     final hasRealNextMatch = !showDummy &&
-        realMatchList.any((m) => m.status == MatchStatus.upcoming);
+        realMatchList.any((m) => m.isVisibleOnHome);
     final hasNextMatch = showDummy || hasRealNextMatch;
 
     return Stack(
@@ -77,7 +103,41 @@ class _HomeTabState extends ConsumerState<HomeTab> {
             children: [
               NextMatchCard(hasNextMatch: hasNextMatch),
               const SizedBox(height: AppSpacing.base),
-              if (hasNextMatch && !_isResultCardDismissed)
+              // 결과 미입력 경기 알림
+              if (!showDummy) ...[
+                ...() {
+                  final needsResult = realMatchList
+                      .where((m) =>
+                          (m.displayState == MatchDisplayState.ended ||
+                           m.displayState == MatchDisplayState.earlyEnded) &&
+                          !m.hasResult)
+                      .toList()
+                    ..sort((a, b) => b.date.compareTo(a.date));
+                  if (needsResult.isEmpty) return <Widget>[];
+                  final m = needsResult.first;
+                  return [
+                    AnimatedSlide(
+                      offset: _showResultCard
+                          ? Offset.zero
+                          : const Offset(0, 0.3),
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOutCubic,
+                      child: AnimatedOpacity(
+                        opacity: _showResultCard ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeOutCubic,
+                        child: _MatchResultPromptCard(
+                          title: 'vs ${m.opponentName} 결과 입력',
+                          matchId: m.id,
+                          opponentName: m.opponentName,
+                          onDismiss: () =>
+                              setState(() => _isResultCardDismissed = true),
+                        ),
+                      ),
+                    ),
+                  ];
+                }(),
+              ] else if (hasNextMatch && !_isResultCardDismissed) ...[
                 AnimatedSlide(
                   offset: _showResultCard
                       ? Offset.zero
@@ -94,6 +154,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                     ),
                   ),
                 ),
+              ],
               const SizedBox(height: AppSpacing.xxl),
               TeamRecentResultsSection(hasResults: hasNextMatch),
               const SizedBox(height: AppSpacing.xxl),
@@ -130,14 +191,19 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
-                          Image.asset(
-                            'assets/images/logo_calo.png',
-                            width: 32,
-                            height: 32,
-                          ),
+                          if (team?.logoUrl != null && team!.logoUrl!.isNotEmpty)
+                            ClipOval(
+                              child: Image.network(
+                                team.logoUrl!,
+                                width: 32, height: 32, fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => _defaultTeamLogo(),
+                              ),
+                            )
+                          else
+                            _defaultTeamLogo(),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            'FC칼로',
+                            team?.name ?? '...',
                             style: AppTextStyles.pageTitle.copyWith(
                               color: AppColors.textPrimary,
                             ),
@@ -206,16 +272,31 @@ class _HomeTabState extends ConsumerState<HomeTab> {
 // ── 이벤트성 알림 카드 ──
 
 class _MatchResultPromptCard extends StatelessWidget {
-  const _MatchResultPromptCard({required this.onDismiss});
+  const _MatchResultPromptCard({
+    required this.onDismiss,
+    this.title,
+    this.matchId,
+    this.opponentName,
+  });
   final VoidCallback onDismiss;
+  final String? title;
+  final String? matchId;
+  final String? opponentName;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: AppSpacing.paddingPage,
       child: _DismissibleNoticeCard(
-        title: '3/21 vs FC쏘아 결과 입력',
-        onTap: () => context.push('/match/result-input'),
+        title: title ?? '경기 결과 입력',
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => MatchResultInputScreen(
+              matchId: matchId,
+              opponentName: opponentName,
+            ),
+          ),
+        ),
         onDismiss: onDismiss,
       ),
     );

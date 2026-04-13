@@ -419,6 +419,87 @@ final class LineupServiceProvider
 
 String _$lineupServiceHash() => r'd64bb8e32493ee15ade4c0be6e1571725b04670d';
 
+/// 현재 유저의 팀 목록.
+
+@ProviderFor(myTeams)
+final myTeamsProvider = MyTeamsProvider._();
+
+/// 현재 유저의 팀 목록.
+
+final class MyTeamsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Team>>,
+          List<Team>,
+          FutureOr<List<Team>>
+        >
+    with $FutureModifier<List<Team>>, $FutureProvider<List<Team>> {
+  /// 현재 유저의 팀 목록.
+  MyTeamsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'myTeamsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$myTeamsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Team>> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Team>> create(Ref ref) {
+    return myTeams(ref);
+  }
+}
+
+String _$myTeamsHash() => r'5efc42250e6b12e766f85688536774c7ea8f3ce7';
+
+/// 현재 선택된 팀.
+
+@ProviderFor(currentTeam)
+final currentTeamProvider = CurrentTeamProvider._();
+
+/// 현재 선택된 팀.
+
+final class CurrentTeamProvider
+    extends $FunctionalProvider<AsyncValue<Team?>, Team?, FutureOr<Team?>>
+    with $FutureModifier<Team?>, $FutureProvider<Team?> {
+  /// 현재 선택된 팀.
+  CurrentTeamProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentTeamProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentTeamHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Team?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Team?> create(Ref ref) {
+    return currentTeam(ref);
+  }
+}
+
+String _$currentTeamHash() => r'eace4e77110b34b98e391d6b582241369a63fe82';
+
 /// 현재 유저의 첫 번째 팀 ID.
 
 @ProviderFor(currentTeamId)
@@ -455,7 +536,7 @@ final class CurrentTeamIdProvider
   }
 }
 
-String _$currentTeamIdHash() => r'6fc2e8c39898777d1198aa800c200edafa40f21c';
+String _$currentTeamIdHash() => r'a5f329414e8ebf1d1da4ecd22b8158bc0202635e';
 
 /// 팀의 전체 경기 목록 (최신순).
 

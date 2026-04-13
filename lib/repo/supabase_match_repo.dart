@@ -35,6 +35,7 @@ class SupabaseMatchRepo implements MatchRepo {
     required String location,
     required String opponentName,
     String? opponentLogoUrl,
+    int durationMinutes = 120,
   }) async {
     final data = await _client
         .from('matches')
@@ -44,6 +45,7 @@ class SupabaseMatchRepo implements MatchRepo {
           'location': location,
           'opponent_name': opponentName,
           'opponent_logo_url': opponentLogoUrl,
+          'duration_minutes': durationMinutes,
         })
         .select()
         .single();
@@ -60,6 +62,34 @@ class SupabaseMatchRepo implements MatchRepo {
       'our_score': ourScore,
       'opponent_score': opponentScore,
       'status': 'completed',
+    }).eq('id', matchId);
+  }
+
+  @override
+  Future<void> updateInfo({
+    required String matchId,
+    DateTime? date,
+    String? location,
+    String? opponentName,
+    int? durationMinutes,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (date != null) updates['date'] = date.toIso8601String();
+    if (location != null) updates['location'] = location;
+    if (opponentName != null) updates['opponent_name'] = opponentName;
+    if (durationMinutes != null) updates['duration_minutes'] = durationMinutes;
+    if (updates.isNotEmpty) {
+      await _client.from('matches').update(updates).eq('id', matchId);
+    }
+  }
+
+  @override
+  Future<void> updateStatus({
+    required String matchId,
+    required String status,
+  }) async {
+    await _client.from('matches').update({
+      'status': status,
     }).eq('id', matchId);
   }
 
@@ -84,14 +114,18 @@ class SupabaseMatchRepo implements MatchRepo {
       id: row['id'] as String,
       teamId: row['team_id'] as String,
       date: DateTime.parse(row['date'] as String),
+      durationMinutes: (row['duration_minutes'] as int?) ?? 90,
       location: row['location'] as String,
       opponentName: row['opponent_name'] as String,
       opponentLogoUrl: row['opponent_logo_url'] as String?,
       ourScore: row['our_score'] as int?,
       opponentScore: row['opponent_score'] as int?,
-      status: row['status'] == 'completed'
-          ? MatchStatus.completed
-          : MatchStatus.upcoming,
+      status: switch (row['status'] as String?) {
+        'completed' => MatchStatus.completed,
+        'cancelled' => MatchStatus.cancelled,
+        'early_ended' => MatchStatus.earlyEnded,
+        _ => MatchStatus.upcoming,
+      },
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }

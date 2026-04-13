@@ -12,8 +12,9 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../runtime/providers.dart';
-import '../../../types/enums.dart' show MatchResult;
+import '../../../types/enums.dart' show MatchDisplayState, MatchResult;
 import '../../../types/match.dart' show Match;
+import '../../../types/team.dart' show Team;
 
 // ── 더미 데이터 모델 ──
 
@@ -44,9 +45,14 @@ class _MatchData {
     this.theirScore,
     required this.participants,
     required this.maxParticipants,
+    this.isFinished = false,
+    this.displayLabel,
   });
 
-  bool get isPast => result != null;
+  final bool isFinished;
+  final String? displayLabel;
+
+  bool get isPast => result != null || isFinished;
 }
 
 final _dummyMatches = [
@@ -77,7 +83,10 @@ class _MatchTabState extends ConsumerState<MatchTab> {
   late int _monthIndex;
   final Set<String> _joinedIds = {'m11', 'm10', 'm9', 'm8', 'm6', 'm5', 'm3'};
 
-  static const _headerHeight = 64.0;
+  /// 0 = 예정, 1 = 종료
+  int _tabIndex = 0;
+
+  static const _headerHeight = 108.0;
 
   @override
   void initState() {
@@ -132,6 +141,17 @@ class _MatchTabState extends ConsumerState<MatchTab> {
     final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
+    // 팀 데이터 (한 번만 watch)
+    final team = showDummy
+        ? null
+        : ref.watch(currentTeamProvider).when<Team?>(
+              data: (t) => t,
+              loading: () => null,
+              error: (_, __) => null,
+            );
+    final ourName = team?.name ?? 'FC칼로';
+    final ourLogo = team?.logoUrl;
+
     // 실제 DB 데이터
     final asyncMatches = ref.watch(teamMatchesProvider);
     final realMatchList = asyncMatches.when<List<Match>>(
@@ -141,7 +161,23 @@ class _MatchTabState extends ConsumerState<MatchTab> {
     );
     final realMatches = showDummy
         ? <_MatchData>[]
-        : realMatchList.map((m) => _MatchData(
+        : realMatchList.map((m) {
+            final ds = m.displayState;
+            String? resultLabel;
+            if (m.hasResult) {
+              resultLabel = m.result == MatchResult.win
+                  ? 'W'
+                  : m.result == MatchResult.loss
+                      ? 'L'
+                      : 'D';
+            }
+            String? label;
+            if (ds == MatchDisplayState.cancelled) label = '취소';
+            if (ds == MatchDisplayState.earlyEnded) label = '조기종료';
+            if (ds == MatchDisplayState.ended) label = '종료';
+            if (ds == MatchDisplayState.inProgress) label = '진행 중';
+
+            return _MatchData(
               id: m.id,
               date: m.date,
               dayOfWeek: m.dayOfWeek,
@@ -149,21 +185,29 @@ class _MatchTabState extends ConsumerState<MatchTab> {
               location: m.location,
               opponentName: m.opponentName,
               opponentLogo: m.opponentLogoUrl ?? 'assets/images/logo_ssoa.png',
-              result: m.isPast
-                  ? (m.result == MatchResult.win
-                      ? 'W'
-                      : m.result == MatchResult.loss
-                          ? 'L'
-                          : 'D')
-                  : null,
+              result: resultLabel,
               ourScore: m.ourScore,
               theirScore: m.opponentScore,
               participants: 0,
               maxParticipants: 16,
-            )).toList();
+              isFinished: m.isFinished,
+              displayLabel: label,
+            );
+          }).toList();
 
-    final matches = showDummy ? _monthMatches : realMatches
+    // 실제 데이터: 예정/종료 분리, 예정은 날짜 오름차순, 종료는 최신순
+    final upcomingReal = realMatches.where((m) => !m.isPast).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final completedReal = realMatches.where((m) => m.isPast).toList()
       ..sort((a, b) => b.date.compareTo(a.date));
+
+    // 더미: 기존 월별 필터
+    final dummyMatches = showDummy ? _monthMatches : <_MatchData>[];
+
+    // 실제 데이터 모드에서 현재 탭에 따라 표시할 리스트
+    final displayMatches = showDummy
+        ? dummyMatches
+        : (_tabIndex == 0 ? upcomingReal : completedReal);
 
     return ColoredBox(
       color: AppColors.surface,
@@ -175,9 +219,11 @@ class _MatchTabState extends ConsumerState<MatchTab> {
               top: topPadding + _headerHeight + AppSpacing.sm,
               bottom: AppSpacing.xxxxl,
             ),
-            itemCount: matches.length + 1,
+            itemCount: showDummy
+                ? displayMatches.length + 1
+                : (displayMatches.isEmpty ? 1 : displayMatches.length),
             itemBuilder: (context, index) {
-              if (index == 0) {
+              if (showDummy && index == 0) {
                 return _MonthHeader(
                   month: _selectedMonth,
                   canPrev: _monthIndex < _months.length - 1,
@@ -186,7 +232,25 @@ class _MatchTabState extends ConsumerState<MatchTab> {
                   onNext: _nextMonth,
                 );
               }
-              final match = matches[index - 1];
+
+              final matchIndex = showDummy ? index - 1 : index;
+
+              // 빈 상태
+              if (displayMatches.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 60),
+                  child: Center(
+                    child: Text(
+                      _tabIndex == 0 ? '예정된 경기가 없습니다' : '종료된 경기가 없습니다',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              final match = displayMatches[matchIndex];
               return Padding(
                 padding: const EdgeInsets.only(
                   left: AppSpacing.lg,
@@ -196,9 +260,12 @@ class _MatchTabState extends ConsumerState<MatchTab> {
                 child: _MatchCard(
                   match: match,
                   isJoined: _joinedIds.contains(match.id),
-                  onTap: () => context.push('/match'),
+                  onTap: () => context.push('/match', extra: match.id),
                   onToggleJoin:
                       match.isPast ? null : () => _toggleJoin(match.id),
+                  ourName: ourName,
+                  ourLogo: ourLogo,
+                  showDummy: showDummy,
                 ),
               );
             },
@@ -214,30 +281,52 @@ class _MatchTabState extends ConsumerState<MatchTab> {
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: Container(
                   color: AppColors.surface.withValues(alpha: 0.85),
-                  padding: EdgeInsets.only(
-                    top: topPadding + AppSpacing.sm,
-                    left: AppSpacing.lg,
-                    right: AppSpacing.lg,
-                    bottom: AppSpacing.base,
-                  ),
-                  child: Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('경기',
-                          style: AppTextStyles.pageTitle
-                              .copyWith(color: AppColors.textPrimary)),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => context.push('/match/create'),
-                        behavior: HitTestBehavior.opaque,
-                        child: const Padding(
-                          padding: EdgeInsets.all(AppSpacing.xs),
-                          child: Icon(
-                            Icons.add_rounded,
-                            size: 28,
-                            color: AppColors.textPrimary,
-                          ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: topPadding + AppSpacing.sm,
+                          left: AppSpacing.lg,
+                          right: AppSpacing.lg,
+                          bottom: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            Text('경기',
+                                style: AppTextStyles.pageTitle
+                                    .copyWith(color: AppColors.textPrimary)),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () => context.push('/match/create'),
+                              behavior: HitTestBehavior.opaque,
+                              child: const Padding(
+                                padding: EdgeInsets.all(AppSpacing.xs),
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  size: 28,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (!showDummy)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                          ),
+                          child: _SegmentControl(
+                            selectedIndex: _tabIndex,
+                            labels: const ['예정', '종료'],
+                            onChanged: (i) {
+                              HapticFeedback.selectionClick();
+                              setState(() => _tabIndex = i);
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: AppSpacing.sm),
                     ],
                   ),
                 ),
@@ -318,12 +407,18 @@ class _MatchCard extends StatelessWidget {
     required this.isJoined,
     required this.onTap,
     this.onToggleJoin,
+    this.ourName = 'FC칼로',
+    this.ourLogo,
+    this.showDummy = true,
   });
 
   final _MatchData match;
   final bool isJoined;
   final VoidCallback onTap;
   final VoidCallback? onToggleJoin;
+  final String ourName;
+  final String? ourLogo;
+  final bool showDummy;
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +508,7 @@ class _MatchCard extends StatelessWidget {
                                 borderRadius: AppRadius.smoothXs),
                           ),
                           child: Text(
-                            match.isPast ? '완료' : '예정',
+                            match.displayLabel ?? (match.isPast ? '완료' : '예정'),
                             style: AppTextStyles.caption.copyWith(
                               color: match.isPast
                                   ? AppColors.textTertiary
@@ -437,8 +532,9 @@ class _MatchCard extends StatelessWidget {
 
                     // 3행: 우리팀
                     _TeamRow(
-                      logo: 'assets/images/logo_calo.png',
-                      name: 'FC칼로',
+                      logo: showDummy ? 'assets/images/logo_calo.png' : null,
+                      logoUrl: showDummy ? null : ourLogo,
+                      name: ourName,
                       score: match.isPast ? match.ourScore : null,
                       isWinner: match.result == 'W',
                       isPast: match.isPast,
@@ -447,11 +543,12 @@ class _MatchCard extends StatelessWidget {
 
                     // 4행: 상대팀
                     _TeamRow(
-                      logo: match.opponentLogo,
+                      logo: showDummy ? match.opponentLogo : null,
                       name: match.opponentName,
                       score: match.isPast ? match.theirScore : null,
                       isWinner: match.result == 'L',
                       isPast: match.isPast,
+                      isOpponent: true,
                     ),
                   ],
                 ),
@@ -468,28 +565,68 @@ class _MatchCard extends StatelessWidget {
 
 class _TeamRow extends StatelessWidget {
   const _TeamRow({
-    required this.logo,
+    this.logo,
+    this.logoUrl,
     required this.name,
     this.score,
     required this.isWinner,
     required this.isPast,
+    this.isOpponent = false,
   });
 
-  final String logo;
+  final String? logo;
+  final String? logoUrl;
   final String name;
   final int? score;
   final bool isWinner;
   final bool isPast;
+  final bool isOpponent;
+
+  Widget _buildLogo() {
+    if (logo != null) {
+      return ClipSmoothRect(
+        radius: AppRadius.smoothXs,
+        child: Image.asset(logo!, width: 22, height: 22, fit: BoxFit.cover),
+      );
+    }
+    if (logoUrl != null && logoUrl!.isNotEmpty) {
+      return ClipSmoothRect(
+        radius: AppRadius.smoothXs,
+        child: Image.network(
+          logoUrl!,
+          width: 22,
+          height: 22,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _defaultLogo(),
+        ),
+      );
+    }
+    return _defaultLogo();
+  }
+
+  Widget _defaultLogo() {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: ShapeDecoration(
+        color: isOpponent
+            ? const Color(0xFFFFECEC)
+            : AppColors.surface,
+        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothXs),
+      ),
+      child: Icon(
+        isOpponent ? Icons.sports_soccer : Icons.shield_rounded,
+        size: 14,
+        color: AppColors.textTertiary,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ClipSmoothRect(
-          radius: AppRadius.smoothXs,
-          child: Image.asset(logo,
-              width: 22, height: 22, fit: BoxFit.cover),
-        ),
+        _buildLogo(),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
@@ -512,6 +649,61 @@ class _TeamRow extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+// ── 세그먼트 컨트롤 (예정/종료) ──
+
+class _SegmentControl extends StatelessWidget {
+  const _SegmentControl({
+    required this.selectedIndex,
+    required this.labels,
+    required this.onChanged,
+  });
+
+  final int selectedIndex;
+  final List<String> labels;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.all(3),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: SmoothRectangleBorder(
+          borderRadius: AppRadius.smoothSm,
+        ),
+      ),
+      child: Row(
+        children: List.generate(labels.length, (i) {
+          final selected = i == selectedIndex;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(i),
+              child: Container(
+                alignment: Alignment.center,
+                decoration: selected
+                    ? ShapeDecoration(
+                        color: AppColors.textPrimary,
+                        shape: SmoothRectangleBorder(
+                          borderRadius: AppRadius.smoothXs,
+                        ),
+                      )
+                    : null,
+                child: Text(
+                  labels[i],
+                  style: AppTextStyles.captionBold.copyWith(
+                    color: selected ? Colors.white : AppColors.textTertiary,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 }

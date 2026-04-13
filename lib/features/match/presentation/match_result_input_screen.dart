@@ -9,6 +9,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/team.dart' show Team;
 
 // ══════════════════════════════════════════════
 // 더미 데이터
@@ -49,7 +51,11 @@ const _participants = [
 // ══════════════════════════════════════════════
 
 class MatchResultInputScreen extends ConsumerStatefulWidget {
-  const MatchResultInputScreen({super.key});
+  const MatchResultInputScreen({super.key, this.matchId, this.opponentName});
+
+  /// 기존 경기에 결과를 입력할 때 사용. null이면 새 경기 생성+결과 입력.
+  final String? matchId;
+  final String? opponentName;
 
   @override
   ConsumerState<MatchResultInputScreen> createState() => _MatchResultInputScreenState();
@@ -61,22 +67,89 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
   final Map<int, int> _goals = {};
   final Map<int, int> _assists = {};
 
-  void _save() {
+  late String _opponentName = widget.opponentName ?? '';
+
+  Future<void> _save() async {
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('경기 결과가 저장되었습니다'),
-        behavior: SnackBarBehavior.floating,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
-      ),
-    );
-    Navigator.of(context).pop();
+
+    final showDummy = ref.read(showDummyDataProvider);
+    if (showDummy) {
+      // 더미 모드: 기존처럼 스낵바만
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('경기 결과가 저장되었습니다'),
+          behavior: SnackBarBehavior.floating,
+          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        ),
+      );
+      Navigator.of(context).pop();
+      return;
+    }
+
+    try {
+      final matchRepo = ref.read(matchRepoProvider);
+
+      if (widget.matchId != null) {
+        // 기존 경기에 결과 업데이트
+        await matchRepo.updateResult(
+          matchId: widget.matchId!,
+          ourScore: _ourScore,
+          opponentScore: _theirScore,
+        );
+      } else {
+        // 새 경기 생성 + 결과 입력 (빠른 기록용)
+        final teamId = await ref.read(currentTeamIdProvider.future);
+        if (teamId == null || !mounted) return;
+        final opponent = _opponentName.trim().isEmpty ? '상대팀' : _opponentName.trim();
+        final match = await matchRepo.create(
+          teamId: teamId,
+          date: DateTime.now(),
+          location: '',
+          opponentName: opponent,
+        );
+        await matchRepo.updateResult(
+          matchId: match.id,
+          ourScore: _ourScore,
+          opponentScore: _theirScore,
+        );
+      }
+
+      ref.invalidate(teamMatchesProvider);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('경기 결과가 저장되었습니다'),
+          behavior: SnackBarBehavior.floating,
+          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('저장 실패: $e'),
+          behavior: SnackBarBehavior.floating,
+          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final showDummy = ref.watch(showDummyDataProvider);
     final players = showDummy ? _participants : <_Player>[];
+    final team = showDummy
+        ? null
+        : ref.watch(currentTeamProvider).when<Team?>(
+              data: (t) => t,
+              loading: () => null,
+              error: (_, __) => null,
+            );
+    final ourName = team?.name ?? 'FC칼로';
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -132,8 +205,8 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
                     // 우리팀
                     Expanded(
                       child: _TeamScore(
-                        logo: 'assets/images/logo_calo.png',
-                        name: 'FC칼로',
+                        logo: showDummy ? 'assets/images/logo_calo.png' : null,
+                        name: ourName,
                         score: _ourScore,
                         onMinus: _ourScore > 0
                             ? () => setState(() => _ourScore--)
@@ -157,15 +230,26 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
                     ),
                     // 상대팀
                     Expanded(
-                      child: _TeamScore(
-                        logo: 'assets/images/logo_ssoa.png',
-                        name: 'FC쏘아',
-                        score: _theirScore,
-                        onMinus: _theirScore > 0
-                            ? () => setState(() => _theirScore--)
-                            : null,
-                        onPlus: () => setState(() => _theirScore++),
-                      ),
+                      child: showDummy
+                          ? _TeamScore(
+                              logo: 'assets/images/logo_ssoa.png',
+                              name: 'FC쏘아',
+                              score: _theirScore,
+                              onMinus: _theirScore > 0
+                                  ? () => setState(() => _theirScore--)
+                                  : null,
+                              onPlus: () => setState(() => _theirScore++),
+                            )
+                          : _TeamScoreWithInput(
+                              name: _opponentName,
+                              score: _theirScore,
+                              onNameChanged: (v) =>
+                                  setState(() => _opponentName = v),
+                              onMinus: _theirScore > 0
+                                  ? () => setState(() => _theirScore--)
+                                  : null,
+                              onPlus: () => setState(() => _theirScore++),
+                            ),
                     ),
                   ],
                 ),
@@ -345,14 +429,14 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
 
 class _TeamScore extends StatelessWidget {
   const _TeamScore({
-    required this.logo,
+    this.logo,
     required this.name,
     required this.score,
     required this.onMinus,
     required this.onPlus,
   });
 
-  final String logo;
+  final String? logo;
   final String name;
   final int score;
   final VoidCallback? onMinus;
@@ -362,10 +446,21 @@ class _TeamScore extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ClipSmoothRect(
-          radius: AppRadius.smoothXs,
-          child: Image.asset(logo, width: 36, height: 36, fit: BoxFit.cover),
-        ),
+        if (logo != null)
+          ClipSmoothRect(
+            radius: AppRadius.smoothXs,
+            child: Image.asset(logo!, width: 36, height: 36, fit: BoxFit.cover),
+          )
+        else
+          Container(
+            width: 36,
+            height: 36,
+            decoration: ShapeDecoration(
+              color: AppColors.surface,
+              shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothXs),
+            ),
+            child: const Icon(Icons.shield_rounded, size: 20, color: AppColors.textTertiary),
+          ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           name,
@@ -498,6 +593,88 @@ class _Counter extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 상대팀 이름 입력 가능한 스코어 위젯 (실제 데이터 모드용).
+class _TeamScoreWithInput extends StatelessWidget {
+  const _TeamScoreWithInput({
+    required this.name,
+    required this.score,
+    required this.onNameChanged,
+    required this.onMinus,
+    required this.onPlus,
+  });
+
+  final String name;
+  final int score;
+  final ValueChanged<String> onNameChanged;
+  final VoidCallback? onMinus;
+  final VoidCallback onPlus;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: ShapeDecoration(
+            color: const Color(0xFFFFECEC),
+            shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothXs),
+          ),
+          child: const Icon(Icons.sports_soccer, size: 20, color: AppColors.textTertiary),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(
+          width: 80,
+          child: TextField(
+            textAlign: TextAlign.center,
+            onChanged: onNameChanged,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+            decoration: InputDecoration(
+              hintText: '상대팀',
+              hintStyle: AppTextStyles.caption.copyWith(
+                color: AppColors.textTertiary,
+              ),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+              border: const UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.surface),
+              ),
+              enabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.surface),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          '$score',
+          style: GoogleFonts.barlowCondensed(
+            fontSize: 48,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.0,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _RoundButton(icon: Icons.remove_rounded, onTap: onMinus),
+            const SizedBox(width: AppSpacing.base),
+            _RoundButton(icon: Icons.add_rounded, onTap: onPlus),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -1,14 +1,21 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/widgets/info_capsule.dart';
+import '../../../../shared/widgets/match_badges.dart';
 import '../../../../shared/widgets/match_time_info.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
+import '../../../config/dev_settings.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/match.dart' show Match;
+import '../../../types/team.dart' show Team;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import 'match_create_screen.dart';
 import 'widgets/attendance_section.dart';
 import 'widgets/lineup_section.dart';
 import 'widgets/match_header.dart';
@@ -16,14 +23,15 @@ import 'widgets/participation_section.dart';
 import 'widgets/match_tab_bar.dart';
 import 'widgets/recent_record_section.dart';
 
-class MatchDetailScreen extends StatefulWidget {
-  const MatchDetailScreen({super.key});
+class MatchDetailScreen extends ConsumerStatefulWidget {
+  const MatchDetailScreen({super.key, this.matchId});
+  final String? matchId;
 
   @override
-  State<MatchDetailScreen> createState() => _MatchDetailScreenState();
+  ConsumerState<MatchDetailScreen> createState() => _MatchDetailScreenState();
 }
 
-class _MatchDetailScreenState extends State<MatchDetailScreen>
+class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     with SingleTickerProviderStateMixin {
   bool _isJoined = false;
   late final AnimationController _animController;
@@ -62,11 +70,19 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    final matchList = ref.watch(teamMatchesProvider).when<List<Match>>(
+          data: (list) => list, loading: () => [], error: (_, __) => []);
+    final match = widget.matchId != null
+        ? matchList.where((m) => m.id == widget.matchId).firstOrNull
+        : null;
+    final isFinished = !showDummy && match != null && match.isFinished;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: Colors.white,
-        bottomNavigationBar: SafeArea(
+        bottomNavigationBar: isFinished ? null : SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -135,11 +151,41 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                       pinned: true,
                       delegate: MatchTopBarDelegate(
                         onBack: () => Navigator.of(context).pop(),
+                        onEdit: widget.matchId != null
+                            ? () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => MatchCreateScreen(
+                                      matchId: widget.matchId,
+                                    ),
+                                  ),
+                                )
+                            : null,
+                        onStatusChange: (status) async {
+                          HapticFeedback.mediumImpact();
+                          if (widget.matchId != null) {
+                            try {
+                              final matchRepo = ref.read(matchRepoProvider);
+                              await matchRepo.updateStatus(
+                                matchId: widget.matchId!,
+                                status: status,
+                              );
+                              ref.invalidate(teamMatchesProvider);
+                            } catch (_) {}
+                          }
+                          if (!context.mounted) return;
+                          final label = status == 'cancelled' ? '취소' : '조기 종료';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('경기가 $label 처리되었습니다'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     // Hero VS 섹션 — 자연스럽게 스크롤
-                    const SliverToBoxAdapter(
-                      child: _HeroSection(),
+                    SliverToBoxAdapter(
+                      child: _HeroSection(matchId: widget.matchId),
                     ),
                     const SliverPersistentHeader(
                       pinned: true,
@@ -149,13 +195,13 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
                 },
                 body: Container(
                   color: Colors.white,
-                  child: const TabBarView(
+                  child: TabBarView(
                     children: [
                       SingleChildScrollView(
                         child: Column(
                           children: [
-                            LineupSection(),
-                            AttendanceSection(),
+                            const LineupSection(),
+                            AttendanceSection(matchId: widget.matchId),
                             ParticipationSection(),
                             SizedBox(height: AppSpacing.xxxxl),
                           ],
@@ -182,11 +228,38 @@ class _MatchDetailScreenState extends State<MatchDetailScreen>
   }
 }
 
-class _HeroSection extends StatelessWidget {
-  const _HeroSection();
+class _HeroSection extends ConsumerWidget {
+  const _HeroSection({this.matchId});
+  final String? matchId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDummy = ref.watch(showDummyDataProvider);
+
+    // 실제 데이터
+    final team = showDummy
+        ? null
+        : ref.watch(currentTeamProvider).when<Team?>(
+              data: (t) => t, loading: () => null, error: (_, __) => null);
+    final matchList = ref.watch(teamMatchesProvider).when<List<Match>>(
+          data: (list) => list, loading: () => [], error: (_, __) => []);
+    final match = matchId != null
+        ? matchList.where((m) => m.id == matchId).firstOrNull
+        : null;
+
+    final ourName = showDummy ? 'FC칼로' : (team?.name ?? '...');
+    final opponentName = showDummy ? 'FC쏘아' : (match?.opponentName ?? '상대팀');
+    final timeStr = showDummy ? '20:00' : (match?.timeString ?? '--:--');
+    final datePlaceStr = showDummy
+        ? '2/7(토) 성내유수지'
+        : match != null
+            ? '${match.date.month}/${match.date.day}(${match.dayOfWeek}) ${match.location}'
+            : '';
+
+    // 스코어 표시
+    final hasScore = match?.hasResult ?? false;
+    final scoreStr = hasScore ? '${match!.ourScore} : ${match.opponentScore}' : null;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: AppColors.matchHeroGradient,
@@ -200,41 +273,64 @@ class _HeroSection extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Row(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
                 child: Center(
                   child: TeamLogoBadge(
-                    teamName: 'FC칼로',
-                    logoPath: 'assets/images/logo_calo.png',
+                    teamName: ourName,
+                    logoPath: showDummy ? 'assets/images/logo_calo.png' : null,
+                    logoUrl: showDummy ? null : team?.logoUrl,
                     size: 64,
                   ),
                 ),
               ),
-              MatchTimeInfo(
-                time: '20:00',
-                datePlace: '2/7(토) 성내유수지',
-              ),
+              if (scoreStr != null)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      scoreStr,
+                      style: AppTextStyles.timeDisplay.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      datePlaceStr,
+                      style: AppTextStyles.matchInfo,
+                    ),
+                  ],
+                )
+              else
+                MatchTimeInfo(
+                  time: timeStr,
+                  datePlace: datePlaceStr,
+                ),
               Expanded(
                 child: Center(
                   child: TeamLogoBadge(
-                    teamName: 'FC쏘아',
-                    logoPath: 'assets/images/logo_ssoa.png',
+                    teamName: opponentName,
+                    logoPath: showDummy ? 'assets/images/logo_ssoa.png' : null,
                     size: 64,
+                    isOpponent: !showDummy,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Row(
+          Row(
             children: [
-              InfoCapsule(text: '13/16명'),
-              SizedBox(width: AppSpacing.sm),
-              InfoCapsule(text: '참가완료'),
-              SizedBox(width: AppSpacing.sm),
-              InfoCapsule(text: '리벤지 매치'),
+              if (showDummy) ...[
+                const InfoCapsule(text: '13/16명'),
+                const SizedBox(width: AppSpacing.sm),
+                const InfoCapsule(text: '참가완료'),
+                const SizedBox(width: AppSpacing.sm),
+                const InfoCapsule(text: '리벤지 매치'),
+              ] else ...[
+                ...buildMatchBadges(matchList, match),
+              ],
             ],
           ),
         ],
@@ -286,3 +382,4 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _TabBarDelegate oldDelegate) => false;
 }
+

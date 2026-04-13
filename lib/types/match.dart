@@ -6,6 +6,7 @@ class Match {
   final String id;
   final String teamId;
   final DateTime date;
+  final int durationMinutes;
   final String location;
   final String opponentName;
   final String? opponentLogoUrl;
@@ -18,6 +19,7 @@ class Match {
     required this.id,
     required this.teamId,
     required this.date,
+    this.durationMinutes = 120,
     required this.location,
     required this.opponentName,
     this.opponentLogoUrl,
@@ -27,7 +29,54 @@ class Match {
     required this.createdAt,
   });
 
-  bool get isPast => status == MatchStatus.completed;
+  /// 경기 종료 시각.
+  DateTime get endTime => date.add(Duration(minutes: durationMinutes));
+
+  /// 결과 입력 완료 여부.
+  bool get hasResult => ourScore != null && opponentScore != null;
+
+  /// 다음날 오전 6시 — 홈 카드 유지 기준.
+  DateTime get visibilityDeadline {
+    final nextDay = DateTime(date.year, date.month, date.day + 1, 6);
+    // 종료 시간이 자정 이후면 그 날 오전 6시
+    if (endTime.hour >= 0 && endTime.hour < 6) {
+      return DateTime(endTime.year, endTime.month, endTime.day, 6);
+    }
+    return nextDay;
+  }
+
+  /// UI 표시용 상태 (현재 시간 기반).
+  MatchDisplayState get displayState {
+    if (status == MatchStatus.cancelled) return MatchDisplayState.cancelled;
+    if (status == MatchStatus.earlyEnded) return MatchDisplayState.earlyEnded;
+    if (status == MatchStatus.completed) return MatchDisplayState.completed;
+
+    final now = DateTime.now();
+    if (now.isBefore(date)) return MatchDisplayState.upcoming;
+    if (now.isBefore(endTime)) return MatchDisplayState.inProgress;
+    return MatchDisplayState.ended;
+  }
+
+  /// 홈 카드에 표시 가능 여부 (종료 후 다음날 06시까지).
+  bool get isVisibleOnHome {
+    final now = DateTime.now();
+    final ds = displayState;
+    if (ds == MatchDisplayState.upcoming || ds == MatchDisplayState.inProgress) {
+      return true;
+    }
+    // 종료됨 (결과 미입력) — 다음날 06시까지
+    if (ds == MatchDisplayState.ended || ds == MatchDisplayState.earlyEnded) {
+      return now.isBefore(visibilityDeadline);
+    }
+    return false;
+  }
+
+  /// 경기탭 "종료" 분류 여부.
+  bool get isFinished =>
+      displayState != MatchDisplayState.upcoming &&
+      displayState != MatchDisplayState.inProgress;
+
+  bool get isPast => isFinished;
 
   MatchResult? get result {
     if (ourScore == null || opponentScore == null) return null;

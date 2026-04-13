@@ -39,10 +39,22 @@ enum MatchResult {
   final String code;
 }
 
-/// 경기 상태.
+/// 경기 상태 (DB 저장용).
 enum MatchStatus {
   upcoming,
   completed,
+  cancelled,
+  earlyEnded,
+}
+
+/// 경기 표시 상태 (UI 계산용, DB에 저장하지 않음).
+enum MatchDisplayState {
+  upcoming,
+  inProgress,
+  ended,       // 종료됐으나 결과 미입력
+  completed,
+  cancelled,
+  earlyEnded,
 }
 
 /// 팀 내 역할 (3단계).

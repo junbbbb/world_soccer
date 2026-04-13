@@ -15,6 +15,7 @@ abstract class MatchRepo {
     required String location,
     required String opponentName,
     String? opponentLogoUrl,
+    int durationMinutes = 120,
   });
 
   /// 경기 결과 입력.
@@ -22,6 +23,21 @@ abstract class MatchRepo {
     required String matchId,
     required int ourScore,
     required int opponentScore,
+  });
+
+  /// 경기 정보 수정.
+  Future<void> updateInfo({
+    required String matchId,
+    DateTime? date,
+    String? location,
+    String? opponentName,
+    int? durationMinutes,
+  });
+
+  /// 경기 상태 변경 (취소, 조기종료 등).
+  Future<void> updateStatus({
+    required String matchId,
+    required String status,
   });
 
   /// 상대 전적 (H2H).

@@ -8,24 +8,28 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../runtime/providers.dart';
+import '../../../types/match.dart';
 
 /// 펼쳐진 인라인 피커 — 현재는 날짜 캘린더만 사용.
 enum _ExpandedField { none, date }
 
 class MatchCreateScreen extends ConsumerStatefulWidget {
-  const MatchCreateScreen({super.key});
+  const MatchCreateScreen({super.key, this.matchId});
+
+  /// null이면 생성 모드, 값이 있으면 수정 모드.
+  final String? matchId;
 
   @override
   ConsumerState<MatchCreateScreen> createState() => _MatchCreateScreenState();
 }
 
 class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
+  bool get _isEditMode => widget.matchId != null;
+
   // ── 날짜 & 시간 ──
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
-  // 경기 시간: 시작 + 길이 (종료는 자동 계산되는 파생 정보)
-  // 진짜 결정은 1개(시작), 길이는 거의 항상 90분이라 보조 결정.
   TimeOfDay _startTime = const TimeOfDay(hour: 20, minute: 0);
-  int _durationMinutes = 90;
+  int _durationMinutes = 120;
 
   // ── 펼침 상태 (날짜 캘린더만 인라인) ──
   _ExpandedField _expanded = _ExpandedField.none;
@@ -47,6 +51,43 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
 
   // ── 참가 인원 ──
   int _maxParticipants = 16;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditMode) {
+      // 수정 모드: provider에서 데이터 로드 (build 전이라 read 사용)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final matchList = ref.read(teamMatchesProvider).when<List<Match>>(
+          data: (l) => l,
+          loading: () => [],
+          error: (_, __) => [],
+        );
+        final m = matchList.where((m) => m.id == widget.matchId).firstOrNull;
+        if (m == null) return;
+        setState(() {
+          _selectedDate = m.date;
+          _startTime = TimeOfDay(hour: m.date.hour, minute: m.date.minute);
+          _durationMinutes = m.durationMinutes;
+          _selectedLocation = m.location;
+          if (m.opponentName == '미정') {
+            _isOpponentTbd = true;
+          } else if (_opponents.contains(m.opponentName)) {
+            _isOpponentTbd = false;
+            _selectedOpponent = m.opponentName;
+          } else {
+            _isOpponentTbd = false;
+            _useCustomOpponent = true;
+            _customOpponentController.text = m.opponentName;
+          }
+          // 장소가 기존 리스트에 없으면 추가
+          if (m.location.isNotEmpty && !_locations.contains(m.location)) {
+            _locations.add(m.location);
+          }
+        });
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -189,12 +230,24 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
 
     try {
       final matchRepo = ref.read(matchRepoProvider);
-      await matchRepo.create(
-        teamId: teamId,
-        date: matchDate,
-        location: _selectedLocation,
-        opponentName: opponent,
-      );
+
+      if (_isEditMode) {
+        await matchRepo.updateInfo(
+          matchId: widget.matchId!,
+          date: matchDate,
+          location: _selectedLocation,
+          opponentName: opponent,
+          durationMinutes: _durationMinutes,
+        );
+      } else {
+        await matchRepo.create(
+          teamId: teamId,
+          date: matchDate,
+          location: _selectedLocation,
+          opponentName: opponent,
+          durationMinutes: _durationMinutes,
+        );
+      }
 
       // 경기 목록 캐시 갱신
       ref.invalidate(teamMatchesProvider);
@@ -202,7 +255,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('경기 일정이 생성되었습니다'),
+          content: Text(_isEditMode ? '경기 정보가 수정되었습니다' : '경기 일정이 생성되었습니다'),
           behavior: SnackBarBehavior.floating,
           shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
@@ -257,7 +310,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        '경기 일정 만들기',
+                        _isEditMode ? '경기 정보 수정' : '경기 일정 만들기',
                         textAlign: TextAlign.center,
                         style: AppTextStyles.heading.copyWith(
                           color: AppColors.textPrimary,
@@ -509,7 +562,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
                     ),
                   ),
                   child: Text(
-                    '일정 만들기',
+                    _isEditMode ? '수정 완료' : '일정 만들기',
                     style: AppTextStyles.buttonPrimary.copyWith(
                       color: Colors.white,
                     ),

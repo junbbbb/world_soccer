@@ -9,7 +9,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../runtime/providers.dart';
 import '../../../../shared/widgets/section_title.dart';
+import '../../../../types/enums.dart';
+import '../../../../types/match.dart' show Match;
 
 class _MatchResult {
   final String result;
@@ -60,7 +63,67 @@ class TeamRecentResultsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final showDummy = ref.watch(showDummyDataProvider);
-    if (!showDummy) return const SizedBox.shrink();
+
+    if (!showDummy) {
+      // 실제 데이터: 완료 경기에서 최근 전적 추출
+      final matches = ref.watch(teamMatchesProvider).when<List<Match>>(
+            data: (list) => list,
+            loading: () => [],
+            error: (_, __) => [],
+          );
+      final completed = matches
+          .where((m) => m.status == MatchStatus.completed)
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+      final recent = completed.take(5).toList();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
+              bottom: AppSpacing.xs,
+            ),
+            child: SectionTitle('최근 전적'),
+          ),
+          if (recent.isEmpty)
+            const _EmptyResultsCard()
+          else
+            SizedBox(
+              height: 52,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                itemCount: recent.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: AppSpacing.sm),
+                itemBuilder: (_, index) {
+                  final m = recent[index];
+                  final r = m.result;
+                  final label = r == MatchResult.win
+                      ? 'W'
+                      : r == MatchResult.loss
+                          ? 'L'
+                          : 'D';
+                  final score =
+                      '${m.ourScore ?? 0} - ${m.opponentScore ?? 0}';
+                  return _ResultCapsule(
+                    result: _MatchResult(
+                      result: label,
+                      score: score,
+                      opponentLogo: 'assets/images/logo_ssoa.png',
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
