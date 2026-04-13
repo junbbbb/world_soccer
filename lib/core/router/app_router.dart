@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,16 +19,39 @@ import '../../features/profile/presentation/profile_screen.dart';
 
 part 'app_router.g.dart';
 
+/// Supabase auth 상태 변화를 GoRouter에 전달하는 Listenable.
+class _AuthStateNotifier extends ChangeNotifier {
+  late final StreamSubscription<AuthState> _sub;
+
+  _AuthStateNotifier() {
+    _sub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
 @riverpod
 GoRouter goRouter(Ref ref) {
+  final authNotifier = _AuthStateNotifier();
+  ref.onDispose(authNotifier.dispose);
+
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: authNotifier,
     redirect: (context, state) {
       final loggedIn = Supabase.instance.client.auth.currentUser != null;
       final isAuthRoute = state.matchedLocation == '/auth';
+      final isOnboarding = state.matchedLocation == '/onboarding';
 
       if (!loggedIn && !isAuthRoute) return '/auth';
       if (loggedIn && isAuthRoute) return '/';
+      if (!loggedIn && isOnboarding) return '/auth';
       return null;
     },
     routes: [

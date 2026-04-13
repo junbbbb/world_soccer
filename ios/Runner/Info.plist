@@ -55,6 +55,16 @@
 				<string>io.supabase.worldsoccer</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1049253977873-1sa4vnsjtr76c01536u0eppogatpbvfd</string>
+			</array>
+		</dict>
 	</array>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 </dict>
 </plist>

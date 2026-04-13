@@ -1,12 +1,15 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
 
 // ══════════════════════════════════════════════
 // 더미 데이터
@@ -62,11 +65,11 @@ class _PerfData {
 // ProfileScreen
 // ══════════════════════════════════════════════
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -96,6 +99,38 @@ class ProfileScreen extends StatelessWidget {
                 // 최근 경기 (스크롤 아래)
                 const SizedBox(height: AppSpacing.xxxl),
                 const _RecentSection(),
+
+                // 로그아웃
+                const SizedBox(height: AppSpacing.xxxl),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: GestureDetector(
+                      onTap: () async {
+                        HapticFeedback.mediumImpact();
+                        await ref.read(authRepoProvider).signOut();
+                        if (context.mounted) context.go('/auth');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        decoration: ShapeDecoration(
+                          color: AppColors.surfaceLight,
+                          shape: SmoothRectangleBorder(
+                            borderRadius: AppRadius.smoothButton,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '로그아웃',
+                          style: AppTextStyles.buttonSecondary.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
