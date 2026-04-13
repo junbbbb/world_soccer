@@ -84,7 +84,11 @@ class SupabaseAuthRepo implements AuthRepo {
 
   @override
   Future<AuthResponse> signInAnonymously() {
-    return _client.auth.signInAnonymously();
+    // 개발용 고정 계정 (supabase/migrations/20260413000100_fix_dev_user.sql)
+    return _client.auth.signInWithPassword(
+      email: 'dev@worldsoccer.app',
+      password: 'DevPass2026!',
+    );
   }
 
   @override
