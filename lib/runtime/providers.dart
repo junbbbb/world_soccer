@@ -1,6 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../types/match.dart' as types;
+import '../types/team.dart';
 import '../repo/supabase_auth_repo.dart';
 import '../repo/supabase_lineup_repo.dart';
 import '../repo/supabase_match_repo.dart';
@@ -80,4 +82,27 @@ LineupService lineupService(Ref ref) {
     lineupRepo: ref.watch(lineupRepoProvider),
     playerRepo: ref.watch(playerRepoProvider),
   );
+}
+
+// ── Data Providers ──
+
+/// 현재 유저의 첫 번째 팀 ID.
+@riverpod
+Future<String?> currentTeamId(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return null;
+  final teamRepo = ref.watch(teamRepoProvider);
+  final teams = await teamRepo.getMyTeams(user.id);
+  if (teams.isEmpty) return null;
+  return teams.first.id;
+}
+
+/// 팀의 전체 경기 목록 (최신순).
+@riverpod
+Future<List<types.Match>> teamMatches(Ref ref) async {
+  final teamId = await ref.watch(currentTeamIdProvider.future);
+  if (teamId == null) return [];
+  final matchRepo = ref.watch(matchRepoProvider);
+  return matchRepo.getByTeam(teamId);
 }

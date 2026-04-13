@@ -3,28 +3,30 @@ import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/enums.dart';
 import 'widgets/next_match_card.dart';
 import 'widgets/team_posts_section.dart';
 import 'widgets/team_recent_results_section.dart';
 
-class HomeTab extends StatefulWidget {
+class HomeTab extends ConsumerStatefulWidget {
   const HomeTab({super.key});
 
   @override
-  State<HomeTab> createState() => _HomeTabState();
+  ConsumerState<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class _HomeTabState extends ConsumerState<HomeTab> {
   static const _headerHeight = 56.0;
 
-  // 개발용: 일정 유무 토글
-  bool _hasNextMatch = true;
   // 개발용: 프로필 완성 여부 (false = 첫 가입자 상태)
   bool _hasProfile = false;
 
@@ -53,7 +55,19 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
+
+    // 실제 데이터: 예정 경기가 있는지 확인
+    final asyncMatches = ref.watch(teamMatchesProvider);
+    final realMatchList = asyncMatches.when(
+      data: (list) => list,
+      loading: () => <dynamic>[],
+      error: (_, __) => <dynamic>[],
+    );
+    final hasRealNextMatch = !showDummy &&
+        realMatchList.any((m) => m.status == MatchStatus.upcoming);
+    final hasNextMatch = showDummy || hasRealNextMatch;
 
     return Stack(
       children: [
@@ -61,9 +75,9 @@ class _HomeTabState extends State<HomeTab> {
           padding: EdgeInsets.only(top: topPadding + _headerHeight),
           child: Column(
             children: [
-              NextMatchCard(hasNextMatch: _hasNextMatch),
+              NextMatchCard(hasNextMatch: hasNextMatch),
               const SizedBox(height: AppSpacing.base),
-              if (_hasNextMatch && !_isResultCardDismissed)
+              if (hasNextMatch && !_isResultCardDismissed)
                 AnimatedSlide(
                   offset: _showResultCard
                       ? Offset.zero
@@ -81,7 +95,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
               const SizedBox(height: AppSpacing.xxl),
-              TeamRecentResultsSection(hasResults: _hasNextMatch),
+              TeamRecentResultsSection(hasResults: hasNextMatch),
               const SizedBox(height: AppSpacing.xxl),
               // 두꺼운 섹션 구분선
               Container(
@@ -138,31 +152,6 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                     ),
                     const Spacer(),
-                    // DEV: 일정 유무 토글
-                    GestureDetector(
-                      onTap: () =>
-                          setState(() => _hasNextMatch = !_hasNextMatch),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _hasNextMatch
-                              ? AppColors.primary.withValues(alpha: 0.1)
-                              : AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          _hasNextMatch ? 'DEV:일정있음' : 'DEV:일정없음',
-                          style: AppTextStyles.caption.copyWith(
-                            color: _hasNextMatch
-                                ? AppColors.primary
-                                : AppColors.error,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
                     GestureDetector(
                       onTap: () => context.push('/profile'),
                       behavior: HitTestBehavior.opaque,

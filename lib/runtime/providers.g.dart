@@ -418,3 +418,87 @@ final class LineupServiceProvider
 }
 
 String _$lineupServiceHash() => r'd64bb8e32493ee15ade4c0be6e1571725b04670d';
+
+/// 현재 유저의 첫 번째 팀 ID.
+
+@ProviderFor(currentTeamId)
+final currentTeamIdProvider = CurrentTeamIdProvider._();
+
+/// 현재 유저의 첫 번째 팀 ID.
+
+final class CurrentTeamIdProvider
+    extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
+    with $FutureModifier<String?>, $FutureProvider<String?> {
+  /// 현재 유저의 첫 번째 팀 ID.
+  CurrentTeamIdProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentTeamIdProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentTeamIdHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<String?> create(Ref ref) {
+    return currentTeamId(ref);
+  }
+}
+
+String _$currentTeamIdHash() => r'6fc2e8c39898777d1198aa800c200edafa40f21c';
+
+/// 팀의 전체 경기 목록 (최신순).
+
+@ProviderFor(teamMatches)
+final teamMatchesProvider = TeamMatchesProvider._();
+
+/// 팀의 전체 경기 목록 (최신순).
+
+final class TeamMatchesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<types.Match>>,
+          List<types.Match>,
+          FutureOr<List<types.Match>>
+        >
+    with
+        $FutureModifier<List<types.Match>>,
+        $FutureProvider<List<types.Match>> {
+  /// 팀의 전체 경기 목록 (최신순).
+  TeamMatchesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'teamMatchesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamMatchesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<types.Match>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<types.Match>> create(Ref ref) {
+    return teamMatches(ref);
+  }
+}
+
+String _$teamMatchesHash() => r'22ab1eebd5ffe44738a4ec92148c3af8103f89a4';

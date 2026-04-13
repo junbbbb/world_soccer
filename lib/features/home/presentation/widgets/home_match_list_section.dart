@@ -1,7 +1,9 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/dev_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -53,11 +55,14 @@ List<_MatchData> get _matches => [
 
 // ── 섹션 위젯 ──
 
-class HomeMatchListSection extends StatelessWidget {
+class HomeMatchListSection extends ConsumerWidget {
   const HomeMatchListSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    if (!showDummy) return const SizedBox.shrink();
+
     final matches = _matches;
     final upcoming = matches.where((m) => !m.isPast).toList();
     final past = matches.where((m) => m.isPast).toList();

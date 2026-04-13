@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -68,7 +70,7 @@ class ChatRoom {
   final bool isMuted;
 }
 
-class ChatTab extends StatelessWidget {
+class ChatTab extends ConsumerWidget {
   const ChatTab({super.key});
 
   static final _rooms = [
@@ -117,21 +119,23 @@ class ChatTab extends StatelessWidget {
   static const _headerHeight = 56.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    final rooms = showDummy ? _rooms : <ChatRoom>[];
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(
       children: [
         ListView.separated(
           padding: EdgeInsets.only(top: topPadding + _headerHeight),
-          itemCount: _rooms.length,
+          itemCount: rooms.length,
           separatorBuilder: (_, __) => Divider(
             height: 0.5,
             indent: AppSpacing.base + 52 + AppSpacing.md,
             color: AppColors.iconInactive.withValues(alpha: 0.3),
           ),
           itemBuilder: (context, index) {
-            final room = _rooms[index];
+            final room = rooms[index];
             return ChatRoomCell(
               room: room,
               onTap: () => context.push('/chat', extra: room),

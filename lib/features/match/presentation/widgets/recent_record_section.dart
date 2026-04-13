@@ -1,6 +1,8 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../config/dev_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -89,11 +91,13 @@ const _totalMatches = 5;
 // RecentRecordSection (상대전적 탭)
 // ══════════════════════════════════════════════
 
-class RecentRecordSection extends StatelessWidget {
+class RecentRecordSection extends ConsumerWidget {
   const RecentRecordSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    if (!showDummy) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(

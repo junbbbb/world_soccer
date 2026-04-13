@@ -1,8 +1,10 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/dev_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -49,14 +51,16 @@ const _dummyResults = [
   ),
 ];
 
-class TeamRecentResultsSection extends StatelessWidget {
+class TeamRecentResultsSection extends ConsumerWidget {
   const TeamRecentResultsSection({super.key, this.hasResults = true});
 
   /// 신생팀(전적 없음) 케이스를 위한 빈 상태 토글.
   final bool hasResults;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    if (!showDummy) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

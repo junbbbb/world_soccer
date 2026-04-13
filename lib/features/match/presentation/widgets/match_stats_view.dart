@@ -1,6 +1,8 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../config/dev_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -109,7 +111,7 @@ final _cardDecoration = ShapeDecoration(
 
 // ── MatchStatsView ──
 
-class MatchStatsView extends StatelessWidget {
+class MatchStatsView extends ConsumerWidget {
   const MatchStatsView({
     super.key,
     this.scrollPaddingTop = 0,
@@ -120,7 +122,20 @@ class MatchStatsView extends StatelessWidget {
   final int subIndex;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    if (!showDummy) {
+      return Padding(
+        padding: EdgeInsets.only(top: scrollPaddingTop + 60),
+        child: Center(
+          child: Text(
+            '데이터가 없습니다',
+            style: AppTextStyles.body.copyWith(color: AppColors.textTertiary),
+          ),
+        ),
+      );
+    }
+
     return IndexedStack(
       index: subIndex,
       children: [

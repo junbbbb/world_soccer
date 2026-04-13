@@ -1,23 +1,25 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
 
 /// 펼쳐진 인라인 피커 — 현재는 날짜 캘린더만 사용.
 enum _ExpandedField { none, date }
 
-class MatchCreateScreen extends StatefulWidget {
+class MatchCreateScreen extends ConsumerStatefulWidget {
   const MatchCreateScreen({super.key});
 
   @override
-  State<MatchCreateScreen> createState() => _MatchCreateScreenState();
+  ConsumerState<MatchCreateScreen> createState() => _MatchCreateScreenState();
 }
 
-class _MatchCreateScreenState extends State<MatchCreateScreen> {
+class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
   // ── 날짜 & 시간 ──
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
   // 경기 시간: 시작 + 길이 (종료는 자동 계산되는 파생 정보)
@@ -152,16 +154,70 @@ class _MatchCreateScreenState extends State<MatchCreateScreen> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('경기 일정이 생성되었습니다'),
-        behavior: SnackBarBehavior.floating,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
-      ),
+
+    // 팀 ID 가져오기
+    final teamId = await ref.read(currentTeamIdProvider.future);
+    if (teamId == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('팀 정보를 찾을 수 없습니다'),
+          behavior: SnackBarBehavior.floating,
+          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        ),
+      );
+      return;
+    }
+
+    // 날짜 + 시간 합치기
+    final matchDate = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _startTime.hour,
+      _startTime.minute,
     );
-    Navigator.of(context).pop();
+
+    // 상대팀 이름
+    final opponent = _isOpponentTbd
+        ? '미정'
+        : _useCustomOpponent
+            ? _customOpponentController.text.trim()
+            : _selectedOpponent;
+
+    try {
+      final matchRepo = ref.read(matchRepoProvider);
+      await matchRepo.create(
+        teamId: teamId,
+        date: matchDate,
+        location: _selectedLocation,
+        opponentName: opponent,
+      );
+
+      // 경기 목록 캐시 갱신
+      ref.invalidate(teamMatchesProvider);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('경기 일정이 생성되었습니다'),
+          behavior: SnackBarBehavior.floating,
+          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('저장 실패: $e'),
+          behavior: SnackBarBehavior.floating,
+          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        ),
+      );
+    }
   }
 
   // ── Build ──

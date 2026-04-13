@@ -1,8 +1,10 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -46,14 +48,14 @@ const _participants = [
 // 위: 스코어 (큰 숫자 + -) → 아래: 선수별 골/어시 카운터
 // ══════════════════════════════════════════════
 
-class MatchResultInputScreen extends StatefulWidget {
+class MatchResultInputScreen extends ConsumerStatefulWidget {
   const MatchResultInputScreen({super.key});
 
   @override
-  State<MatchResultInputScreen> createState() => _MatchResultInputScreenState();
+  ConsumerState<MatchResultInputScreen> createState() => _MatchResultInputScreenState();
 }
 
-class _MatchResultInputScreenState extends State<MatchResultInputScreen> {
+class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen> {
   int _ourScore = 0;
   int _theirScore = 0;
   final Map<int, int> _goals = {};
@@ -73,6 +75,8 @@ class _MatchResultInputScreenState extends State<MatchResultInputScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showDummy = ref.watch(showDummyDataProvider);
+    final players = showDummy ? _participants : <_Player>[];
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -192,7 +196,7 @@ class _MatchResultInputScreenState extends State<MatchResultInputScreen> {
                     ),
                     const Spacer(),
                     Text(
-                      '${_participants.length}명',
+                      '${players.length}명',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -247,14 +251,14 @@ class _MatchResultInputScreenState extends State<MatchResultInputScreen> {
                     AppSpacing.lg,
                     bottomPadding + 80,
                   ),
-                  itemCount: _participants.length,
+                  itemCount: players.length,
                   separatorBuilder: (_, __) => Divider(
                     height: 1,
                     thickness: 0.5,
                     color: AppColors.textPrimary.withValues(alpha: 0.06),
                   ),
                   itemBuilder: (_, i) {
-                    final p = _participants[i];
+                    final p = players[i];
                     final g = _goals[i] ?? 0;
                     final a = _assists[i] ?? 0;
                     return Padding(

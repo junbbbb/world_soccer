@@ -3,12 +3,17 @@ import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/enums.dart' show MatchResult;
+import '../../../types/match.dart' show Match;
 
 // ── 더미 데이터 모델 ──
 
@@ -60,14 +65,14 @@ final _dummyMatches = [
 
 // ── MatchTab ──
 
-class MatchTab extends StatefulWidget {
+class MatchTab extends ConsumerStatefulWidget {
   const MatchTab({super.key});
 
   @override
-  State<MatchTab> createState() => _MatchTabState();
+  ConsumerState<MatchTab> createState() => _MatchTabState();
 }
 
-class _MatchTabState extends State<MatchTab> {
+class _MatchTabState extends ConsumerState<MatchTab> {
   late List<DateTime> _months;
   late int _monthIndex;
   final Set<String> _joinedIds = {'m11', 'm10', 'm9', 'm8', 'm6', 'm5', 'm3'};
@@ -124,8 +129,41 @@ class _MatchTabState extends State<MatchTab> {
 
   @override
   Widget build(BuildContext context) {
+    final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
-    final matches = _monthMatches;
+
+    // 실제 DB 데이터
+    final asyncMatches = ref.watch(teamMatchesProvider);
+    final realMatchList = asyncMatches.when<List<Match>>(
+      data: (list) => list,
+      loading: () => [],
+      error: (_, __) => [],
+    );
+    final realMatches = showDummy
+        ? <_MatchData>[]
+        : realMatchList.map((m) => _MatchData(
+              id: m.id,
+              date: m.date,
+              dayOfWeek: m.dayOfWeek,
+              time: m.timeString,
+              location: m.location,
+              opponentName: m.opponentName,
+              opponentLogo: m.opponentLogoUrl ?? 'assets/images/logo_ssoa.png',
+              result: m.isPast
+                  ? (m.result == MatchResult.win
+                      ? 'W'
+                      : m.result == MatchResult.loss
+                          ? 'L'
+                          : 'D')
+                  : null,
+              ourScore: m.ourScore,
+              theirScore: m.opponentScore,
+              participants: 0,
+              maxParticipants: 16,
+            )).toList();
+
+    final matches = showDummy ? _monthMatches : realMatches
+      ..sort((a, b) => b.date.compareTo(a.date));
 
     return ColoredBox(
       color: AppColors.surface,

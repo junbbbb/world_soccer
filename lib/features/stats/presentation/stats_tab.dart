@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -166,14 +168,14 @@ class _MatchPerformance {
 
 // ── StatsTab ──
 
-class StatsTab extends StatefulWidget {
+class StatsTab extends ConsumerStatefulWidget {
   const StatsTab({super.key});
 
   @override
-  State<StatsTab> createState() => _StatsTabState();
+  ConsumerState<StatsTab> createState() => _StatsTabState();
 }
 
-class _StatsTabState extends State<StatsTab> {
+class _StatsTabState extends ConsumerState<StatsTab> {
   int _segmentIndex = 0;
 
   // header(56) + segment(44) + gap(24) = 124
@@ -183,19 +185,32 @@ class _StatsTabState extends State<StatsTab> {
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 
+    final showDummy = ref.watch(showDummyDataProvider);
+
     return Stack(
       children: [
-        IndexedStack(
-          index: _segmentIndex,
-          children: [
-            _TeamStatsView(
-              scrollPaddingTop: topPadding + _fullHeaderHeight,
+        if (showDummy)
+          IndexedStack(
+            index: _segmentIndex,
+            children: [
+              _TeamStatsView(
+                scrollPaddingTop: topPadding + _fullHeaderHeight,
+              ),
+              _MyStatsView(
+                scrollPaddingTop: topPadding + _fullHeaderHeight,
+              ),
+            ],
+          )
+        else
+          Padding(
+            padding: EdgeInsets.only(top: topPadding + _fullHeaderHeight + 60),
+            child: Center(
+              child: Text(
+                '데이터가 없습니다',
+                style: AppTextStyles.body.copyWith(color: AppColors.textTertiary),
+              ),
             ),
-            _MyStatsView(
-              scrollPaddingTop: topPadding + _fullHeaderHeight,
-            ),
-          ],
-        ),
+          ),
         Positioned(
           top: 0,
           left: 0,

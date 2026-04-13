@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../config/dev_settings.dart';
 import '../../../runtime/providers.dart';
 
 // ══════════════════════════════════════════════
@@ -100,8 +101,44 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xxxl),
                 const _RecentSection(),
 
-                // 로그아웃
+                // 개발 설정
                 const SizedBox(height: AppSpacing.xxxl),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.base,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: ShapeDecoration(
+                      color: AppColors.surfaceLight,
+                      shape: SmoothRectangleBorder(
+                        borderRadius: AppRadius.smoothMd,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          '더미 데이터 표시',
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const Spacer(),
+                        Switch.adaptive(
+                          value: ref.watch(showDummyDataProvider),
+                          activeColor: AppColors.primary,
+                          onChanged: (v) {
+                            ref.read(showDummyDataProvider.notifier).toggle(v);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // 로그아웃
+                const SizedBox(height: AppSpacing.base),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: SizedBox(

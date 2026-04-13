@@ -3,7 +3,9 @@ import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -111,14 +113,14 @@ class _Member {
 
 // ── TeamTab ──
 
-class TeamTab extends StatefulWidget {
+class TeamTab extends ConsumerStatefulWidget {
   const TeamTab({super.key});
 
   @override
-  State<TeamTab> createState() => _TeamTabState();
+  ConsumerState<TeamTab> createState() => _TeamTabState();
 }
 
-class _TeamTabState extends State<TeamTab> with SingleTickerProviderStateMixin {
+class _TeamTabState extends ConsumerState<TeamTab> with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
   static const _headerHeight = 108.0;
@@ -137,7 +139,18 @@ class _TeamTabState extends State<TeamTab> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
+
+    final emptyView = Padding(
+      padding: EdgeInsets.only(top: topPadding + _headerHeight + 60),
+      child: Center(
+        child: Text(
+          '데이터가 없습니다',
+          style: AppTextStyles.body.copyWith(color: AppColors.textTertiary),
+        ),
+      ),
+    );
 
     return ColoredBox(
       color: Colors.white,
@@ -146,14 +159,19 @@ class _TeamTabState extends State<TeamTab> with SingleTickerProviderStateMixin {
           // ── 탭 본문 ──
           TabBarView(
             controller: _tabController,
-            children: [
-              _OverviewView(
-                  scrollPaddingTop: topPadding + _headerHeight + AppSpacing.sm),
-              _TeamStatsView(
-                  scrollPaddingTop: topPadding + _headerHeight + AppSpacing.sm),
-              _MembersView(
-                  scrollPaddingTop: topPadding + _headerHeight + AppSpacing.sm),
-            ],
+            children: showDummy
+                ? [
+                    _OverviewView(
+                        scrollPaddingTop:
+                            topPadding + _headerHeight + AppSpacing.sm),
+                    _TeamStatsView(
+                        scrollPaddingTop:
+                            topPadding + _headerHeight + AppSpacing.sm),
+                    _MembersView(
+                        scrollPaddingTop:
+                            topPadding + _headerHeight + AppSpacing.sm),
+                  ]
+                : [emptyView, emptyView, emptyView],
           ),
 
           // ── 헤더 ──
