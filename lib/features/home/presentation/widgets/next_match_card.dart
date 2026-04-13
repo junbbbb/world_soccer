@@ -16,8 +16,49 @@ import '../../../../shared/widgets/info_capsule.dart';
 import '../../../../shared/widgets/match_badges.dart';
 import '../../../../shared/widgets/match_time_info.dart';
 import '../../../../shared/widgets/team_logo_badge.dart';
+import '../../../../types/enums.dart';
 import '../../../../types/match.dart' show Match;
 import 'join_match_sheet.dart';
+
+/// 홈 카드에 표시할 경기 선택.
+///
+/// 1. 예정/진행 중 경기가 있으면 가장 가까운 것을 표시.
+/// 2. 없으면 종료/결과입력 경기 중 가장 최근 것을 표시 (다음날 06시까지).
+/// 3. 둘 다 있으면: 다음 경기가 종료 경기의 visibilityDeadline 안에 있으면
+///    (같은날 or 다음날 아침) 다음 경기를 우선 표시.
+Match? _pickHomeMatch(List<Match> matchList) {
+  final visible = matchList.where((m) => m.isVisibleOnHome).toList();
+  if (visible.isEmpty) return null;
+
+  // 예정/진행 중 → 날짜순 가장 가까운 것
+  final upcoming = visible
+      .where((m) =>
+          m.displayState == MatchDisplayState.upcoming ||
+          m.displayState == MatchDisplayState.inProgress)
+      .toList()
+    ..sort((a, b) => a.date.compareTo(b.date));
+
+  // 종료/결과입력 → 날짜순 가장 최근 것
+  final finished = visible
+      .where((m) =>
+          m.displayState == MatchDisplayState.ended ||
+          m.displayState == MatchDisplayState.earlyEnded ||
+          m.displayState == MatchDisplayState.completed)
+      .toList()
+    ..sort((a, b) => b.date.compareTo(a.date));
+
+  final nearestUpcoming = upcoming.isNotEmpty ? upcoming.first : null;
+  final latestFinished = finished.isNotEmpty ? finished.first : null;
+
+  if (nearestUpcoming == null) return latestFinished;
+  if (latestFinished == null) return nearestUpcoming;
+
+  // 다음 경기가 종료 경기의 visibility 기한 안이면 → 다음 경기 우선
+  if (nearestUpcoming.date.isBefore(latestFinished.visibilityDeadline)) {
+    return nearestUpcoming;
+  }
+  return latestFinished;
+}
 
 class NextMatchCard extends ConsumerStatefulWidget {
   const NextMatchCard({super.key, this.hasNextMatch = true});
@@ -68,13 +109,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
           loading: () => [],
           error: (_, __) => [],
         );
-    final nextMatchList = showDummy
-        ? <Match>[]
-        : matchList
-            .where((m) => m.isVisibleOnHome)
-            .toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
-    final match = nextMatchList.isNotEmpty ? nextMatchList.first : null;
+    final match = showDummy ? null : _pickHomeMatch(matchList);
     final isMatchEnded = match != null && match.isFinished;
 
     // 표시할 값

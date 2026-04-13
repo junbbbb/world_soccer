@@ -11,6 +11,7 @@ import '../../features/chat/presentation/chat_tab.dart';
 import '../../features/chat/presentation/group_info_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/match/presentation/lineup/lineup_builder_screen.dart';
+import '../../features/match/presentation/lineup/lineup_view_screen.dart';
 import '../../features/match/presentation/match_create_screen.dart';
 import '../../features/match/presentation/match_result_input_screen.dart';
 import '../../features/match/presentation/match_screen.dart';
@@ -100,6 +101,13 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/match/lineup-builder',
         builder: (context, state) => const LineupBuilderScreen(),
+      ),
+      GoRoute(
+        path: '/match/lineup-view',
+        builder: (context, state) {
+          final quarter = state.extra as int? ?? 0;
+          return LineupViewScreen(initialQuarter: quarter);
+        },
       ),
       GoRoute(
         path: '/match/share',

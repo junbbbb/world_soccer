@@ -57,15 +57,18 @@ class Match {
     return MatchDisplayState.ended;
   }
 
-  /// 홈 카드에 표시 가능 여부 (종료 후 다음날 06시까지).
+  /// 홈 카드에 표시 가능 여부 (종료/결과입력 후 다음날 06시까지).
   bool get isVisibleOnHome {
     final now = DateTime.now();
     final ds = displayState;
-    if (ds == MatchDisplayState.upcoming || ds == MatchDisplayState.inProgress) {
+    if (ds == MatchDisplayState.upcoming ||
+        ds == MatchDisplayState.inProgress) {
       return true;
     }
-    // 종료됨 (결과 미입력) — 다음날 06시까지
-    if (ds == MatchDisplayState.ended || ds == MatchDisplayState.earlyEnded) {
+    // 종료됨 / 조기종료 / 결과입력 완료 — 다음날 06시까지 유지
+    if (ds == MatchDisplayState.ended ||
+        ds == MatchDisplayState.earlyEnded ||
+        ds == MatchDisplayState.completed) {
       return now.isBefore(visibilityDeadline);
     }
     return false;
