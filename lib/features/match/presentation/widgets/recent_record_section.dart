@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -424,7 +423,7 @@ class _H2HMatchRow extends StatelessWidget {
             ),
             decoration: ShapeDecoration(
               color: AppColors.surfaceLight,
-              shape: SmoothRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothXs,
               ),
             ),

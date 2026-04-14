@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -75,16 +74,10 @@ class FormationDropdown extends StatelessWidget {
         return Container(
           decoration: const ShapeDecoration(
             color: Colors.white,
-            shape: SmoothRectangleBorder(
-              borderRadius: SmoothBorderRadius.only(
-                topLeft: SmoothRadius(
-                  cornerRadius: AppRadius.xl,
-                  cornerSmoothing: 1.0,
-                ),
-                topRight: SmoothRadius(
-                  cornerRadius: AppRadius.xl,
-                  cornerSmoothing: 1.0,
-                ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppRadius.xl),
+                topRight: Radius.circular(AppRadius.xl),
               ),
             ),
           ),

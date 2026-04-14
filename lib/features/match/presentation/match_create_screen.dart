@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -206,7 +205,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
         SnackBar(
           content: const Text('팀 정보를 찾을 수 없습니다'),
           behavior: SnackBarBehavior.floating,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
       );
       return;
@@ -257,7 +256,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
         SnackBar(
           content: Text(_isEditMode ? '경기 정보가 수정되었습니다' : '경기 일정이 생성되었습니다'),
           behavior: SnackBarBehavior.floating,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
       );
       Navigator.of(context).pop();
@@ -267,7 +266,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
         SnackBar(
           content: Text('저장 실패: $e'),
           behavior: SnackBarBehavior.floating,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
       );
     }
@@ -557,7 +556,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
                     color: _canSave
                         ? AppColors.primary
                         : AppColors.primary.withValues(alpha: 0.3),
-                    shape: SmoothRectangleBorder(
+                    shape: RoundedRectangleBorder(
                       borderRadius: AppRadius.smoothButton,
                     ),
                   ),
@@ -648,7 +647,7 @@ class _PickerButton extends StatelessWidget {
         ),
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothSm,
             side: BorderSide(
               color: isExpanded ? AppColors.textPrimary : Colors.transparent,
@@ -710,7 +709,7 @@ class _InlineCalendar extends StatelessWidget {
     return Container(
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
       ),
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Theme(
@@ -857,10 +856,10 @@ class _TimeSheetState extends State<_TimeSheet> {
     return Container(
       decoration: const ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(
-          borderRadius: SmoothBorderRadius.only(
-            topLeft: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1.0),
-            topRight: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
         ),
       ),
@@ -926,7 +925,7 @@ class _TimeSheetState extends State<_TimeSheet> {
                     ),
                     decoration: ShapeDecoration(
                       color: AppColors.surfaceLight,
-                      shape: SmoothRectangleBorder(
+                      shape: RoundedRectangleBorder(
                         borderRadius: AppRadius.smoothMd,
                       ),
                     ),
@@ -1018,7 +1017,7 @@ class _TimeSheetState extends State<_TimeSheet> {
                 alignment: Alignment.center,
                 decoration: ShapeDecoration(
                   color: AppColors.textPrimary,
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothButton,
                   ),
                 ),
@@ -1060,7 +1059,7 @@ class _DurationChip extends StatelessWidget {
         alignment: Alignment.center,
         decoration: ShapeDecoration(
           color: isSelected ? AppColors.textPrimary : AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
         ),
         child: Text(
           label,
@@ -1101,7 +1100,7 @@ class _SelectChip extends StatelessWidget {
         ),
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothSm,
             side: BorderSide(
               color: isSelected ? AppColors.textPrimary : Colors.transparent,
@@ -1149,7 +1148,7 @@ class _AddChip extends StatelessWidget {
         ),
         decoration: ShapeDecoration(
           color: Colors.transparent,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothSm,
             side: BorderSide(
               color: isOpen ? AppColors.textPrimary : AppColors.iconInactive,
@@ -1194,7 +1193,7 @@ class _TextFieldBox extends StatelessWidget {
     return Container(
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
       ),
       child: TextField(
         controller: controller,
@@ -1245,7 +1244,7 @@ class _AddInputRow extends StatelessWidget {
             ),
             decoration: ShapeDecoration(
               color: AppColors.textPrimary,
-              shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
             ),
             child: Text(
               '추가',
@@ -1278,7 +1277,7 @@ class _CounterButton extends StatelessWidget {
         alignment: Alignment.center,
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
         ),
         child: Icon(
           icon,

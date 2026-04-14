@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,15 +32,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: switch (_mode) {
               _OnboardingMode.choice => _ChoiceView(
-                  onCreateTeam: () =>
-                      setState(() => _mode = _OnboardingMode.createTeam),
+                  onCreateTeam: () => context.push('/team/create'),
                   onJoinTeam: () =>
                       setState(() => _mode = _OnboardingMode.joinTeam),
-                ),
-              _OnboardingMode.createTeam => _CreateTeamView(
-                  onBack: () =>
-                      setState(() => _mode = _OnboardingMode.choice),
-                  onComplete: () => context.go('/'),
                 ),
               _OnboardingMode.joinTeam => _JoinTeamView(
                   onBack: () =>
@@ -56,7 +49,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-enum _OnboardingMode { choice, createTeam, joinTeam }
+enum _OnboardingMode { choice, joinTeam }
 
 // ══════════════════════════════════════════════
 // 선택 화면: 팀 만들기 vs 초대 코드 입력
@@ -117,245 +110,6 @@ class _ChoiceView extends StatelessWidget {
         ),
 
         const Spacer(flex: 3),
-      ],
-    );
-  }
-}
-
-// ══════════════════════════════════════════════
-// 팀 생성 화면
-// ══════════════════════════════════════════════
-
-class _CreateTeamView extends ConsumerStatefulWidget {
-  const _CreateTeamView({
-    required this.onBack,
-    required this.onComplete,
-  });
-
-  final VoidCallback onBack;
-  final VoidCallback onComplete;
-
-  @override
-  ConsumerState<_CreateTeamView> createState() => _CreateTeamViewState();
-}
-
-class _CreateTeamViewState extends ConsumerState<_CreateTeamView> {
-  final _nameController = TextEditingController();
-  bool _loading = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = '팀 이름을 입력해주세요');
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    try {
-      final teamRepo = ref.read(teamRepoProvider);
-      final team = await teamRepo.create(name: name);
-
-      // 초대 코드 자동 생성
-      final code = await teamRepo.createInviteCode(teamId: team.id);
-
-      if (mounted) {
-        // 초대 코드를 보여주는 다이얼로그
-        await _showInviteCodeDialog(team.name, code);
-        widget.onComplete();
-      }
-    } catch (e) {
-      setState(() {
-        _error = '팀 생성에 실패했습니다';
-        _loading = false;
-      });
-    }
-  }
-
-  Future<void> _showInviteCodeDialog(String teamName, String code) {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothLg),
-        title: Text(
-          '$teamName 생성 완료!',
-          style: AppTextStyles.heading.copyWith(color: AppColors.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '팀원들에게 아래 초대 코드를 공유하세요',
-              style: AppTextStyles.bodyRegular.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: code));
-                HapticFeedback.mediumImpact();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('코드가 복사되었습니다')),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.base,
-                  horizontal: AppSpacing.lg,
-                ),
-                decoration: ShapeDecoration(
-                  color: AppColors.surfaceLight,
-                  shape: SmoothRectangleBorder(
-                    borderRadius: AppRadius.smoothMd,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      code,
-                      style: AppTextStyles.sectionTitle.copyWith(
-                        color: AppColors.primary,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Icon(
-                      Icons.copy_rounded,
-                      size: 18,
-                      color: AppColors.textTertiary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              '확인',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: AppSpacing.lg),
-
-        // 뒤로가기
-        GestureDetector(
-          onTap: widget.onBack,
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.all(AppSpacing.xs),
-            child: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-          ),
-        ),
-
-        const SizedBox(height: AppSpacing.xxl),
-
-        Text(
-          '새 팀 만들기',
-          style: AppTextStyles.sectionTitle.copyWith(
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          '팀 이름을 입력하세요',
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-
-        const SizedBox(height: AppSpacing.xxl),
-
-        // 팀 이름 입력
-        Container(
-          decoration: ShapeDecoration(
-            color: AppColors.surfaceLight,
-            shape: SmoothRectangleBorder(
-              borderRadius: AppRadius.smoothMd,
-            ),
-          ),
-          child: TextField(
-            controller: _nameController,
-            autofocus: true,
-            style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              hintText: 'FC칼로',
-              hintStyle: AppTextStyles.body.copyWith(
-                color: AppColors.textTertiary,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.base,
-                vertical: AppSpacing.md,
-              ),
-            ),
-          ),
-        ),
-
-        if (_error != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            _error!,
-            style: AppTextStyles.caption.copyWith(color: AppColors.error),
-          ),
-        ],
-
-        const SizedBox(height: AppSpacing.xl),
-
-        // 생성 버튼
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _loading ? null : _submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.textPrimary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: SmoothRectangleBorder(
-                borderRadius: AppRadius.smoothButton,
-              ),
-            ),
-            child: _loading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('팀 생성', style: AppTextStyles.buttonPrimary),
-          ),
-        ),
       ],
     );
   }
@@ -487,7 +241,7 @@ class _JoinTeamViewState extends ConsumerState<_JoinTeamView> {
         Container(
           decoration: ShapeDecoration(
             color: AppColors.surfaceLight,
-            shape: SmoothRectangleBorder(
+            shape: RoundedRectangleBorder(
               borderRadius: AppRadius.smoothMd,
             ),
           ),
@@ -537,7 +291,7 @@ class _JoinTeamViewState extends ConsumerState<_JoinTeamView> {
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: SmoothRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothButton,
               ),
             ),
@@ -589,7 +343,7 @@ class _OnboardingButton extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: ShapeDecoration(
           color: isPrimary ? AppColors.textPrimary : AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothLg,
           ),
         ),

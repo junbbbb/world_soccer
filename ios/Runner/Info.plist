@@ -66,5 +66,7 @@
 	</array>
 	<key>FlutterDeepLinkingEnabled</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>팀 로고에 사용할 사진을 선택합니다.</string>
 </dict>
 </plist>

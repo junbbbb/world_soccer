@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -100,7 +99,7 @@ class _Header extends StatelessWidget {
                 ),
                 decoration: ShapeDecoration(
                   color: AppColors.primary,
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothXs,
                   ),
                 ),
@@ -133,8 +132,8 @@ class _Header extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    ClipSmoothRect(
-                      radius: AppRadius.smoothXs,
+                    ClipRRect(
+                      borderRadius: AppRadius.smoothXs,
                       child: Image.asset(
                         'assets/images/logo_calo.png',
                         width: 28,
@@ -170,8 +169,8 @@ class _Header extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    ClipSmoothRect(
-                      radius: AppRadius.smoothXs,
+                    ClipRRect(
+                      borderRadius: AppRadius.smoothXs,
                       child: Image.asset(
                         'assets/images/logo_ssoa.png',
                         width: 28,
@@ -267,7 +266,7 @@ class _BenchSection extends StatelessWidget {
       ),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothSm,
         ),
       ),

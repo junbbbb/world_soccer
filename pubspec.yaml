@@ -43,12 +43,12 @@ dependencies:
   freezed_annotation:
   json_annotation:
   google_fonts:
-  figma_squircle: ^0.6.3
   checkmark: ^0.0.2+1
   flutter_svg: ^2.2.4
   chat_bubbles: ^1.9.0
   supabase_flutter: ^2.9.0
   google_sign_in: ^6.2.1
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

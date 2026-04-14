@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,7 @@ import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../runtime/providers.dart';
+import '../../../shared/widgets/opponent_logo.dart';
 import '../../../types/enums.dart' show MatchDisplayState, MatchResult;
 import '../../../types/match.dart' show Match;
 import '../../../types/team.dart' show Team;
@@ -429,7 +429,7 @@ class _MatchCard extends StatelessWidget {
             horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
         decoration: ShapeDecoration(
           color: Colors.white,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -484,7 +484,7 @@ class _MatchCard extends StatelessWidget {
                                 horizontal: 8, vertical: 3),
                             decoration: ShapeDecoration(
                               color: const Color(0xFFE8F8EE),
-                              shape: SmoothRectangleBorder(
+                              shape: RoundedRectangleBorder(
                                   borderRadius: AppRadius.smoothXs),
                             ),
                             child: Text(
@@ -504,7 +504,7 @@ class _MatchCard extends StatelessWidget {
                             color: match.isPast
                                 ? AppColors.surface
                                 : AppColors.primary.withValues(alpha: 0.08),
-                            shape: SmoothRectangleBorder(
+                            shape: RoundedRectangleBorder(
                                 borderRadius: AppRadius.smoothXs),
                           ),
                           child: Text(
@@ -583,15 +583,22 @@ class _TeamRow extends StatelessWidget {
   final bool isOpponent;
 
   Widget _buildLogo() {
+    if (isOpponent && (logoUrl == null || logoUrl!.isEmpty)) {
+      return OpponentLogo(
+        teamName: name,
+        size: 22,
+        borderRadius: AppRadius.smoothXs,
+      );
+    }
     if (logo != null) {
-      return ClipSmoothRect(
-        radius: AppRadius.smoothXs,
+      return ClipRRect(
+        borderRadius: AppRadius.smoothXs,
         child: Image.asset(logo!, width: 22, height: 22, fit: BoxFit.cover),
       );
     }
     if (logoUrl != null && logoUrl!.isNotEmpty) {
-      return ClipSmoothRect(
-        radius: AppRadius.smoothXs,
+      return ClipRRect(
+        borderRadius: AppRadius.smoothXs,
         child: Image.network(
           logoUrl!,
           width: 22,
@@ -612,7 +619,7 @@ class _TeamRow extends StatelessWidget {
         color: isOpponent
             ? const Color(0xFFFFECEC)
             : AppColors.surface,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothXs),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothXs),
       ),
       child: Icon(
         isOpponent ? Icons.sports_soccer : Icons.shield_rounded,
@@ -673,7 +680,7 @@ class _SegmentControl extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothSm,
         ),
       ),
@@ -688,7 +695,7 @@ class _SegmentControl extends StatelessWidget {
                 decoration: selected
                     ? ShapeDecoration(
                         color: AppColors.textPrimary,
-                        shape: SmoothRectangleBorder(
+                        shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.smoothXs,
                         ),
                       )

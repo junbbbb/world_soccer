@@ -419,6 +419,47 @@ final class LineupServiceProvider
 
 String _$lineupServiceHash() => r'd64bb8e32493ee15ade4c0be6e1571725b04670d';
 
+@ProviderFor(teamService)
+final teamServiceProvider = TeamServiceProvider._();
+
+final class TeamServiceProvider
+    extends $FunctionalProvider<TeamService, TeamService, TeamService>
+    with $Provider<TeamService> {
+  TeamServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'teamServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<TeamService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  TeamService create(Ref ref) {
+    return teamService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TeamService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TeamService>(value),
+    );
+  }
+}
+
+String _$teamServiceHash() => r'e85d3611867f6fef0689b68d23d421516b7f0de4';
+
 /// 현재 유저의 팀 목록.
 
 @ProviderFor(myTeams)

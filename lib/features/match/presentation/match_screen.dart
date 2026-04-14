@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +67,54 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
     }
   }
 
+  Future<void> _confirmDelete(String matchId) async {
+    HapticFeedback.mediumImpact();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('경기 삭제'),
+        content: const Text('이 경기를 영구 삭제할까요?\n삭제한 경기는 복구할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      await ref.read(matchRepoProvider).delete(matchId);
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('삭제 실패: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    ref.invalidate(teamMatchesProvider);
+    navigator.pop();
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('경기가 삭제되었습니다'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final showDummy = ref.watch(showDummyDataProvider);
@@ -104,7 +151,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                     elevation: 0,
                     padding:
                         const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                    shape: SmoothRectangleBorder(
+                    shape: RoundedRectangleBorder(
                       borderRadius: AppRadius.smoothButton,
                     ),
                   ),
@@ -181,6 +228,9 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                             ),
                           );
                         },
+                        onDelete: (!showDummy && widget.matchId != null)
+                            ? () => _confirmDelete(widget.matchId!)
+                            : null,
                       ),
                     ),
                     // Hero VS 섹션 — 자연스럽게 스크롤

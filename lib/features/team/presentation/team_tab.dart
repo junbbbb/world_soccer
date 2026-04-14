@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,9 +9,14 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
 import '../../../shared/widgets/section_title.dart';
+import '../../../shared/widgets/team_logo_view.dart';
 import '../../../types/profile.dart';
 import '../../../types/team.dart';
+import 'package:go_router/go_router.dart';
+
+import 'widgets/team_settings_sheet.dart';
 
 // ── 더미 데이터 ──
 
@@ -198,10 +202,25 @@ class _TeamTabState extends ConsumerState<TeamTab> with SingleTickerProviderStat
                                   .copyWith(color: AppColors.textPrimary),
                             ),
                             const Spacer(),
-                            const Icon(
-                              Icons.settings_outlined,
-                              color: AppColors.textTertiary,
-                              size: 24,
+                            GestureDetector(
+                              onTap: () async {
+                                HapticFeedback.selectionClick();
+                                final team = await ref
+                                    .read(currentTeamProvider.future);
+                                if (!context.mounted) return;
+                                if (team == null) {
+                                  // 팀 없으면 바로 "새 팀 만들기" 화면
+                                  context.push('/team/create');
+                                  return;
+                                }
+                                showTeamSettingsSheet(context, team);
+                              },
+                              behavior: HitTestBehavior.opaque,
+                              child: const Icon(
+                                Icons.settings_outlined,
+                                color: AppColors.textTertiary,
+                                size: 24,
+                              ),
                             ),
                           ],
                         ),
@@ -275,27 +294,38 @@ class _OverviewView extends StatelessWidget {
 
 // ── 팀 정보 섹션 ──
 
-class _TeamInfoSection extends StatelessWidget {
+class _TeamInfoSection extends ConsumerWidget {
   const _TeamInfoSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final realTeam = ref.watch(currentTeamProvider).maybeWhen(
+          data: (t) => t,
+          orElse: () => null,
+        );
     return Padding(
       padding: AppSpacing.paddingPage,
       child: Column(
         children: [
-          ClipSmoothRect(
-            radius: AppRadius.smoothLg,
-            child: Image.asset(
-              'assets/images/logo_calo.png',
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
+          if (realTeam != null)
+            TeamLogoView(
+              team: realTeam,
+              size: 80,
+              borderRadius: AppRadius.smoothLg,
+            )
+          else
+            ClipRRect(
+              borderRadius: AppRadius.smoothLg,
+              child: Image.asset(
+                'assets/images/logo_calo.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            _teamInfo.name,
+            realTeam?.name ?? _teamInfo.name,
             style: AppTextStyles.sectionTitle.copyWith(
               color: AppColors.textPrimary,
             ),
@@ -332,7 +362,7 @@ class _InfoBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: ShapeDecoration(
         color: AppColors.surface,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothFull),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothFull),
       ),
       child: Text(
         label,
@@ -367,7 +397,7 @@ class _InviteLinkCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           decoration: ShapeDecoration(
             color: AppColors.surface,
-            shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -450,7 +480,7 @@ class _InviteBottomSheet extends StatelessWidget {
                 ),
                 decoration: ShapeDecoration(
                   color: AppColors.surfaceLight,
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothSm,
                   ),
                 ),
@@ -484,7 +514,7 @@ class _InviteBottomSheet extends StatelessWidget {
                             horizontal: 10, vertical: 6),
                         decoration: ShapeDecoration(
                           color: Colors.white,
-                          shape: SmoothRectangleBorder(
+                          shape: RoundedRectangleBorder(
                             borderRadius: AppRadius.smoothXs,
                           ),
                         ),
@@ -564,7 +594,7 @@ class _InviteShareButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
         decoration: ShapeDecoration(
           color: color,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothSm,
             side: hasBorder
                 ? const BorderSide(color: AppColors.iconInactive)
@@ -630,7 +660,7 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,7 +714,7 @@ class _TeamStatsView extends StatelessWidget {
               ),
               decoration: ShapeDecoration(
                 color: AppColors.surfaceLight,
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothMd),
               ),
               child: Column(
@@ -771,7 +801,7 @@ class _RecordOverviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
       ),
       child: Column(
         children: [
@@ -787,8 +817,8 @@ class _RecordOverviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.base),
-          ClipSmoothRect(
-            radius: AppRadius.smoothFull,
+          ClipRRect(
+            borderRadius: AppRadius.smoothFull,
             child: SizedBox(
               height: 8,
               child: Row(
@@ -879,8 +909,8 @@ class _RankingRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ClipSmoothRect(
-            radius: AppRadius.smoothSm,
+          ClipRRect(
+            borderRadius: AppRadius.smoothSm,
             child: Image.asset(player.avatarPath ?? '',
                 width: 36, height: 36, fit: BoxFit.cover),
           ),
@@ -935,7 +965,7 @@ class _MembersView extends StatelessWidget {
                     const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 decoration: ShapeDecoration(
                   color: AppColors.surface,
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: AppRadius.smoothMd),
                 ),
                 child: Row(
@@ -989,8 +1019,8 @@ class _MemberRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
-          ClipSmoothRect(
-            radius: AppRadius.smoothSm,
+          ClipRRect(
+            borderRadius: AppRadius.smoothSm,
             child: Image.asset(member.avatarPath,
                 width: 40, height: 40, fit: BoxFit.cover),
           ),

@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -106,7 +105,7 @@ const _recentPerformances = [
 
 final _cardDecoration = ShapeDecoration(
   color: AppColors.surfaceLight,
-  shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothLg),
+  shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothLg),
 );
 
 // ── MatchStatsView ──
@@ -181,8 +180,8 @@ class _TeamStatsContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.base),
-                  ClipSmoothRect(
-                    radius: AppRadius.smoothFull,
+                  ClipRRect(
+                    borderRadius: AppRadius.smoothFull,
                     child: SizedBox(
                       height: 8,
                       child: Row(
@@ -301,8 +300,8 @@ class _MyStatsContent extends StatelessWidget {
               decoration: _cardDecoration,
               child: Row(
                 children: [
-                  ClipSmoothRect(
-                    radius: AppRadius.smoothSm,
+                  ClipRRect(
+                    borderRadius: AppRadius.smoothSm,
                     child: Image.asset(_myStats.avatarPath, width: 56, height: 56, fit: BoxFit.cover),
                   ),
                   const SizedBox(width: AppSpacing.base),
@@ -458,8 +457,8 @@ class _RankingRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ClipSmoothRect(
-            radius: AppRadius.smoothSm,
+          ClipRRect(
+            borderRadius: AppRadius.smoothSm,
             child: Image.asset(player.avatarPath, width: 36, height: 36, fit: BoxFit.cover),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -516,7 +515,7 @@ class _TitleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: ShapeDecoration(
         color: bg,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothFull),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothFull),
       ),
       child: Text(
         label,
@@ -573,7 +572,7 @@ class _PerformanceRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: ShapeDecoration(
                 color: AppColors.momBackground,
-                shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothFull),
+                shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothFull),
               ),
               child: Text(
                 'MOM',

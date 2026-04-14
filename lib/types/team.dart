@@ -6,14 +6,36 @@ class Team {
   final String id;
   final String name;
   final String? logoUrl;
+  final String? logoColor; // hex #RRGGBB — logoUrl 없을 때 이니셜 배경색
+  final String? description;
   final DateTime createdAt;
 
   const Team({
     required this.id,
     required this.name,
     this.logoUrl,
+    this.logoColor,
+    this.description,
     required this.createdAt,
   });
+
+  Team copyWith({
+    String? id,
+    String? name,
+    String? logoUrl,
+    String? logoColor,
+    String? description,
+    DateTime? createdAt,
+  }) {
+    return Team(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      logoUrl: logoUrl ?? this.logoUrl,
+      logoColor: logoColor ?? this.logoColor,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 /// 팀 멤버십 (다대다 관계).

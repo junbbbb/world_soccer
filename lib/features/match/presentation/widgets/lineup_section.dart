@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,9 +47,83 @@ class LineupSection extends ConsumerWidget {
                 : null,
           ),
           if (hasLineup)
-            _LineupGrid(state: state, formations: formations)
+            _LineupCard(state: state, formations: formations)
           else
             const _EmptyLineup(),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════
+// 라인업 카드 (그리드 + 전술 메모)
+// ══════════════════════════════════════════════
+
+class _LineupCard extends StatelessWidget {
+  const _LineupCard({required this.state, required this.formations});
+
+  final LineupState state;
+  final List<Formation> formations;
+
+  // TODO: LineupState 에 tacticsNote 추가되면 연결.
+  String? get _tacticsNote => null;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: AppColors.surfaceLight,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothLg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _LineupGrid(state: state, formations: formations),
+            const SizedBox(height: AppSpacing.lg),
+            _TacticsNote(note: _tacticsNote),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TacticsNote extends StatelessWidget {
+  const _TacticsNote({this.note});
+
+  final String? note;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasNote = note != null && note!.trim().isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.xs,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '감독의 전술',
+            style: AppTextStyles.captionBold.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            hasNote ? note! : '전술 메모가 아직 없어요',
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: hasNote
+                  ? AppColors.textPrimary
+                  : AppColors.textTertiary,
+            ),
+          ),
         ],
       ),
     );
@@ -72,8 +145,8 @@ class _LineupGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 외곽만 둥글게, 내부 맞닿는 면은 직각
-    return ClipSmoothRect(
-      radius: AppRadius.smoothLg,
+    return ClipRRect(
+      borderRadius: AppRadius.smoothLg,
       child: ColoredBox(
         color: LineupColors.pitchBackground.withValues(alpha: 0.4),
         child: Column(
@@ -157,7 +230,7 @@ class _EmptyLineup extends StatelessWidget {
               elevation: 0,
               padding:
                   const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: SmoothRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothMd,
               ),
             ),

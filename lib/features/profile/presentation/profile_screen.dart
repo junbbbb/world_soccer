@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +10,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../config/dev_settings.dart';
 import '../../../runtime/providers.dart';
+import '../../../shared/widgets/opponent_logo.dart';
 
 // ══════════════════════════════════════════════
 // 더미 데이터
@@ -112,7 +112,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     decoration: ShapeDecoration(
                       color: AppColors.surfaceLight,
-                      shape: SmoothRectangleBorder(
+                      shape: RoundedRectangleBorder(
                         borderRadius: AppRadius.smoothMd,
                       ),
                     ),
@@ -153,7 +153,7 @@ class ProfileScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         decoration: ShapeDecoration(
                           color: AppColors.surfaceLight,
-                          shape: SmoothRectangleBorder(
+                          shape: RoundedRectangleBorder(
                             borderRadius: AppRadius.smoothButton,
                           ),
                         ),
@@ -220,7 +220,7 @@ class _Header extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('프로필 공유 (준비중)'),
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothMd,
                   ),
                   behavior: SnackBarBehavior.floating,
@@ -368,7 +368,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('이미지 변경 (준비중)'),
-                            shape: SmoothRectangleBorder(
+                            shape: RoundedRectangleBorder(
                               borderRadius: AppRadius.smoothMd,
                             ),
                             behavior: SnackBarBehavior.floating,
@@ -532,7 +532,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                 padding: const EdgeInsets.symmetric(
                   vertical: AppSpacing.md,
                 ),
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothButton,
                 ),
               ),
@@ -587,7 +587,7 @@ class _InputField extends StatelessWidget {
       ),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
       ),
       child: TextField(
         controller: controller,
@@ -635,7 +635,7 @@ class _PositionPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothFull,
             side: BorderSide(
               color: isSelected ? AppColors.textPrimary : Colors.transparent,
@@ -672,7 +672,7 @@ class _PhysicalInfo extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
         decoration: ShapeDecoration(
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothMd,
             side: BorderSide(
               color: AppColors.textPrimary.withValues(alpha: 0.08),
@@ -733,7 +733,7 @@ class _ProfileCard extends StatelessWidget {
     return Container(
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothLg),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothLg),
       ),
       child: Column(
         children: [
@@ -850,7 +850,7 @@ class _TagRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: ShapeDecoration(
               color: tag.bg,
-              shape: SmoothRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothFull,
               ),
             ),
@@ -906,7 +906,7 @@ class _RecentSection extends StatelessWidget {
                 foregroundColor: AppColors.textSecondary,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothMd,
                 ),
               ),
@@ -932,19 +932,15 @@ class _MatchRow extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
       ),
       child: Row(
         children: [
           // 상대팀 로고
-          ClipSmoothRect(
-            radius: AppRadius.smoothXs,
-            child: Image.asset(
-              match.logo,
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
-            ),
+          OpponentLogo(
+            teamName: match.opponent,
+            size: 36,
+            borderRadius: AppRadius.smoothXs,
           ),
           const SizedBox(width: AppSpacing.md),
           // 상대 + 날짜
@@ -974,7 +970,7 @@ class _MatchRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: ShapeDecoration(
                 color: AppColors.momBackground,
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothXs,
                 ),
               ),
@@ -997,7 +993,7 @@ class _MatchRow extends StatelessWidget {
             ),
             decoration: ShapeDecoration(
               color: Colors.white,
-              shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
             ),
             child: Row(
               children: [

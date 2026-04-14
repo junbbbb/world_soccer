@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -10,11 +9,17 @@ import '../../../../core/theme/app_text_styles.dart';
 
 /// 상단 바 (뒤로가기 + 공유/일정/더보기) — pinned
 class MatchTopBarDelegate extends SliverPersistentHeaderDelegate {
-  const MatchTopBarDelegate({this.onBack, this.onStatusChange, this.onEdit});
+  const MatchTopBarDelegate({
+    this.onBack,
+    this.onStatusChange,
+    this.onEdit,
+    this.onDelete,
+  });
 
   final VoidCallback? onBack;
   final ValueChanged<String>? onStatusChange;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   double get minExtent => 52;
@@ -74,10 +79,10 @@ class MatchTopBarDelegate extends SliverPersistentHeaderDelegate {
       builder: (_) => Container(
         decoration: const ShapeDecoration(
           color: Colors.white,
-          shape: SmoothRectangleBorder(
-            borderRadius: SmoothBorderRadius.only(
-              topLeft: SmoothRadius(cornerRadius: AppRadius.xl, cornerSmoothing: 1),
-              topRight: SmoothRadius(cornerRadius: AppRadius.xl, cornerSmoothing: 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(AppRadius.xl),
+              topRight: Radius.circular(AppRadius.xl),
             ),
           ),
         ),
@@ -131,6 +136,17 @@ class MatchTopBarDelegate extends SliverPersistentHeaderDelegate {
                   onStatusChange?.call('cancelled');
                 },
               ),
+              if (onDelete != null)
+                _StatusOption(
+                  icon: Icons.delete_outline_rounded,
+                  label: '경기 삭제',
+                  description: '경기를 영구 삭제합니다 (복구 불가)',
+                  isDestructive: true,
+                  onTap: () {
+                    Navigator.pop(context);
+                    onDelete!();
+                  },
+                ),
               const SizedBox(height: AppSpacing.base),
             ],
           ),
@@ -142,7 +158,8 @@ class MatchTopBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant MatchTopBarDelegate oldDelegate) =>
       onStatusChange != oldDelegate.onStatusChange ||
-      onEdit != oldDelegate.onEdit;
+      onEdit != oldDelegate.onEdit ||
+      onDelete != oldDelegate.onDelete;
 }
 
 class _StatusOption extends StatelessWidget {

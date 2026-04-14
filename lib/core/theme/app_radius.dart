@@ -1,6 +1,6 @@
-import 'package:figma_squircle/figma_squircle.dart';
+import 'package:flutter/widgets.dart';
 
-/// cornerSmoothing 1.0 기본, squircle 라운딩 시스템
+/// 라운딩 토큰. `BorderRadius.circular` 캐시.
 class AppRadius {
   AppRadius._();
 
@@ -13,41 +13,17 @@ class AppRadius {
   static const double xl = 20;
   static const double full = 100;
 
-  // ── Cached SmoothBorderRadius (빌드마다 재생성 방지) ──
-  static final smoothXs = SmoothBorderRadius(
-    cornerRadius: xs,
-    cornerSmoothing: 1.0,
-  );
-  static final smoothSm = SmoothBorderRadius(
-    cornerRadius: sm,
-    cornerSmoothing: 1.0,
-  );
-  static final smoothMd = SmoothBorderRadius(
-    cornerRadius: md,
-    cornerSmoothing: 1.0,
-  );
-  static final smoothButton = SmoothBorderRadius(
-    cornerRadius: button,
-    cornerSmoothing: 1.0,
-  );
-  static final smoothLg = SmoothBorderRadius(
-    cornerRadius: lg,
-    cornerSmoothing: 1.0,
-  );
-  static final smoothXl = SmoothBorderRadius(
-    cornerRadius: xl,
-    cornerSmoothing: 1.0,
-  );
-  static final smoothFull = SmoothBorderRadius(
-    cornerRadius: full,
-    cornerSmoothing: 1.0,
-  );
+  // ── Cached BorderRadius (빌드마다 재생성 방지) ──
+  static final smoothXs = BorderRadius.circular(xs);
+  static final smoothSm = BorderRadius.circular(sm);
+  static final smoothMd = BorderRadius.circular(md);
+  static final smoothButton = BorderRadius.circular(button);
+  static final smoothLg = BorderRadius.circular(lg);
+  static final smoothXl = BorderRadius.circular(xl);
+  static final smoothFull = BorderRadius.circular(full);
 
   /// 비표준 값용 팩토리
-  static SmoothBorderRadius smooth(double radius) {
-    return SmoothBorderRadius(
-      cornerRadius: radius,
-      cornerSmoothing: 1.0,
-    );
+  static BorderRadius smooth(double radius) {
+    return BorderRadius.circular(radius);
   }
 }

@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -237,7 +236,7 @@ class BottomActionBarState extends State<BottomActionBar>
                         disabledForegroundColor: widget.isJoined && !_isExpanded
                             ? AppColors.textSecondary
                             : Colors.white.withValues(alpha: 0.6),
-                        shape: SmoothRectangleBorder(
+                        shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.smoothMd,
                         ),
                         padding: const EdgeInsets.symmetric(
@@ -303,7 +302,7 @@ class BottomActionBarState extends State<BottomActionBar>
                 side: BorderSide(
                   color: AppColors.textSecondary.withValues(alpha: 0.5),
                 ),
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothMd,
                 ),
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -436,7 +435,7 @@ class BottomActionBarState extends State<BottomActionBar>
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: ShapeDecoration(
           color: AppColors.surface,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothFull,
             side: BorderSide(
               color: isSelected ? AppColors.textPrimary : Colors.transparent,

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../types/enums.dart';
@@ -60,11 +62,21 @@ class SupabaseTeamRepo implements TeamRepo {
   }
 
   @override
-  Future<Team> create({required String name, String? logoUrl}) async {
+  Future<Team> create({
+    required String name,
+    String? logoUrl,
+    String? logoColor,
+    String? description,
+  }) async {
     final userId = _client.auth.currentUser!.id;
     final data = await _client
         .from('teams')
-        .insert({'name': name, 'logo_url': logoUrl})
+        .insert({
+          'name': name,
+          'logo_url': logoUrl,
+          'logo_color': logoColor,
+          'description': description,
+        })
         .select()
         .single();
 
@@ -81,6 +93,31 @@ class SupabaseTeamRepo implements TeamRepo {
   }
 
   @override
+  Future<Team> updateInfo({
+    required String teamId,
+    String? name,
+    String? logoUrl,
+    String? logoColor,
+    String? description,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (name != null) updates['name'] = name;
+    if (logoUrl != null) updates['logo_url'] = logoUrl;
+    if (logoColor != null) updates['logo_color'] = logoColor;
+    if (description != null) updates['description'] = description;
+    if (updates.isEmpty) {
+      return getById(teamId);
+    }
+    final data = await _client
+        .from('teams')
+        .update(updates)
+        .eq('id', teamId)
+        .select()
+        .single();
+    return _teamFromRow(data);
+  }
+
+  @override
   Future<void> join({
     required String teamId,
     required String playerId,
@@ -90,6 +127,47 @@ class SupabaseTeamRepo implements TeamRepo {
       'player_id': playerId,
       'role': 'member',
     });
+  }
+
+  @override
+  Future<void> leave({
+    required String teamId,
+    required String playerId,
+  }) async {
+    final removed = await _client
+        .from('team_members')
+        .delete()
+        .eq('team_id', teamId)
+        .eq('player_id', playerId)
+        .select('team_id');
+    if (removed.isEmpty) {
+      throw StateError('탈퇴 실패: 권한이 없거나 소속되지 않은 팀');
+    }
+  }
+
+  @override
+  Future<String> uploadLogo({
+    required String teamId,
+    required List<int> bytes,
+    required String extension,
+  }) async {
+    final ext = extension.toLowerCase().replaceAll('.', '');
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final path = '$teamId/logo_$ts.$ext';
+    final contentType = switch (ext) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
+    await _client.storage.from('team-logos').uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(
+            contentType: contentType,
+            upsert: true,
+          ),
+        );
+    return _client.storage.from('team-logos').getPublicUrl(path);
   }
 
   @override
@@ -171,6 +249,8 @@ class SupabaseTeamRepo implements TeamRepo {
       id: row['id'] as String,
       name: row['name'] as String,
       logoUrl: row['logo_url'] as String?,
+      logoColor: row['logo_color'] as String?,
+      description: row['description'] as String?,
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }

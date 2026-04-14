@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,16 +79,10 @@ class _SlotPickerSheet extends ConsumerWidget {
       child: Container(
         decoration: const ShapeDecoration(
           color: Colors.white,
-          shape: SmoothRectangleBorder(
-            borderRadius: SmoothBorderRadius.only(
-              topLeft: SmoothRadius(
-                cornerRadius: AppRadius.xl,
-                cornerSmoothing: 1.0,
-              ),
-              topRight: SmoothRadius(
-                cornerRadius: AppRadius.xl,
-                cornerSmoothing: 1.0,
-              ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(AppRadius.xl),
+              topRight: Radius.circular(AppRadius.xl),
             ),
           ),
         ),
@@ -259,7 +252,7 @@ class _CandidateRow extends StatelessWidget {
         ),
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothSm),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
         ),
         child: Row(
           children: [
@@ -346,7 +339,7 @@ class _CandidateRow extends StatelessWidget {
                       color: isPositionMatch
                           ? AppColors.primary.withValues(alpha: 0.12)
                           : AppColors.surface,
-                      shape: SmoothRectangleBorder(
+                      shape: RoundedRectangleBorder(
                         borderRadius: AppRadius.smoothXs,
                       ),
                     ),
@@ -370,7 +363,7 @@ class _CandidateRow extends StatelessWidget {
                       ),
                       decoration: ShapeDecoration(
                         color: AppColors.textPrimary,
-                        shape: SmoothRectangleBorder(
+                        shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.smoothXs,
                         ),
                       ),

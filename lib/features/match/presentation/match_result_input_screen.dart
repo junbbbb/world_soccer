@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,7 +79,7 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
         SnackBar(
           content: const Text('경기 결과가 저장되었습니다'),
           behavior: SnackBarBehavior.floating,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
       );
       Navigator.of(context).pop();
@@ -122,7 +121,7 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
         SnackBar(
           content: const Text('경기 결과가 저장되었습니다'),
           behavior: SnackBarBehavior.floating,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
       );
       Navigator.of(context).pop();
@@ -132,7 +131,7 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
         SnackBar(
           content: Text('저장 실패: $e'),
           behavior: SnackBarBehavior.floating,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
       );
     }
@@ -409,7 +408,7 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
                 padding: const EdgeInsets.symmetric(
                   vertical: AppSpacing.md,
                 ),
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothButton,
                 ),
               ),
@@ -447,8 +446,8 @@ class _TeamScore extends StatelessWidget {
     return Column(
       children: [
         if (logo != null)
-          ClipSmoothRect(
-            radius: AppRadius.smoothXs,
+          ClipRRect(
+            borderRadius: AppRadius.smoothXs,
             child: Image.asset(logo!, width: 36, height: 36, fit: BoxFit.cover),
           )
         else
@@ -457,7 +456,7 @@ class _TeamScore extends StatelessWidget {
             height: 36,
             decoration: ShapeDecoration(
               color: AppColors.surface,
-              shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothXs),
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothXs),
             ),
             child: const Icon(Icons.shield_rounded, size: 20, color: AppColors.textTertiary),
           ),
@@ -546,7 +545,7 @@ class _Counter extends StatelessWidget {
       height: 34,
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothFull),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothFull),
       ),
       child: Row(
         children: [
@@ -622,7 +621,7 @@ class _TeamScoreWithInput extends StatelessWidget {
           height: 36,
           decoration: ShapeDecoration(
             color: const Color(0xFFFFECEC),
-            shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothXs),
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothXs),
           ),
           child: const Icon(Icons.sports_soccer, size: 20, color: AppColors.textTertiary),
         ),

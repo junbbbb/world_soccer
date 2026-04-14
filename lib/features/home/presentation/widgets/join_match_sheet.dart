@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -72,16 +71,10 @@ class _JoinMatchSheetState extends State<_JoinMatchSheet> {
     return Container(
       decoration: const ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(
-          borderRadius: SmoothBorderRadius.only(
-            topLeft: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
-            topRight: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.xl),
+            topRight: Radius.circular(AppRadius.xl),
           ),
         ),
       ),
@@ -167,7 +160,7 @@ class _JoinMatchSheetState extends State<_JoinMatchSheet> {
                   padding: const EdgeInsets.symmetric(
                     vertical: AppSpacing.md,
                   ),
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothButton,
                   ),
                 ),
@@ -226,7 +219,7 @@ class _OutlinePill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothFull,
             side: BorderSide(
               color: isSelected ? AppColors.textPrimary : Colors.transparent,

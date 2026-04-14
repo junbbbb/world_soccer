@@ -151,6 +151,15 @@ class MockMatchRepo extends _i1.Mock implements _i4.MatchRepo {
           as _i5.Future<void>);
 
   @override
+  _i5.Future<void> delete(String? matchId) =>
+      (super.noSuchMethod(
+            Invocation.method(#delete, [matchId]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
   _i5.Future<List<_i2.Match>> getH2H({
     required String? teamId,
     required String? opponentName,
@@ -182,6 +191,29 @@ class MockPlayerRepo extends _i1.Mock implements _i6.PlayerRepo {
             ),
           )
           as _i5.Future<_i3.Player>);
+
+  @override
+  _i5.Future<void> setActiveTeam({
+    required String? playerId,
+    required String? teamId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#setActiveTeam, [], {
+              #playerId: playerId,
+              #teamId: teamId,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<String?> getActiveTeamId(String? playerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getActiveTeamId, [playerId]),
+            returnValue: _i5.Future<String?>.value(),
+          )
+          as _i5.Future<String?>);
 
   @override
   _i5.Future<void> joinMatch({

@@ -40,6 +40,9 @@ abstract class MatchRepo {
     required String status,
   });
 
+  /// 경기 영구 삭제.
+  Future<void> delete(String matchId);
+
   /// 상대 전적 (H2H).
   Future<List<Match>> getH2H({
     required String teamId,

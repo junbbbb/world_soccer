@@ -17,6 +17,7 @@ import '../../features/match/presentation/match_result_input_screen.dart';
 import '../../features/match/presentation/match_screen.dart';
 import '../../features/match/presentation/share/match_share_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/team/presentation/team_create_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -116,6 +117,10 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/team/create',
+        builder: (context, state) => const TeamCreateScreen(),
       ),
       GoRoute(
         path: '/chat',

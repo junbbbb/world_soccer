@@ -19,6 +19,31 @@ class SupabasePlayerRepo implements PlayerRepo {
   }
 
   @override
+  Future<void> setActiveTeam({
+    required String playerId,
+    required String teamId,
+  }) async {
+    final updated = await _client
+        .from('players')
+        .update({'active_team_id': teamId})
+        .eq('id', playerId)
+        .select('id');
+    if (updated.isEmpty) {
+      throw StateError('활성 팀 설정 실패: 권한이 없거나 존재하지 않는 플레이어');
+    }
+  }
+
+  @override
+  Future<String?> getActiveTeamId(String playerId) async {
+    final data = await _client
+        .from('players')
+        .select('active_team_id')
+        .eq('id', playerId)
+        .maybeSingle();
+    return data?['active_team_id'] as String?;
+  }
+
+  @override
   Future<void> joinMatch({
     required String matchId,
     required String playerId,

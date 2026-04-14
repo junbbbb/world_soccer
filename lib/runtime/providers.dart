@@ -19,6 +19,7 @@ import '../repo/stats_repo.dart';
 import '../repo/team_repo.dart';
 import '../service/lineup_service.dart';
 import '../service/match_service.dart';
+import '../service/team_service.dart';
 
 part 'providers.g.dart';
 
@@ -84,6 +85,14 @@ LineupService lineupService(Ref ref) {
   );
 }
 
+@riverpod
+TeamService teamService(Ref ref) {
+  return TeamService(
+    teamRepo: ref.watch(teamRepoProvider),
+    playerRepo: ref.watch(playerRepoProvider),
+  );
+}
+
 // ── Data Providers ──
 
 /// 현재 유저의 팀 목록.
@@ -97,10 +106,28 @@ Future<List<Team>> myTeams(Ref ref) async {
 }
 
 /// 현재 선택된 팀.
+///
+/// `players.active_team_id` 를 우선 조회. 없거나 해당 팀이 더 이상 내 팀 목록에
+/// 없으면 가입한 첫 팀으로 폴백.
 @riverpod
 Future<Team?> currentTeam(Ref ref) async {
   final teams = await ref.watch(myTeamsProvider.future);
   if (teams.isEmpty) return null;
+
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return teams.first;
+
+  final playerRepo = ref.watch(playerRepoProvider);
+  try {
+    final activeId = await playerRepo.getActiveTeamId(user.id);
+    if (activeId != null) {
+      final match = teams.where((t) => t.id == activeId).firstOrNull;
+      if (match != null) return match;
+    }
+  } catch (_) {
+    // 실패해도 앱이 멈추지 않게: 첫 팀으로 폴백.
+  }
   return teams.first;
 }
 

@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -90,7 +89,7 @@ class MatchShareScreen extends ConsumerWidget {
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothLg),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothLg),
         shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -99,8 +98,8 @@ class MatchShareScreen extends ConsumerWidget {
           ),
         ],
       ),
-      child: ClipSmoothRect(
-        radius: AppRadius.smoothLg,
+      child: ClipRRect(
+        borderRadius: AppRadius.smoothLg,
         child: SquadShareCard(
           quarterIndex: q,
           formation: formation,
@@ -184,7 +183,7 @@ class _BottomBar extends StatelessWidget {
                         content: const Text(
                           '다음 단계에서 카톡 공유 연결 예정',
                         ),
-                        shape: SmoothRectangleBorder(
+                        shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.smoothMd,
                         ),
                         behavior: SnackBarBehavior.floating,
@@ -200,7 +199,7 @@ class _BottomBar extends StatelessWidget {
               disabledForegroundColor: AppColors.textTertiary,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: SmoothRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothButton,
               ),
             ),

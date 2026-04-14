@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -285,7 +284,7 @@ class _SegmentControl extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: ShapeDecoration(
         color: AppColors.surface,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothMd,
         ),
       ),
@@ -328,7 +327,7 @@ class _SegmentButton extends StatelessWidget {
           decoration: isSelected
               ? ShapeDecoration(
                   color: Colors.white,
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothSm,
                   ),
                   shadows: const [
@@ -388,7 +387,7 @@ class _TeamStatsView extends StatelessWidget {
               ),
               decoration: ShapeDecoration(
                 color: AppColors.surfaceLight,
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothMd,
                 ),
               ),
@@ -487,7 +486,7 @@ class _RecordOverviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothMd,
         ),
       ),
@@ -512,8 +511,8 @@ class _RecordOverviewCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.base),
           // 승/무/패 바
-          ClipSmoothRect(
-            radius: AppRadius.smoothFull,
+          ClipRRect(
+            borderRadius: AppRadius.smoothFull,
             child: SizedBox(
               height: 8,
               child: Row(
@@ -609,7 +608,7 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothMd,
         ),
       ),
@@ -663,8 +662,8 @@ class _MyStatsView extends StatelessWidget {
             padding: AppSpacing.paddingPage,
             child: Row(
               children: [
-                ClipSmoothRect(
-                  radius: AppRadius.smoothMd,
+                ClipRRect(
+                  borderRadius: AppRadius.smoothMd,
                   child: Image.asset(
                     _myStats.avatarPath,
                     width: 56,
@@ -721,7 +720,7 @@ class _MyStatsView extends StatelessWidget {
               ),
               decoration: ShapeDecoration(
                 color: AppColors.surfaceLight,
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothMd,
                 ),
               ),
@@ -796,7 +795,7 @@ class _MyStatsView extends StatelessWidget {
                         ),
                         decoration: ShapeDecoration(
                           color: const Color(0xFFFFC107),
-                          shape: SmoothRectangleBorder(
+                          shape: RoundedRectangleBorder(
                             borderRadius: AppRadius.smoothSm,
                           ),
                         ),
@@ -894,8 +893,8 @@ class _RankingRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ClipSmoothRect(
-            radius: AppRadius.smoothSm,
+          ClipRRect(
+            borderRadius: AppRadius.smoothSm,
             child: Image.asset(
               player.avatarPath,
               width: 36,
@@ -943,7 +942,7 @@ class _TitleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: ShapeDecoration(
         color: color,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothSm,
         ),
       ),

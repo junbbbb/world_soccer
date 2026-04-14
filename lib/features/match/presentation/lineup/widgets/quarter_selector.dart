@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -48,7 +47,7 @@ class QuarterSelector extends StatelessWidget {
             padding: const EdgeInsets.all(_containerPadding),
             decoration: ShapeDecoration(
               color: AppColors.surface,
-              shape: SmoothRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothMd,
               ),
             ),
@@ -65,7 +64,7 @@ class QuarterSelector extends StatelessWidget {
                   child: Container(
                     decoration: ShapeDecoration(
                       color: Colors.white,
-                      shape: SmoothRectangleBorder(
+                      shape: RoundedRectangleBorder(
                         borderRadius: AppRadius.smooth(AppRadius.sm + 1),
                       ),
                       shadows: const [

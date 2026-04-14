@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -66,16 +65,10 @@ class _AddMercenarySheetBodyState extends State<_AddMercenarySheetBody> {
     return Container(
       decoration: const ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(
-          borderRadius: SmoothBorderRadius.only(
-            topLeft: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
-            topRight: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.xl),
+            topRight: Radius.circular(AppRadius.xl),
           ),
         ),
       ),
@@ -126,7 +119,7 @@ class _AddMercenarySheetBodyState extends State<_AddMercenarySheetBody> {
               ),
               decoration: ShapeDecoration(
                 color: AppColors.surfaceLight,
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothSm,
                 ),
               ),
@@ -207,7 +200,7 @@ class _AddMercenarySheetBodyState extends State<_AddMercenarySheetBody> {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  shape: SmoothRectangleBorder(
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.smoothButton,
                   ),
                 ),
@@ -245,7 +238,7 @@ class _PositionButton extends StatelessWidget {
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.10)
               : AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: AppRadius.smoothSm,
             side: BorderSide(
               color: isSelected ? AppColors.primary : Colors.transparent,

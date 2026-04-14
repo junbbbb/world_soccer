@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -597,7 +596,7 @@ class _SocialButton extends StatelessWidget {
           height: 52,
           decoration: ShapeDecoration(
             color: backgroundColor,
-            shape: SmoothRectangleBorder(
+            shape: RoundedRectangleBorder(
               borderRadius: AppRadius.smoothButton,
               side: borderColor != null
                   ? BorderSide(color: borderColor!)
@@ -789,7 +788,7 @@ class _InputField extends StatelessWidget {
     return Container(
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothMd,
         ),
       ),

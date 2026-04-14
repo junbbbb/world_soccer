@@ -94,6 +94,20 @@ class SupabaseMatchRepo implements MatchRepo {
   }
 
   @override
+  Future<void> delete(String matchId) async {
+    // .select() 를 붙여 실제 삭제된 row 를 반환받는다. RLS 로 막히거나
+    // 존재하지 않는 id 를 넘기면 빈 배열이 오므로 명시적으로 예외를 던진다.
+    final deleted = await _client
+        .from('matches')
+        .delete()
+        .eq('id', matchId)
+        .select('id');
+    if (deleted.isEmpty) {
+      throw StateError('match $matchId 삭제 실패: 권한이 없거나 존재하지 않는 경기');
+    }
+  }
+
+  @override
   Future<List<Match>> getH2H({
     required String teamId,
     required String opponentName,

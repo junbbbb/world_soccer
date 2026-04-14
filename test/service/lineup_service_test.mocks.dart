@@ -118,6 +118,29 @@ class MockPlayerRepo extends _i1.Mock implements _i5.PlayerRepo {
           as _i4.Future<_i2.Player>);
 
   @override
+  _i4.Future<void> setActiveTeam({
+    required String? playerId,
+    required String? teamId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#setActiveTeam, [], {
+              #playerId: playerId,
+              #teamId: teamId,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<String?> getActiveTeamId(String? playerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getActiveTeamId, [playerId]),
+            returnValue: _i4.Future<String?>.value(),
+          )
+          as _i4.Future<String?>);
+
+  @override
   _i4.Future<void> joinMatch({
     required String? matchId,
     required String? playerId,

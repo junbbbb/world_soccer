@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +13,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../runtime/providers.dart';
 import '../../../types/enums.dart';
 import '../../../types/match.dart' show Match;
+import '../../../shared/widgets/team_logo_view.dart';
 import '../../match/presentation/match_result_input_screen.dart';
 import '../../../types/team.dart' show Team;
 import 'widgets/next_match_card.dart';
@@ -328,7 +328,7 @@ class _DismissibleNoticeCard extends StatelessWidget {
         ),
         decoration: ShapeDecoration(
           color: AppColors.surfaceLight,
-          shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -371,29 +371,22 @@ class _DismissibleNoticeCard extends StatelessWidget {
 // Team Switcher Sheet — 소속팀 변경
 // ══════════════════════════════════════════════
 
-class _TeamSwitcherSheet extends StatelessWidget {
+class _TeamSwitcherSheet extends ConsumerWidget {
   const _TeamSwitcherSheet();
 
-  static const _teams = <({String name, String logo, bool isCurrent})>[
-    (name: 'FC칼로', logo: 'assets/images/logo_calo.png', isCurrent: true),
-    (name: 'FC쏘아', logo: 'assets/images/logo_ssoa.png', isCurrent: false),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamsAsync = ref.watch(myTeamsProvider);
+    final currentAsync = ref.watch(currentTeamProvider);
+    final currentId = currentAsync.asData?.value?.id;
+
     return Container(
       decoration: const ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(
-          borderRadius: SmoothBorderRadius.only(
-            topLeft: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
-            topRight: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.xl),
+            topRight: Radius.circular(AppRadius.xl),
           ),
         ),
       ),
@@ -425,56 +418,42 @@ class _TeamSwitcherSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            for (final team in _teams)
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.of(context).pop();
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: Row(
-                    children: [
-                      ClipSmoothRect(
-                        radius: AppRadius.smoothXs,
-                        child: Image.asset(
-                          team.logo,
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          team.name,
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: team.isCurrent
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (team.isCurrent)
-                        const Icon(
-                          Icons.check_rounded,
-                          size: 20,
-                          color: AppColors.primary,
-                        ),
-                    ],
+            teamsAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (_, __) => Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                child: Text(
+                  '팀 목록을 불러오지 못했어요',
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.textTertiary,
                   ),
                 ),
               ),
+              data: (teams) => Column(
+                children: [
+                  for (final team in teams)
+                    _TeamSwitcherItem(
+                      team: team,
+                      isCurrent: team.id == currentId,
+                      onTap: () => _onSelect(context, ref, team.id),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: AppSpacing.base),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/team/create');
+                },
                 behavior: HitTestBehavior.opaque,
                 child: Container(
                   width: double.infinity,
@@ -483,7 +462,7 @@ class _TeamSwitcherSheet extends StatelessWidget {
                   ),
                   decoration: ShapeDecoration(
                     color: AppColors.surfaceLight,
-                    shape: SmoothRectangleBorder(
+                    shape: RoundedRectangleBorder(
                       borderRadius: AppRadius.smoothMd,
                     ),
                   ),
@@ -497,7 +476,7 @@ class _TeamSwitcherSheet extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
-                        '새 팀 참가하기',
+                        '새 팀 만들기',
                         style: AppTextStyles.captionMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -508,6 +487,104 @@ class _TeamSwitcherSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.base),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onSelect(
+      BuildContext context, WidgetRef ref, String teamId) async {
+    HapticFeedback.selectionClick();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final supa = ref.read(supabaseClientProvider);
+    final uid = supa.auth.currentUser?.id;
+    if (uid == null) {
+      navigator.pop();
+      return;
+    }
+
+    try {
+      await ref
+          .read(teamServiceProvider)
+          .switchTeam(playerId: uid, teamId: teamId);
+      ref.invalidate(currentTeamProvider);
+      ref.invalidate(currentTeamIdProvider);
+      ref.invalidate(teamMatchesProvider);
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('팀 전환 실패: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    navigator.pop();
+  }
+}
+
+class _TeamSwitcherItem extends StatelessWidget {
+  const _TeamSwitcherItem({
+    required this.team,
+    required this.isCurrent,
+    required this.onTap,
+  });
+
+  final Team team;
+  final bool isCurrent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            TeamLogoView(
+              team: team,
+              size: 40,
+              borderRadius: AppRadius.smoothXs,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    team.name,
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight:
+                          isCurrent ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                  if (team.description != null &&
+                      team.description!.isNotEmpty)
+                    Text(
+                      team.description!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (isCurrent)
+              const Icon(
+                Icons.check_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
           ],
         ),
       ),

@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -67,7 +66,7 @@ class ParticipationSection extends StatelessWidget {
                 elevation: 0,
                 padding:
                     const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothMd,
                 ),
               ),

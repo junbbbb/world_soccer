@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -166,8 +165,8 @@ class _ReadOnlyPitchView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipSmoothRect(
-      radius: AppRadius.smoothLg,
+    return ClipRRect(
+      borderRadius: AppRadius.smoothLg,
       child: DecoratedBox(
         decoration: const BoxDecoration(
           color: LineupColors.pitchBackground,

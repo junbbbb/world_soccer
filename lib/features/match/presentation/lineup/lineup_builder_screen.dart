@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,7 +37,7 @@ class _LineupBuilderScreenState extends ConsumerState<LineupBuilderScreen> {
       SnackBar(
         content: Text(msg),
         behavior: SnackBarBehavior.floating,
-        shape: SmoothRectangleBorder(borderRadius: AppRadius.smoothMd),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -335,16 +334,10 @@ class _MoreMenuSheet extends StatelessWidget {
     return Container(
       decoration: const ShapeDecoration(
         color: Colors.white,
-        shape: SmoothRectangleBorder(
-          borderRadius: SmoothBorderRadius.only(
-            topLeft: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
-            topRight: SmoothRadius(
-              cornerRadius: AppRadius.xl,
-              cornerSmoothing: 1.0,
-            ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppRadius.xl),
+            topRight: Radius.circular(AppRadius.xl),
           ),
         ),
       ),

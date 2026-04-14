@@ -7,6 +7,11 @@
 | 영역 | 파일 패턴 | 이유 |
 |------|----------|------|
 | DB 스키마 | `supabase/migrations/`, `types/*.dart` 모델 필드 추가/삭제 | 기존 데이터와 불일치 |
+| RLS 정책 | `supabase/migrations/*_policy.sql` | 권한 구멍/차단 |
+| 삭제 경로 | `MatchRepo.delete`, `updateStatus('cancelled')`, UI 삭제 메뉴 | 데이터 영구 손실 (cascade 포함) |
+| 탈퇴/멤버십 | `TeamRepo.leave`, `TeamService.leaveTeam` | 마지막 admin 보호 규칙 깨지면 팀 잠김 |
+| 활성 팀 전환 | `players.active_team_id`, `TeamService.switchTeam`, `currentTeamProvider` | 엉뚱한 팀 데이터 노출 |
+| Storage 버킷/정책 | `storage.buckets`, `storage.objects` RLS, `TeamRepo.uploadLogo` | 권한 누수 또는 업로드 전부 차단 |
 | 인증 | `repo/auth_repo.dart`, `service/auth_service.dart` | 로그인 불가 |
 | Supabase 설정 | `config/supabase_config.dart`, `.env` | 전체 데이터 접근 불가 |
 | 레이어 의존성 규칙 | `analysis_options.yaml`, `import_lint.yaml` | 아키텍처 무너짐 |

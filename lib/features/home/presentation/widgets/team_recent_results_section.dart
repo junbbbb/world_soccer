@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../runtime/providers.dart';
+import '../../../../shared/widgets/opponent_logo.dart';
 import '../../../../shared/widgets/section_title.dart';
 import '../../../../types/enums.dart';
 import '../../../../types/match.dart' show Match;
@@ -17,12 +17,12 @@ import '../../../../types/match.dart' show Match;
 class _MatchResult {
   final String result;
   final String score;
-  final String opponentLogo;
+  final String opponentName;
 
   const _MatchResult({
     required this.result,
     required this.score,
-    required this.opponentLogo,
+    required this.opponentName,
   });
 }
 
@@ -30,27 +30,27 @@ const _dummyResults = [
   _MatchResult(
     result: 'W',
     score: '3 - 1',
-    opponentLogo: 'assets/images/logo_ssoa.png',
+    opponentName: 'FC쏘아',
   ),
   _MatchResult(
     result: 'L',
     score: '1 - 2',
-    opponentLogo: 'assets/images/logo_calo.png',
+    opponentName: '드림FC',
   ),
   _MatchResult(
     result: 'W',
     score: '4 - 0',
-    opponentLogo: 'assets/images/logo_ssoa.png',
+    opponentName: '올스타FC',
   ),
   _MatchResult(
     result: 'D',
     score: '2 - 2',
-    opponentLogo: 'assets/images/logo_calo.png',
+    opponentName: 'FC뽀잉',
   ),
   _MatchResult(
     result: 'W',
     score: '2 - 1',
-    opponentLogo: 'assets/images/logo_ssoa.png',
+    opponentName: 'FC쏘아',
   ),
 ];
 
@@ -114,7 +114,7 @@ class TeamRecentResultsSection extends ConsumerWidget {
                     result: _MatchResult(
                       result: label,
                       score: score,
-                      opponentLogo: 'assets/images/logo_ssoa.png',
+                      opponentName: m.opponentName,
                     ),
                   );
                 },
@@ -154,7 +154,7 @@ class TeamRecentResultsSection extends ConsumerWidget {
                       ),
                       decoration: ShapeDecoration(
                         color: AppColors.surfaceLight,
-                        shape: SmoothRectangleBorder(
+                        shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.smoothSm,
                         ),
                       ),
@@ -217,7 +217,7 @@ class _EmptyResultsCard extends StatelessWidget {
               ),
               decoration: ShapeDecoration(
                 color: AppColors.surfaceLight,
-                shape: SmoothRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.smoothSm,
                 ),
               ),
@@ -271,7 +271,7 @@ class _ResultCapsule extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 10),
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
-        shape: SmoothRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: AppRadius.smoothSm,
         ),
       ),
@@ -294,14 +294,10 @@ class _ResultCapsule extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.base),
-          ClipSmoothRect(
-            radius: AppRadius.smoothXs,
-            child: Image.asset(
-              result.opponentLogo,
-              width: 22,
-              height: 22,
-              fit: BoxFit.cover,
-            ),
+          OpponentLogo(
+            teamName: result.opponentName,
+            size: 22,
+            borderRadius: AppRadius.smoothXs,
           ),
         ],
       ),

@@ -1,4 +1,3 @@
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_colors.dart';
@@ -31,8 +30,8 @@ class StaticPitchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 0.85,
-      child: ClipSmoothRect(
-        radius: AppRadius.smoothMd,
+      child: ClipRRect(
+        borderRadius: AppRadius.smoothMd,
         child: DecoratedBox(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

@@ -1,19 +1,25 @@
 # Quality Status
 
-마지막 업데이트: 2026-04-12 (Phase 4 완료 시점)
+마지막 업데이트: 2026-04-14 (팀 라이프사이클 반영)
 
 ## 코드 규모
 
-- 소스 파일: 82개 (`lib/`)
-- 테스트 파일: 3개 (`test/types/`, `test/service/`)
+- 소스 파일: 약 86개 (`lib/`)
+- 테스트 파일: 4개 (`test/types/`, `test/service/` — team_service_test.dart 추가)
 
 ## 정적 분석
 
 - `flutter analyze` 결과:
   - Errors: **0**
-  - Warnings: **2** (minor)
-  - Info: **43** (대부분 `prefer_const_constructors`)
+  - Warnings: **2** (기존, minor)
+  - Info: 다수 (대부분 `prefer_const_constructors`, `directives_ordering`, `dangling_library_doc_comments`)
 - 레이어 의존성 위반: **미측정** (`import_lint` 미설치)
+- `pubspec.yaml`: `figma_squircle` 제거됨 (discontinued)
+
+## 테스트
+
+- `flutter test` 기준: 33+ 통과 (신규 team_service 14건 포함)
+- 기존 실패 2건은 내 변경과 무관: `match_test.dart` 하드코딩 날짜 만료, `widget_test.dart` ProviderScope 누락
 
 ## 테스트 커버리지
 
