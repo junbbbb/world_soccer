@@ -31,4 +31,14 @@ abstract class StatsRepo {
     required RankType rankType,
     int limit = 5,
   });
+
+  /// 선수가 팀·반기 기준 획득한 뱃지 목록.
+  ///
+  /// 최소 3경기 출전, 공동 1위 포함. 없으면 빈 리스트.
+  Future<List<PlayerTitle>> getPlayerTitles({
+    required String playerId,
+    required String teamId,
+    required int year,
+    required SeasonHalf half,
+  });
 }

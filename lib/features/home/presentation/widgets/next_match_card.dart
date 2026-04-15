@@ -73,18 +73,98 @@ class NextMatchCard extends ConsumerStatefulWidget {
 
 class _NextMatchCardState extends ConsumerState<NextMatchCard> {
   bool _isJoined = false;
+  bool _busy = false;
 
-  /// 참가하기 탭 → 바텀시트에서 포지션/쿼터 입력 받고 참가 완료로 전환.
-  /// (이미 참가 중이면 바로 취소)
-  Future<void> _onParticipateTap() async {
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  /// 짧게 탭 → 프로필 선호 포지션으로 바로 참가 (전 쿼터).
+  /// 이미 참가 상태면 참가 취소.
+  Future<void> _onParticipateTap(Match? match) async {
+    if (_busy) return;
     HapticFeedback.mediumImpact();
-    if (_isJoined) {
-      setState(() => _isJoined = false);
+
+    if (ref.read(showDummyDataProvider) || match == null) {
+      setState(() => _isJoined = !_isJoined);
       return;
     }
+
+    final user = ref.read(supabaseClientProvider).auth.currentUser;
+    if (user == null) {
+      _showError('로그인이 필요합니다');
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      final service = ref.read(matchServiceProvider);
+      if (_isJoined) {
+        await service.leaveMatch(matchId: match.id, playerId: user.id);
+        if (mounted) setState(() => _isJoined = false);
+        return;
+      }
+
+      final player = await ref.read(currentPlayerProvider.future);
+      if (player == null || player.preferredPositions.isEmpty) {
+        _showError('프로필에서 선호 포지션을 먼저 설정해주세요');
+        return;
+      }
+      await service.joinMatch(
+        matchId: match.id,
+        playerId: user.id,
+        preferredPositions: player.preferredPositions,
+        availableQuarters: const [1, 2, 3, 4],
+      );
+      if (mounted) setState(() => _isJoined = true);
+    } catch (e) {
+      _showError('참가 처리 실패: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// 길게 누름 → 기존 바텀시트에서 포지션/쿼터 커스텀 입력.
+  Future<void> _onParticipateLongPress(Match? match) async {
+    if (_busy) return;
+    HapticFeedback.heavyImpact();
+
+    if (ref.read(showDummyDataProvider) || match == null) {
+      final result = await showJoinMatchSheet(context);
+      if (!mounted || result == null) return;
+      setState(() => _isJoined = true);
+      return;
+    }
+
+    final user = ref.read(supabaseClientProvider).auth.currentUser;
+    if (user == null) {
+      _showError('로그인이 필요합니다');
+      return;
+    }
+
     final result = await showJoinMatchSheet(context);
     if (!mounted || result == null) return;
-    setState(() => _isJoined = true);
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(matchServiceProvider).joinMatch(
+        matchId: match.id,
+        playerId: user.id,
+        preferredPositions: result.preferredPositions.toList(),
+        availableQuarters: result.availableQuarters.toList(),
+      );
+      if (mounted) setState(() => _isJoined = true);
+    } catch (e) {
+      _showError('참가 처리 실패: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   static const _animDuration = Duration(milliseconds: 350);
@@ -240,7 +320,11 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
                               ),
                             ),
                           ),
-                          _ParticipateButton(onTap: _onParticipateTap),
+                          _ParticipateButton(
+                            onTap: () => _onParticipateTap(match),
+                            onLongPress: () =>
+                                _onParticipateLongPress(match),
+                          ),
                         ],
                       ),
               ),
@@ -255,8 +339,13 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
 // ── 참가하기 버튼 (press 피드백 + 타원형 방사 그라데이션) ──
 
 class _ParticipateButton extends StatefulWidget {
-  const _ParticipateButton({required this.onTap, this.label = '참가하기'});
+  const _ParticipateButton({
+    required this.onTap,
+    required this.onLongPress,
+    this.label = '참가하기',
+  });
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
   final String label;
 
   @override
@@ -270,6 +359,7 @@ class _ParticipateButtonState extends State<_ParticipateButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),

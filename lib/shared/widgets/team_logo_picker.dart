@@ -6,16 +6,23 @@ import 'team_logo_view.dart' show extensionFromPath;
 
 typedef PickedLogoImage = ({Uint8List bytes, String ext});
 
-/// 갤러리에서 팀 로고 이미지 선택. 취소/에러 시 null.
+/// 갤러리에서 이미지 선택. 취소/에러 시 null.
 /// 에러는 호출자 화면의 SnackBar 로 표시, 성공 시 햅틱 피드백.
-Future<PickedLogoImage?> pickTeamLogoImage(BuildContext context) async {
+///
+/// 팀 로고 기본값은 512/85. 프로필은 크롭 단계가 뒤에 붙으므로 1500/92 권장.
+Future<PickedLogoImage?> pickTeamLogoImage(
+  BuildContext context, {
+  int maxWidth = 512,
+  int maxHeight = 512,
+  int imageQuality = 85,
+}) async {
   try {
     final picker = ImagePicker();
     final file = await picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 85,
+      maxWidth: maxWidth.toDouble(),
+      maxHeight: maxHeight.toDouble(),
+      imageQuality: imageQuality,
     );
     if (file == null) return null;
     final bytes = await file.readAsBytes();

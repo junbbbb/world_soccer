@@ -87,8 +87,8 @@ class SupabasePlayerRepo implements PlayerRepo {
         matchId: row['match_id'] as String,
         playerId: row['player_id'] as String,
         preferredPositions: posLabels
-            .map((label) => Position.values.firstWhere((p) => p.label == label,
-                orElse: () => Position.cm))
+            .map(Position.fromLabel)
+            .whereType<Position>()
             .toList(),
         availableQuarters:
             (row['available_quarters'] as List<dynamic>?)?.cast<int>() ?? [],
@@ -109,19 +109,15 @@ class SupabasePlayerRepo implements PlayerRepo {
       number: row['number'] as int?,
       avatarUrl: row['avatar_url'] as String?,
       preferredPositions: posLabels
-          .map((label) => Position.values.firstWhere((p) => p.label == label,
-              orElse: () => Position.cm))
+          .map(Position.fromLabel)
+          .whereType<Position>()
           .toList(),
-      preferredFoot: _parseFoot(row['preferred_foot'] as String?),
+      preferredFoot: switch (row['preferred_foot'] as String?) {
+        null => null,
+        final v => PreferredFoot.fromLabel(v),
+      },
       height: row['height'] as int?,
       createdAt: DateTime.parse(row['created_at'] as String),
     );
-  }
-
-  PreferredFoot? _parseFoot(String? value) {
-    if (value == null) return null;
-    return PreferredFoot.values
-        .cast<PreferredFoot?>()
-        .firstWhere((f) => f!.label == value, orElse: () => null);
   }
 }

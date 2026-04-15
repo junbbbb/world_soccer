@@ -3,78 +3,104 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 
-import 'dart:typed_data';
-
+import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../config/dev_settings.dart';
+import '../../../core/utils/capture.dart';
+import '../../../core/utils/date_format.dart';
 import '../../../runtime/providers.dart';
-import '../../../shared/widgets/opponent_logo.dart';
 import '../../../shared/widgets/team_logo_picker.dart';
+import '../../../shared/widgets/team_logo_view.dart';
+import '../../../types/enums.dart';
+import '../../../types/player.dart';
+import '../../../types/profile.dart';
+import '../../../types/team.dart';
+import 'widgets/crop_image_screen.dart';
 
-// ══════════════════════════════════════════════
-// 더미 데이터
-// ══════════════════════════════════════════════
+const _defaultAvatarAsset = 'assets/images/avatars/profileimage.png';
 
-const _avatarPath =
-    'assets/images/avatars/profileimage.png';
-
-const _name = '이병준';
-const _position = 'MF';
-const _number = 7;
-const _team = 'FC칼로';
-const _season = '2026 상반기';
-
-const _appearances = 12;
-const _goals = 5;
-const _assists = 3;
-const _mom = 2;
-
-const _tags = <({String label, Color bg, Color fg})>[
-  (label: '출석왕', bg: Color(0xFFFFF3E0), fg: Color(0xFFE65100)),
-  (label: '득점 2위', bg: Color(0xFFE3F2FD), fg: Color(0xFF1565C0)),
-  (label: '어시왕', bg: Color(0xFFE8F5E9), fg: Color(0xFF2E7D32)),
-  (label: 'MOM 2회', bg: Color(0xFFFCE4EC), fg: Color(0xFFC62828)),
-];
-
-const _recentPerformances = <_PerfData>[
-  _PerfData(opponent: 'FC쏘아', logo: 'assets/images/logo_ssoa.png', date: '3/14 토', goals: 1, assists: 1, isMom: true),
-  _PerfData(opponent: '올스타FC', logo: 'assets/images/logo_ssoa.png', date: '3/7 토', goals: 0, assists: 0, isMom: false),
-  _PerfData(opponent: 'FC쏘아', logo: 'assets/images/logo_ssoa.png', date: '2/21 토', goals: 2, assists: 0, isMom: true),
-  _PerfData(opponent: '올스타FC', logo: 'assets/images/logo_ssoa.png', date: '2/7 토', goals: 1, assists: 1, isMom: false),
-  _PerfData(opponent: 'FC쏘아', logo: 'assets/images/logo_ssoa.png', date: '1/18 토', goals: 1, assists: 0, isMom: false),
-];
-
-class _PerfData {
-  final String opponent;
-  final String logo;
-  final String date;
-  final int goals;
-  final int assists;
-  final bool isMom;
-  const _PerfData({
-    required this.opponent,
-    required this.logo,
-    required this.date,
-    required this.goals,
-    required this.assists,
-    required this.isMom,
-  });
+String _seasonLabel() {
+  final s = currentSeasonHalf();
+  return '${s.year} ${s.half.label}';
 }
+
+String _positionGroupLabel(Player p) {
+  if (p.preferredPositions.isEmpty) return '—';
+  return p.preferredPositions.first.group.label;
+}
+
+String _positionsText(Player p) {
+  if (p.preferredPositions.isEmpty) return '—';
+  final labels = p.preferredPositions.map((pos) => pos.label).toList();
+  if (labels.length <= 2) return labels.join(', ');
+  return '${labels.take(2).join(', ')} +${labels.length - 2}';
+}
+
+const _titleStyles = <PlayerTitle, ({Color bg, Color fg})>{
+  PlayerTitle.topScorer: (bg: Color(0xFFE3F2FD), fg: Color(0xFF1565C0)),
+  PlayerTitle.topAssister: (bg: Color(0xFFE8F5E9), fg: Color(0xFF2E7D32)),
+  PlayerTitle.topAttendance: (bg: Color(0xFFFFF3E0), fg: Color(0xFFE65100)),
+  PlayerTitle.topMom: (bg: Color(0xFFFCE4EC), fg: Color(0xFFC62828)),
+};
 
 // ══════════════════════════════════════════════
 // ProfileScreen
 // ══════════════════════════════════════════════
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  final GlobalKey _cardKey = GlobalKey();
+  bool _sharing = false;
+
+  Future<void> _shareCard(Player player) async {
+    if (_sharing) return;
+    HapticFeedback.selectionClick();
+    setState(() => _sharing = true);
+    try {
+      final bytes = await captureWidgetAsPng(_cardKey, pixelRatio: 3);
+      await Share.shareXFiles(
+        [
+          XFile.fromData(
+            bytes,
+            mimeType: 'image/png',
+            name: 'profile_${player.id}.png',
+          ),
+        ],
+        subject: '${player.name} 프로필',
+        text: '${player.name} 프로필',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('공유 실패: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final playerAsync = ref.watch(currentPlayerProvider);
+    final teamAsync = ref.watch(currentTeamProvider);
+    final statsAsync = ref.watch(currentSeasonStatsProvider);
+    final titlesAsync = ref.watch(currentPlayerTitlesProvider);
+    final recentAsync = ref.watch(currentRecentPerformancesProvider);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -82,97 +108,145 @@ class ProfileScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         body: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(bottom: bottomPadding + AppSpacing.xxl),
-            child: Column(
-              children: [
-                // 헤더
-                const _Header(),
-                const SizedBox(height: AppSpacing.sm),
-
-                // 프로필 카드 (이름+이미지+데이터+태그)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: _ProfileCard(),
-                ),
-
-                // 피지컬 정보
-                const SizedBox(height: AppSpacing.xl),
-                const _PhysicalInfo(),
-
-                // 최근 경기 (스크롤 아래)
-                const SizedBox(height: AppSpacing.xxxl),
-                const _RecentSection(),
-
-                // 개발 설정
-                const SizedBox(height: AppSpacing.xxxl),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.base,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: ShapeDecoration(
-                      color: AppColors.surfaceLight,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.smoothMd,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          '더미 데이터 표시',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const Spacer(),
-                        Switch.adaptive(
-                          value: ref.watch(showDummyDataProvider),
-                          activeColor: AppColors.primary,
-                          onChanged: (v) {
-                            ref.read(showDummyDataProvider.notifier).toggle(v);
-                          },
-                        ),
-                      ],
-                    ),
+          child: playerAsync.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  '프로필을 불러오지 못했습니다.\n$e',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body.copyWith(
+                    color: AppColors.textTertiary,
                   ),
                 ),
+              ),
+            ),
+            data: (player) {
+              if (player == null) {
+                return Center(
+                  child: Text(
+                    '로그인이 필요합니다',
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                );
+              }
 
-                // 로그아웃
-                const SizedBox(height: AppSpacing.base),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: GestureDetector(
-                      onTap: () async {
-                        HapticFeedback.mediumImpact();
-                        await ref.read(authRepoProvider).signOut();
-                        if (context.mounted) context.go('/auth');
-                      },
+              final team = teamAsync.value;
+              final stats = statsAsync.value;
+              final titles = titlesAsync.value ?? const <PlayerTitle>[];
+              final recent = recentAsync.value ?? const <RecentPerformance>[];
+
+              return SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: bottomPadding + AppSpacing.xxl,
+                ),
+                child: Column(
+                  children: [
+                    _Header(
+                      player: player,
+                      onShare: () => _shareCard(player),
+                      isSharing: _sharing,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: RepaintBoundary(
+                        key: _cardKey,
+                        child: _ProfileCard(
+                          player: player,
+                          team: team,
+                          stats: stats,
+                          titles: titles,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    _PhysicalInfo(player: player),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    _RecentSection(recent: recent),
+                    const SizedBox(height: AppSpacing.xxxl),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.base,
+                          vertical: AppSpacing.xs,
+                        ),
                         decoration: ShapeDecoration(
                           color: AppColors.surfaceLight,
                           shape: RoundedRectangleBorder(
-                            borderRadius: AppRadius.smoothButton,
+                            borderRadius: AppRadius.smoothMd,
                           ),
                         ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '로그아웃',
-                          style: AppTextStyles.buttonSecondary.copyWith(
-                            color: AppColors.textTertiary,
+                        child: Row(
+                          children: [
+                            Text(
+                              '더미 데이터 표시',
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const Spacer(),
+                            Switch.adaptive(
+                              value: ref.watch(showDummyDataProvider),
+                              activeColor: AppColors.primary,
+                              onChanged: (v) {
+                                ref
+                                    .read(showDummyDataProvider.notifier)
+                                    .toggle(v);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.base),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: GestureDetector(
+                          onTap: () async {
+                            HapticFeedback.mediumImpact();
+                            await ref.read(authRepoProvider).signOut();
+                            if (context.mounted) context.go('/auth');
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
+                            decoration: ShapeDecoration(
+                              color: AppColors.surfaceLight,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppRadius.smoothButton,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '로그아웃',
+                              style: AppTextStyles.buttonSecondary.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -185,7 +259,14 @@ class ProfileScreen extends ConsumerWidget {
 // ══════════════════════════════════════════════
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({
+    required this.player,
+    required this.onShare,
+    required this.isSharing,
+  });
+  final Player player;
+  final VoidCallback onShare;
+  final bool isSharing;
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +288,7 @@ class _Header extends StatelessWidget {
           ),
           const Spacer(),
           GestureDetector(
-            onTap: () => _openEdit(context),
+            onTap: () => _openEdit(context, player),
             behavior: HitTestBehavior.opaque,
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -219,25 +300,26 @@ class _Header extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('프로필 공유 (준비중)'),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.smoothMd,
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onTap: isSharing ? null : onShare,
             behavior: HitTestBehavior.opaque,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.base),
-              child: Icon(
-                Icons.ios_share_rounded,
-                size: 20,
-                color: AppColors.textPrimary,
-              ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+              child: isSharing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(
+                          AppColors.textPrimary,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.ios_share_rounded,
+                      size: 20,
+                      color: AppColors.textPrimary,
+                    ),
             ),
           ),
         ],
@@ -245,27 +327,22 @@ class _Header extends StatelessWidget {
     );
   }
 
-  static void _openEdit(BuildContext context) {
+  static void _openEdit(BuildContext context, Player player) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => const _EditProfileScreen(),
+        builder: (_) => _EditProfileScreen(player: player),
       ),
     );
   }
 }
 
 // ══════════════════════════════════════════════
-// Edit Profile Sheet
+// Edit Profile
 // ══════════════════════════════════════════════
 
-const _allPositions = [
-  'GK', 'LB', 'CB', 'RB',
-  'DM', 'CM', 'AM',
-  'LW', 'ST', 'RW',
-];
-
 class _EditProfileScreen extends ConsumerStatefulWidget {
-  const _EditProfileScreen();
+  const _EditProfileScreen({required this.player});
+  final Player player;
 
   @override
   ConsumerState<_EditProfileScreen> createState() =>
@@ -276,19 +353,21 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _numberCtrl;
   late final TextEditingController _heightCtrl;
-  final Set<String> _selectedPositions = {'CM'};
-  String _foot = '오른발';
+  late final Set<Position> _selectedPositions;
+  late PreferredFoot _foot;
 
   Uint8List? _pickedAvatarBytes;
-  String? _pickedAvatarExt;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController(text: _name);
-    _numberCtrl = TextEditingController(text: '$_number');
-    _heightCtrl = TextEditingController(text: '175');
+    final p = widget.player;
+    _nameCtrl = TextEditingController(text: p.name);
+    _numberCtrl = TextEditingController(text: p.number?.toString() ?? '');
+    _heightCtrl = TextEditingController(text: p.height?.toString() ?? '');
+    _selectedPositions = p.preferredPositions.toSet();
+    _foot = p.preferredFoot ?? PreferredFoot.right;
   }
 
   @override
@@ -300,12 +379,23 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
   }
 
   Future<void> _pickAvatar() async {
-    final picked = await pickTeamLogoImage(context);
+    final picked = await pickTeamLogoImage(
+      context,
+      maxWidth: 1500,
+      maxHeight: 1500,
+      imageQuality: 92,
+    );
     if (picked == null || !mounted) return;
-    setState(() {
-      _pickedAvatarBytes = picked.bytes;
-      _pickedAvatarExt = picked.ext;
-    });
+
+    final cropped = await Navigator.of(context).push<Uint8List>(
+      MaterialPageRoute(
+        builder: (_) => CropImageScreen(imageBytes: picked.bytes),
+      ),
+    );
+    if (cropped == null || !mounted) return;
+
+    HapticFeedback.selectionClick();
+    setState(() => _pickedAvatarBytes = cropped);
   }
 
   Future<void> _save() async {
@@ -320,19 +410,30 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
     try {
       final profileRepo = ref.read(profileRepoProvider);
       String? uploadedUrl;
-      if (_pickedAvatarBytes != null && _pickedAvatarExt != null) {
+      if (_pickedAvatarBytes != null) {
         uploadedUrl = await profileRepo.uploadAvatar(
           playerId: user.id,
           bytes: _pickedAvatarBytes!,
-          extension: _pickedAvatarExt!,
+          extension: 'png',
         );
       }
-      if (uploadedUrl != null) {
-        await profileRepo.update(
-          playerId: user.id,
-          avatarUrl: uploadedUrl,
-        );
-      }
+
+      final numberText = _numberCtrl.text.trim();
+      final heightText = _heightCtrl.text.trim();
+
+      await profileRepo.update(
+        playerId: user.id,
+        name: _nameCtrl.text.trim(),
+        number: numberText.isEmpty ? null : int.tryParse(numberText),
+        avatarUrl: uploadedUrl,
+        preferredPositions: _selectedPositions.toList(),
+        preferredFoot: _foot,
+        height: heightText.isEmpty ? null : int.tryParse(heightText),
+      );
+
+      ref.invalidate(currentPlayerProvider);
+      await ref.read(currentPlayerProvider.future);
+
       if (!mounted) return;
       HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
@@ -349,7 +450,7 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
     }
   }
 
-  void _togglePosition(String p) {
+  void _togglePosition(Position p) {
     setState(() {
       if (_selectedPositions.contains(p)) {
         _selectedPositions.remove(p);
@@ -365,6 +466,8 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
     final canSave = _selectedPositions.isNotEmpty &&
         _nameCtrl.text.trim().isNotEmpty;
 
+    final avatarUrl = widget.player.avatarUrl;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
@@ -373,7 +476,6 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
           bottom: false,
           child: Column(
             children: [
-              // 헤더
               SizedBox(
                 height: 52,
                 child: Row(
@@ -406,160 +508,161 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
                   ],
                 ),
               ),
-
-              // 폼 스크롤
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg,
                   ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // 프로필 이미지
-                  Center(
-                    child: GestureDetector(
-                      onTap: _saving ? null : _pickAvatar,
-                      child: Stack(
-                        children: [
-                          ClipOval(
-                            child: _pickedAvatarBytes != null
-                                ? Image.memory(
-                                    _pickedAvatarBytes!,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                  )
-                                : const Image(
-                                    image: AssetImage(_avatarPath),
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: AppSpacing.lg),
+                      Center(
+                        child: GestureDetector(
+                          onTap: _saving ? null : _pickAvatar,
+                          child: Stack(
+                            children: [
+                              ClipOval(
+                                child: _pickedAvatarBytes != null
+                                    ? Image.memory(
+                                        _pickedAvatarBytes!,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : (avatarUrl != null && avatarUrl.isNotEmpty
+                                        ? Image.network(
+                                            avatarUrl,
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                const Image(
+                                              image: AssetImage(
+                                                _defaultAvatarAsset,
+                                              ),
+                                              width: 80,
+                                              height: 80,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : const Image(
+                                            image: AssetImage(
+                                              _defaultAvatarAsset,
+                                            ),
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                          )),
+                              ),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.textPrimary,
+                                    shape: BoxShape.circle,
                                   ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: const BoxDecoration(
-                                color: AppColors.textPrimary,
-                                shape: BoxShape.circle,
+                                  child: const Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.camera_alt_rounded,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // 이름
-                  const _FieldLabel('이름'),
-                  const SizedBox(height: AppSpacing.sm),
-                  _InputField(
-                    controller: _nameCtrl,
-                    hint: '이름을 입력해주세요',
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // 등번호
-                  const _FieldLabel('등번호'),
-                  const SizedBox(height: AppSpacing.sm),
-                  SizedBox(
-                    width: 100,
-                    child: _InputField(
-                      controller: _numberCtrl,
-                      keyboardType: TextInputType.number,
-                      maxLength: 3,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // 선호 포지션
-                  const _FieldLabel('선호 포지션'),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      for (final p in _allPositions)
-                        _PositionPill(
-                          label: p,
-                          isSelected: _selectedPositions.contains(p),
-                          onTap: () => _togglePosition(p),
                         ),
-                    ],
-                  ),
-                  if (_selectedPositions.isEmpty) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '최소 1개 이상 선택해주세요',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.error,
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // 주발
-                  const _FieldLabel('주발'),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    children: [
-                      for (final f in ['왼발', '오른발', '양발'])
-                        _PositionPill(
-                          label: f,
-                          isSelected: _foot == f,
-                          onTap: () => setState(() => _foot = f),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // 키
-                  const _FieldLabel('키'),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
+                      const SizedBox(height: AppSpacing.xxl),
+                      const _FieldLabel('이름'),
+                      const SizedBox(height: AppSpacing.sm),
+                      _InputField(
+                        controller: _nameCtrl,
+                        hint: '이름을 입력해주세요',
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _FieldLabel('등번호'),
+                      const SizedBox(height: AppSpacing.sm),
                       SizedBox(
                         width: 100,
                         child: _InputField(
-                          controller: _heightCtrl,
+                          controller: _numberCtrl,
                           keyboardType: TextInputType.number,
                           maxLength: 3,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        'cm',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _FieldLabel('선호 포지션'),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          for (final p in Position.values)
+                            _PositionPill(
+                              label: p.label,
+                              isSelected: _selectedPositions.contains(p),
+                              onTap: () => _togglePosition(p),
+                            ),
+                        ],
                       ),
+                      if (_selectedPositions.isEmpty) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '최소 1개 이상 선택해주세요',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.lg),
+                      const _FieldLabel('주발'),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        children: [
+                          for (final f in PreferredFoot.values)
+                            _PositionPill(
+                              label: f.label,
+                              isSelected: _foot == f,
+                              onTap: () => setState(() => _foot = f),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _FieldLabel('키'),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            child: _InputField(
+                              controller: _heightCtrl,
+                              keyboardType: TextInputType.number,
+                              maxLength: 3,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'cm',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
+                ),
               ),
-            ),
-          ),
-
             ],
           ),
         ),
-        // 저장 버튼 (고정 하단)
         bottomNavigationBar: Container(
           color: Colors.white,
           padding: EdgeInsets.fromLTRB(
@@ -717,11 +820,12 @@ class _PositionPill extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════
-// Physical Info — 카드 밖, 가벼운 정보 행
+// Physical Info
 // ══════════════════════════════════════════════
 
 class _PhysicalInfo extends StatelessWidget {
-  const _PhysicalInfo();
+  const _PhysicalInfo({required this.player});
+  final Player player;
 
   @override
   Widget build(BuildContext context) {
@@ -738,11 +842,23 @@ class _PhysicalInfo extends StatelessWidget {
             ),
           ),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Expanded(child: _InfoItem(label: '선호 포지션', value: 'CM, AM')),
-            Expanded(child: _InfoItem(label: '주발', value: '오른발')),
-            Expanded(child: _InfoItem(label: '키', value: '175cm')),
+            Expanded(
+              child: _InfoItem(label: '선호 포지션', value: _positionsText(player)),
+            ),
+            Expanded(
+              child: _InfoItem(
+                label: '주발',
+                value: player.preferredFoot?.label ?? '—',
+              ),
+            ),
+            Expanded(
+              child: _InfoItem(
+                label: '키',
+                value: player.height != null ? '${player.height}cm' : '—',
+              ),
+            ),
           ],
         ),
       ),
@@ -780,14 +896,37 @@ class _InfoItem extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════
-// Profile Card — 회색 카드에 이름 + 이미지 + 데이터 통합
+// Profile Card
 // ══════════════════════════════════════════════
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard();
+  const _ProfileCard({
+    required this.player,
+    required this.team,
+    required this.stats,
+    required this.titles,
+  });
+
+  final Player player;
+  final Team? team;
+  final SeasonStats? stats;
+  final List<PlayerTitle> titles;
 
   @override
   Widget build(BuildContext context) {
+    final numberText = player.number != null ? '#${player.number}' : '';
+    final metaParts = <String>[
+      if (team != null) team!.name,
+      _positionGroupLabel(player),
+      if (numberText.isNotEmpty) numberText,
+      _seasonLabel(),
+    ];
+
+    final appearances = stats?.appearances ?? 0;
+    final goals = stats?.goals ?? 0;
+    final assists = stats?.assists ?? 0;
+    final mom = stats?.mom ?? 0;
+
     return Container(
       decoration: ShapeDecoration(
         color: AppColors.surfaceLight,
@@ -796,11 +935,9 @@ class _ProfileCard extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: AppSpacing.xl),
-
-          // 이름
-          const Text(
-            _name,
-            style: TextStyle(
+          Text(
+            player.name,
+            style: const TextStyle(
               fontFamily: 'Pretendard',
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -809,46 +946,58 @@ class _ProfileCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          // 팀 · 포지션 · 번호 · 시즌
           Text(
-            '$_team · $_position · #$_number · $_season',
+            metaParts.join(' · '),
             style: AppTextStyles.caption.copyWith(
               color: AppColors.textTertiary,
               fontWeight: FontWeight.w600,
             ),
           ),
-
           const SizedBox(height: AppSpacing.xl),
-
-          // 상반신 이미지
-          Image.asset(
-            _avatarPath,
-            height: 220,
-          ),
-
+          _BigAvatar(avatarUrl: player.avatarUrl),
           const SizedBox(height: AppSpacing.xl),
-
-          // 큰 숫자 4열
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Row(
               children: [
-                _BigStat(value: '$_appearances', label: '경기'),
-                _BigStat(value: '$_goals', label: '골'),
-                _BigStat(value: '$_assists', label: '어시스트'),
-                _BigStat(value: '$_mom', label: 'MOM'),
+                _BigStat(value: '$appearances', label: '경기'),
+                _BigStat(value: '$goals', label: '골'),
+                _BigStat(value: '$assists', label: '어시스트'),
+                _BigStat(value: '$mom', label: 'MOM'),
               ],
             ),
           ),
-
-          // 태그
-          const SizedBox(height: AppSpacing.lg),
-          const _TagRow(),
-
+          if (titles.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _TagRow(titles: titles),
+          ],
           const SizedBox(height: AppSpacing.xl),
         ],
       ),
     );
+  }
+}
+
+class _BigAvatar extends StatelessWidget {
+  const _BigAvatar({required this.avatarUrl});
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: AppRadius.smoothMd,
+        child: Image.network(
+          avatarUrl!,
+          width: 220,
+          height: 220,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+              Image.asset(_defaultAvatarAsset, height: 220),
+        ),
+      );
+    }
+    return Image.asset(_defaultAvatarAsset, height: 220);
   }
 }
 
@@ -890,7 +1039,8 @@ class _BigStat extends StatelessWidget {
 // ══════════════════════════════════════════════
 
 class _TagRow extends StatelessWidget {
-  const _TagRow();
+  const _TagRow({required this.titles});
+  final List<PlayerTitle> titles;
 
   @override
   Widget build(BuildContext context) {
@@ -899,24 +1049,25 @@ class _TagRow extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        itemCount: _tags.length,
+        itemCount: titles.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) {
-          final tag = _tags[i];
+          final title = titles[i];
+          final style = _titleStyles[title]!;
           return Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: ShapeDecoration(
-              color: tag.bg,
+              color: style.bg,
               shape: RoundedRectangleBorder(
                 borderRadius: AppRadius.smoothFull,
               ),
             ),
             child: Text(
-              tag.label,
+              title.label,
               style: TextStyle(
                 fontFamily: 'Pretendard',
-                color: tag.fg,
+                color: style.fg,
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
               ),
@@ -933,7 +1084,8 @@ class _TagRow extends StatelessWidget {
 // ══════════════════════════════════════════════
 
 class _RecentSection extends StatelessWidget {
-  const _RecentSection();
+  const _RecentSection({required this.recent});
+  final List<RecentPerformance> recent;
 
   @override
   Widget build(BuildContext context) {
@@ -949,11 +1101,22 @@ class _RecentSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.base),
-          for (var i = 0; i < _recentPerformances.length; i++) ...[
-            _MatchRow(match: _recentPerformances[i]),
-            if (i < _recentPerformances.length - 1)
-              const SizedBox(height: AppSpacing.sm),
-          ],
+          if (recent.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: Text(
+                '기록된 경기가 없습니다',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            )
+          else
+            for (var i = 0; i < recent.length; i++) ...[
+              _MatchRow(match: recent[i]),
+              if (i < recent.length - 1)
+                const SizedBox(height: AppSpacing.sm),
+            ],
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
             width: double.infinity,
@@ -982,7 +1145,7 @@ class _RecentSection extends StatelessWidget {
 
 class _MatchRow extends StatelessWidget {
   const _MatchRow({required this.match});
-  final _PerfData match;
+  final RecentPerformance match;
 
   @override
   Widget build(BuildContext context) {
@@ -990,14 +1153,13 @@ class _MatchRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
-          // 상대팀 로고
-          OpponentLogo(
-            teamName: match.opponent,
+          TeamLogoView.byName(
+            name: match.opponent,
+            logoUrl: match.opponentLogoUrl,
             size: 36,
             borderRadius: AppRadius.smoothXs,
           ),
           const SizedBox(width: AppSpacing.md),
-          // 상대 + 날짜
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1010,7 +1172,7 @@ class _MatchRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  match.date,
+                  formatMdWeekday(match.date),
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textTertiary,
                   ),
@@ -1018,7 +1180,6 @@ class _MatchRow extends StatelessWidget {
               ],
             ),
           ),
-          // MOM
           if (match.isMom) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1039,7 +1200,6 @@ class _MatchRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
           ],
-          // 골/어시 숫자 (회색 pill)
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -1086,3 +1246,4 @@ class _MatchRow extends StatelessWidget {
     );
   }
 }
+

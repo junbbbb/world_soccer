@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../types/chat.dart';
 import '../types/enums.dart';
 import '../types/match.dart' as types;
+import '../types/player.dart';
 import '../types/profile.dart';
 import '../types/team.dart';
 import '../repo/supabase_auth_repo.dart';
@@ -220,4 +221,71 @@ Future<List<types.Match>> teamMatches(Ref ref) async {
   if (teamId == null) return [];
   final matchRepo = ref.watch(matchRepoProvider);
   return matchRepo.getByTeam(teamId);
+}
+
+// ── 프로필 Data Providers ──
+
+/// 오늘 기준 현재 반기 (1~6월=상반기, 7~12월=하반기).
+({int year, SeasonHalf half}) currentSeasonHalf([DateTime? now]) {
+  final d = now ?? DateTime.now();
+  return (
+    year: d.year,
+    half: d.month <= 6 ? SeasonHalf.first : SeasonHalf.second,
+  );
+}
+
+/// 현재 로그인한 선수 프로필.
+@riverpod
+Future<Player?> currentPlayer(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return null;
+  return ref.watch(playerRepoProvider).getById(user.id);
+}
+
+/// 현재 유저 × 현재 팀 × 현재 반기 시즌 스탯.
+@riverpod
+Future<SeasonStats> currentSeasonStats(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  final teamId = await ref.watch(currentTeamIdProvider.future);
+  if (user == null || teamId == null) {
+    return const SeasonStats(appearances: 0, goals: 0, assists: 0, mom: 0);
+  }
+  final season = currentSeasonHalf();
+  return ref.watch(statsRepoProvider).getSeasonStats(
+        playerId: user.id,
+        teamId: teamId,
+        year: season.year,
+        half: season.half,
+      );
+}
+
+/// 현재 유저 × 현재 팀 × 현재 반기 뱃지 목록.
+@riverpod
+Future<List<PlayerTitle>> currentPlayerTitles(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  final teamId = await ref.watch(currentTeamIdProvider.future);
+  if (user == null || teamId == null) return const [];
+  final season = currentSeasonHalf();
+  return ref.watch(statsRepoProvider).getPlayerTitles(
+        playerId: user.id,
+        teamId: teamId,
+        year: season.year,
+        half: season.half,
+      );
+}
+
+/// 현재 유저 × 현재 팀 최근 경기 퍼포먼스.
+@riverpod
+Future<List<RecentPerformance>> currentRecentPerformances(Ref ref) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  final teamId = await ref.watch(currentTeamIdProvider.future);
+  if (user == null || teamId == null) return const [];
+  return ref.watch(statsRepoProvider).getRecentPerformances(
+        playerId: user.id,
+        teamId: teamId,
+      );
 }

@@ -60,7 +60,14 @@ class SupabaseProfileRepo implements ProfileRepo {
     if (height != null) updates['height'] = height;
 
     if (updates.isNotEmpty) {
-      await _client.from('players').update(updates).eq('id', playerId);
+      final result = await _client
+          .from('players')
+          .update(updates)
+          .eq('id', playerId)
+          .select('id');
+      if (result.isEmpty) {
+        throw StateError('프로필 수정 실패: 권한이 없거나 존재하지 않는 플레이어');
+      }
     }
   }
 }

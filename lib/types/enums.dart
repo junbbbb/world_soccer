@@ -27,6 +27,13 @@ enum Position {
   const Position(this.label, this.group);
   final String label;
   final PositionGroup group;
+
+  static Position? fromLabel(String label) {
+    for (final p in Position.values) {
+      if (p.label == label) return p;
+    }
+    return null;
+  }
 }
 
 /// 경기 결과.
@@ -72,6 +79,13 @@ enum PreferredFoot {
 
   const PreferredFoot(this.label);
   final String label;
+
+  static PreferredFoot? fromLabel(String label) {
+    for (final f in PreferredFoot.values) {
+      if (f.label == label) return f;
+    }
+    return null;
+  }
 }
 
 /// 시즌 반기.
@@ -88,6 +102,27 @@ enum RankType {
   goals,
   assists,
   mom,
+}
+
+/// 반기 뱃지 (팀·반기 1등 카테고리).
+///
+/// DB RPC `get_player_titles` 의 반환 라벨과 1:1 매칭.
+/// 최소 3경기 출전 + 해당 카테고리 값 > 0 + 공동 1위 포함.
+enum PlayerTitle {
+  topScorer('득점왕'),
+  topAssister('어시왕'),
+  topAttendance('출석왕'),
+  topMom('MOM왕');
+
+  const PlayerTitle(this.label);
+  final String label;
+
+  static PlayerTitle? fromLabel(String label) {
+    for (final t in PlayerTitle.values) {
+      if (t.label == label) return t;
+    }
+    return null;
+  }
 }
 
 /// 라인업 공정성 상태.

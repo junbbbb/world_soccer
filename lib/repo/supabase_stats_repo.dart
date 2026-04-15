@@ -121,4 +121,28 @@ class SupabaseStatsRepo implements StatsRepo {
       );
     }).toList();
   }
+
+  @override
+  Future<List<PlayerTitle>> getPlayerTitles({
+    required String playerId,
+    required String teamId,
+    required int year,
+    required SeasonHalf half,
+  }) async {
+    final raw = await _client.rpc(
+      'get_player_titles',
+      params: {
+        'p_player_id': playerId,
+        'p_team_id': teamId,
+        'p_year': year,
+        'p_half': half == SeasonHalf.first ? 'H1' : 'H2',
+      },
+    );
+    if (raw == null) return const [];
+    final labels = (raw as List<dynamic>).cast<String>();
+    return labels
+        .map(PlayerTitle.fromLabel)
+        .whereType<PlayerTitle>()
+        .toList();
+  }
 }

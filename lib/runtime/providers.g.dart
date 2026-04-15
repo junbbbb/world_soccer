@@ -1264,3 +1264,180 @@ final class TeamMatchesProvider
 }
 
 String _$teamMatchesHash() => r'22ab1eebd5ffe44738a4ec92148c3af8103f89a4';
+
+/// 현재 로그인한 선수 프로필.
+
+@ProviderFor(currentPlayer)
+final currentPlayerProvider = CurrentPlayerProvider._();
+
+/// 현재 로그인한 선수 프로필.
+
+final class CurrentPlayerProvider
+    extends $FunctionalProvider<AsyncValue<Player?>, Player?, FutureOr<Player?>>
+    with $FutureModifier<Player?>, $FutureProvider<Player?> {
+  /// 현재 로그인한 선수 프로필.
+  CurrentPlayerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentPlayerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentPlayerHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Player?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Player?> create(Ref ref) {
+    return currentPlayer(ref);
+  }
+}
+
+String _$currentPlayerHash() => r'646b491e26b9fc81cbddcc7a4a43ef657a639e57';
+
+/// 현재 유저 × 현재 팀 × 현재 반기 시즌 스탯.
+
+@ProviderFor(currentSeasonStats)
+final currentSeasonStatsProvider = CurrentSeasonStatsProvider._();
+
+/// 현재 유저 × 현재 팀 × 현재 반기 시즌 스탯.
+
+final class CurrentSeasonStatsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SeasonStats>,
+          SeasonStats,
+          FutureOr<SeasonStats>
+        >
+    with $FutureModifier<SeasonStats>, $FutureProvider<SeasonStats> {
+  /// 현재 유저 × 현재 팀 × 현재 반기 시즌 스탯.
+  CurrentSeasonStatsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentSeasonStatsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentSeasonStatsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SeasonStats> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SeasonStats> create(Ref ref) {
+    return currentSeasonStats(ref);
+  }
+}
+
+String _$currentSeasonStatsHash() =>
+    r'7f8a9eb17aaa69566ad6e2dc1b199240f4f3c350';
+
+/// 현재 유저 × 현재 팀 × 현재 반기 뱃지 목록.
+
+@ProviderFor(currentPlayerTitles)
+final currentPlayerTitlesProvider = CurrentPlayerTitlesProvider._();
+
+/// 현재 유저 × 현재 팀 × 현재 반기 뱃지 목록.
+
+final class CurrentPlayerTitlesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<PlayerTitle>>,
+          List<PlayerTitle>,
+          FutureOr<List<PlayerTitle>>
+        >
+    with
+        $FutureModifier<List<PlayerTitle>>,
+        $FutureProvider<List<PlayerTitle>> {
+  /// 현재 유저 × 현재 팀 × 현재 반기 뱃지 목록.
+  CurrentPlayerTitlesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentPlayerTitlesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentPlayerTitlesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<PlayerTitle>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<PlayerTitle>> create(Ref ref) {
+    return currentPlayerTitles(ref);
+  }
+}
+
+String _$currentPlayerTitlesHash() =>
+    r'eccbe1501ee2255535a6aefe2af0163d440aa9aa';
+
+/// 현재 유저 × 현재 팀 최근 경기 퍼포먼스.
+
+@ProviderFor(currentRecentPerformances)
+final currentRecentPerformancesProvider = CurrentRecentPerformancesProvider._();
+
+/// 현재 유저 × 현재 팀 최근 경기 퍼포먼스.
+
+final class CurrentRecentPerformancesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<RecentPerformance>>,
+          List<RecentPerformance>,
+          FutureOr<List<RecentPerformance>>
+        >
+    with
+        $FutureModifier<List<RecentPerformance>>,
+        $FutureProvider<List<RecentPerformance>> {
+  /// 현재 유저 × 현재 팀 최근 경기 퍼포먼스.
+  CurrentRecentPerformancesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentRecentPerformancesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentRecentPerformancesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<RecentPerformance>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<RecentPerformance>> create(Ref ref) {
+    return currentRecentPerformances(ref);
+  }
+}
+
+String _$currentRecentPerformancesHash() =>
+    r'69d66fb6a291c5c131af1506f7c3ded468c6bee8';

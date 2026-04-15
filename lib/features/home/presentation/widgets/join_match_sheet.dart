@@ -29,7 +29,9 @@ class _JoinMatchSheet extends StatefulWidget {
 
 class _JoinMatchSheetState extends State<_JoinMatchSheet> {
   final Set<Position> _positions = {Position.cm};
-  final Set<int> _quarters = {0, 1, 2, 3};
+
+  /// 1-indexed 쿼터 (1~4). DB 스키마와 동일.
+  final Set<int> _quarters = {1, 2, 3, 4};
 
   void _togglePosition(Position p) {
     HapticFeedback.selectionClick();
@@ -136,9 +138,9 @@ class _JoinMatchSheetState extends State<_JoinMatchSheet> {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
-                for (var q = 0; q < 4; q++)
+                for (var q = 1; q <= 4; q++)
                   _OutlinePill(
-                    label: 'Q${q + 1}',
+                    label: 'Q$q',
                     isSelected: _quarters.contains(q),
                     onTap: () => _toggleQuarter(q),
                   ),

@@ -149,6 +149,8 @@ class PlayerMatchStats {
 /// 참가 신청 결과 (바텀시트 반환용).
 class JoinMatchResult {
   final Set<Position> preferredPositions;
+
+  /// 1-indexed 쿼터 번호 (1~4). DB `match_participations.available_quarters` 와 동일.
   final Set<int> availableQuarters;
 
   const JoinMatchResult({
