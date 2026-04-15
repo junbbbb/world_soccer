@@ -1,53 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
-import 'chat_tab.dart';
+import '../../../repo/chat_repo.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/chat.dart';
+import '../../../types/enums.dart';
+import '../../../types/team.dart';
 
-/// 그룹 멤버 모델 (더미)
-class GroupMember {
-  const GroupMember({
-    required this.id,
-    required this.name,
-    this.tag,
-    this.isAdmin = false,
-    this.isMe = false,
-  });
-
-  final int id;
-  final String name;
-  final String? tag;
-  final bool isAdmin;
-  final bool isMe;
-}
-
-class GroupInfoScreen extends StatefulWidget {
+class GroupInfoScreen extends ConsumerStatefulWidget {
   const GroupInfoScreen({super.key, required this.room});
 
   final ChatRoom room;
 
   @override
-  State<GroupInfoScreen> createState() => _GroupInfoScreenState();
+  ConsumerState<GroupInfoScreen> createState() => _GroupInfoScreenState();
 }
 
-class _GroupInfoScreenState extends State<GroupInfoScreen> {
+class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-
-  static const _members = [
-    GroupMember(id: 0, name: '나', tag: null, isMe: true),
-    GroupMember(id: 1, name: '김민수', tag: '주장', isAdmin: true),
-    GroupMember(id: 2, name: '이준호', tag: '골키퍼'),
-    GroupMember(id: 3, name: '박성진', tag: '공격수'),
-    GroupMember(id: 4, name: '최영훈', tag: '수비수'),
-    GroupMember(id: 5, name: '정우성'),
-    GroupMember(id: 6, name: '한지민'),
-    GroupMember(id: 7, name: '강동원', tag: '미드필더'),
-    GroupMember(id: 8, name: '유재석'),
-    GroupMember(id: 9, name: '송중기', tag: '공격수'),
-  ];
 
   static const _avatarColors = [
     Color(0xFFE57373),
@@ -59,69 +35,104 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     Color(0xFFF06292),
   ];
 
-  List<GroupMember> get _filteredMembers {
-    if (_searchQuery.isEmpty) return _members;
-    return _members
-        .where((m) => m.name.contains(_searchQuery))
-        .toList();
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  List<TeamMember> _filter(List<TeamMember> members) {
+    if (_searchQuery.isEmpty) return members;
+    return members
+        .where((m) => (m.playerName ?? '').contains(_searchQuery))
+        .toList();
+  }
+
+  String? get _myId =>
+      ref.read(supabaseClientProvider).auth.currentUser?.id;
+
+  Future<void> _openDirectChat(TeamMember member) async {
+    final meId = _myId;
+    if (meId == null) return;
+    try {
+      final room = await ref.read(chatServiceProvider).getOrCreateDirectRoom(
+            meId: meId,
+            otherId: member.playerId,
+          );
+      if (!mounted) return;
+      context.push('/chat', extra: room);
+    } on NotTeammateException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('같은 팀원에게만 메시지를 보낼 수 있습니다')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('오류: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final teamId = widget.room.teamId;
+    final membersAsync = teamId == null
+        ? const AsyncValue<List<TeamMember>>.data([])
+        : ref.watch(teamMembersByTeamProvider(teamId));
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // 상단 앱바
-              SliverToBoxAdapter(child: _buildAppBar()),
-              // 그룹 배너 (아바타 80pt + 이름 20pt)
-              SliverToBoxAdapter(child: _buildGroupBanner()),
-              // 그룹 설명
-              SliverToBoxAdapter(child: _buildDescription()),
-              // 구분선
-              SliverToBoxAdapter(child: _buildDivider()),
-              // 미디어/링크/문서
-              SliverToBoxAdapter(child: _buildMediaSection()),
-              SliverToBoxAdapter(child: _buildDivider()),
-              // 알림 설정
-              SliverToBoxAdapter(child: _buildNotificationToggle()),
-              SliverToBoxAdapter(child: _buildDivider()),
-              // 사라지는 메시지
-              SliverToBoxAdapter(child: _buildDisappearingMessages()),
-              SliverToBoxAdapter(child: _buildDivider()),
-              // 멤버 섹션 헤더 + 검색
-              SliverToBoxAdapter(child: _buildMemberHeader()),
-              // 멤버 리스트
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _buildMemberRow(_filteredMembers[index]),
-                  childCount: _filteredMembers.length,
+          child: membersAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Center(
+              child: Text(
+                '멤버를 불러오지 못했습니다\n$err',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyRegular.copyWith(
+                  color: AppColors.textTertiary,
                 ),
               ),
-              // 하단 여유
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.xxxxl),
-              ),
-            ],
+            ),
+            data: (members) => _buildContent(context, members),
           ),
         ),
       ),
     );
   }
 
+  Widget _buildContent(BuildContext context, List<TeamMember> members) {
+    final filtered = _filter(members);
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: _buildAppBar()),
+        SliverToBoxAdapter(child: _buildGroupBanner(members.length)),
+        SliverToBoxAdapter(child: _buildDescription()),
+        SliverToBoxAdapter(child: _buildDivider()),
+        SliverToBoxAdapter(child: _buildMemberHeader(members.length)),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _buildMemberRow(filtered[index]),
+            childCount: filtered.length,
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AppSpacing.xxxl),
+        ),
+      ],
+    );
+  }
+
   Widget _buildAppBar() {
     return Container(
       height: 56,
-      padding: const EdgeInsets.only(left: AppSpacing.xs, right: AppSpacing.base),
+      padding: const EdgeInsets.only(
+        left: AppSpacing.xs,
+        right: AppSpacing.base,
+      ),
       child: Row(
         children: [
           IconButton(
@@ -133,23 +144,16 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
             ),
           ),
           const Spacer(),
-          const Icon(
-            Icons.more_vert_rounded,
-            size: 24,
-            color: AppColors.textTertiary,
-          ),
         ],
       ),
     );
   }
 
-  /// 스펙: 그룹 아바타 80×80pt + 이름 20pt
-  Widget _buildGroupBanner() {
+  Widget _buildGroupBanner(int memberCount) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          // 아바타 80×80pt
           if (widget.room.logoPath != null)
             ClipOval(
               child: Image.asset(
@@ -164,7 +168,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               radius: 40,
               backgroundColor: AppColors.primary,
               child: Text(
-                widget.room.name[0],
+                widget.room.name.isNotEmpty ? widget.room.name[0] : '?',
                 style: AppTextStyles.sectionTitle.copyWith(
                   color: Colors.white,
                   fontSize: 28,
@@ -172,7 +176,6 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               ),
             ),
           const SizedBox(height: AppSpacing.md),
-          // 이름 20pt
           Text(
             widget.room.name,
             style: AppTextStyles.sectionTitle.copyWith(
@@ -181,7 +184,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '멤버 ${widget.room.memberCount}명',
+            '멤버 $memberCount명',
             style: AppTextStyles.labelRegular.copyWith(
               color: AppColors.textTertiary,
             ),
@@ -208,7 +211,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '${widget.room.name} 공식 채팅방입니다. 경기 일정, 공지사항 등을 공유합니다.',
+            '${widget.room.name} 공식 채팅방입니다.',
             style: AppTextStyles.bodyRegular.copyWith(
               color: AppColors.textPrimary,
             ),
@@ -219,96 +222,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Widget _buildDivider() {
-    return Divider(
+    return const Divider(
       height: 1,
       thickness: 8,
       color: AppColors.surface,
     );
   }
 
-  Widget _buildMediaSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.base,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '미디어, 링크, 문서',
-              style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-            ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.textTertiary,
-            size: 24,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationToggle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '알림',
-              style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-            ),
-          ),
-          Switch(
-            value: !widget.room.isMuted,
-            onChanged: (_) {},
-            activeTrackColor: AppColors.primary,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDisappearingMessages() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.base,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.timer_outlined,
-            color: AppColors.textTertiary,
-            size: 24,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사라지는 메시지',
-                  style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-                ),
-                Text(
-                  '꺼짐',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMemberHeader() {
+  Widget _buildMemberHeader(int count) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -320,11 +241,12 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '멤버 ${_members.length}명',
-            style: AppTextStyles.heading.copyWith(color: AppColors.textPrimary),
+            '멤버 $count명',
+            style: AppTextStyles.heading.copyWith(
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          // 검색창: 36pt 높이, border radius 10pt
           SizedBox(
             height: 36,
             child: TextField(
@@ -365,29 +287,42 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     );
   }
 
-  /// 스펙: 각 행 56pt 높이, 이름 16pt + 태그 13pt gray
-  Widget _buildMemberRow(GroupMember member) {
-    final colorIndex = member.id % _avatarColors.length;
+  Widget _buildMemberRow(TeamMember member) {
+    final isMe = member.playerId == _myId;
+    final displayName = isMe ? '나' : (member.playerName ?? '이름 없음');
+    final colorIndex =
+        member.playerId.hashCode.abs() % _avatarColors.length;
+    final roleLabel = switch (member.role) {
+      TeamRole.admin => '관리자',
+      TeamRole.mercenary => '용병',
+      TeamRole.member => null,
+    };
 
     return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xs,
+      ),
       child: Row(
         children: [
-          // 아바타
           CircleAvatar(
             radius: 18,
             backgroundColor: _avatarColors[colorIndex],
-            child: Text(
-              member.name[0],
-              style: AppTextStyles.labelMedium.copyWith(
-                color: Colors.white,
-                fontSize: 13,
-              ),
-            ),
+            backgroundImage: member.playerAvatarUrl != null
+                ? NetworkImage(member.playerAvatarUrl!)
+                : null,
+            child: member.playerAvatarUrl == null
+                ? Text(
+                    displayName.isNotEmpty ? displayName[0] : '?',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: AppSpacing.md),
-          // 이름 + 태그
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,52 +330,50 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      member.isMe ? '나' : member.name,
-                      style: AppTextStyles.heading.copyWith(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
+                    Flexible(
+                      child: Text(
+                        displayName,
+                        style: AppTextStyles.heading.copyWith(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (member.isAdmin) ...[
+                    if (roleLabel != null) ...[
                       const SizedBox(width: AppSpacing.xs),
                       Text(
-                        '관리자',
+                        roleLabel,
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primary,
+                          color: member.role == TeamRole.admin
+                              ? AppColors.primary
+                              : AppColors.textTertiary,
                         ),
                       ),
                     ],
                   ],
                 ),
-                if (member.tag != null)
+                if (member.playerPosition != null)
                   Text(
-                    member.tag!,
+                    member.playerPosition!,
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textTertiary,
                       fontSize: 13,
                     ),
                   ),
-                // 내 프로필: "Add member tag" 버튼
-                if (member.isMe && member.tag == null)
-                  GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('멤버 태그 추가 기능 (준비 중)')),
-                      );
-                    },
-                    child: Text(
-                      'Add member tag',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
+          if (!isMe)
+            IconButton(
+              tooltip: '1:1 메시지',
+              onPressed: () => _openDirectChat(member),
+              icon: const Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
+            ),
         ],
       ),
     );

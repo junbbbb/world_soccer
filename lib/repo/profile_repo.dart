@@ -13,4 +13,14 @@ abstract class ProfileRepo {
     PreferredFoot? preferredFoot,
     int? height,
   });
+
+  /// 아바타 이미지 업로드. public URL 반환.
+  ///
+  /// [bytes] 이미지 바이트, [extension] 예: 'jpg', 'png', 'webp'.
+  /// 본인 폴더(`{playerId}/`) 에만 쓸 수 있도록 RLS 로 강제됨.
+  Future<String> uploadAvatar({
+    required String playerId,
+    required List<int> bytes,
+    required String extension,
+  });
 }

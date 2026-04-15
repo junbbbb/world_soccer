@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'dart:typed_data';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -11,6 +13,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../config/dev_settings.dart';
 import '../../../runtime/providers.dart';
 import '../../../shared/widgets/opponent_logo.dart';
+import '../../../shared/widgets/team_logo_picker.dart';
 
 // ══════════════════════════════════════════════
 // 더미 데이터
@@ -261,19 +264,24 @@ const _allPositions = [
   'LW', 'ST', 'RW',
 ];
 
-class _EditProfileScreen extends StatefulWidget {
+class _EditProfileScreen extends ConsumerStatefulWidget {
   const _EditProfileScreen();
 
   @override
-  State<_EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<_EditProfileScreen> createState() =>
+      _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<_EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _numberCtrl;
   late final TextEditingController _heightCtrl;
   final Set<String> _selectedPositions = {'CM'};
   String _foot = '오른발';
+
+  Uint8List? _pickedAvatarBytes;
+  String? _pickedAvatarExt;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -289,6 +297,56 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
     _numberCtrl.dispose();
     _heightCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final picked = await pickTeamLogoImage(context);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _pickedAvatarBytes = picked.bytes;
+      _pickedAvatarExt = picked.ext;
+    });
+  }
+
+  Future<void> _save() async {
+    final client = ref.read(supabaseClientProvider);
+    final user = client.auth.currentUser;
+    if (user == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      final profileRepo = ref.read(profileRepoProvider);
+      String? uploadedUrl;
+      if (_pickedAvatarBytes != null && _pickedAvatarExt != null) {
+        uploadedUrl = await profileRepo.uploadAvatar(
+          playerId: user.id,
+          bytes: _pickedAvatarBytes!,
+          extension: _pickedAvatarExt!,
+        );
+      }
+      if (uploadedUrl != null) {
+        await profileRepo.update(
+          playerId: user.id,
+          avatarUrl: uploadedUrl,
+        );
+      }
+      if (!mounted) return;
+      HapticFeedback.mediumImpact();
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('저장 실패: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _togglePosition(String p) {
@@ -363,27 +421,23 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                   // 프로필 이미지
                   Center(
                     child: GestureDetector(
-                      onTap: () {
-                        // TODO: 이미지 피커
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('이미지 변경 (준비중)'),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.smoothMd,
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
+                      onTap: _saving ? null : _pickAvatar,
                       child: Stack(
                         children: [
-                          const ClipOval(
-                            child: Image(
-                              image: AssetImage(_avatarPath),
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            ),
+                          ClipOval(
+                            child: _pickedAvatarBytes != null
+                                ? Image.memory(
+                                    _pickedAvatarBytes!,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Image(
+                                    image: AssetImage(_avatarPath),
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                           Positioned(
                             right: 0,
@@ -517,12 +571,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: canSave
-                  ? () {
-                      HapticFeedback.mediumImpact();
-                      Navigator.of(context).pop();
-                    }
-                  : null,
+              onPressed: (canSave && !_saving) ? _save : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.textPrimary,
                 foregroundColor: Colors.white,
@@ -536,10 +585,19 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                   borderRadius: AppRadius.smoothButton,
                 ),
               ),
-              child: const Text(
-                '저장',
-                style: AppTextStyles.buttonPrimary,
-              ),
+              child: _saving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      '저장',
+                      style: AppTextStyles.buttonPrimary,
+                    ),
             ),
           ),
         ),
@@ -928,12 +986,8 @@ class _MatchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: ShapeDecoration(
-        color: AppColors.surfaceLight,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
           // 상대팀 로고
@@ -985,14 +1039,14 @@ class _MatchRow extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
           ],
-          // 골/어시 숫자
+          // 골/어시 숫자 (회색 pill)
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
             decoration: ShapeDecoration(
-              color: Colors.white,
+              color: AppColors.surfaceLight,
               shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothSm),
             ),
             child: Row(

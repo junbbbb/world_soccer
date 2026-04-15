@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../chat_tab.dart';
+import '../../../../types/chat.dart';
 
 /// 채팅 내 경기 이벤트 카드 — 파란 테두리, 큰 사이즈
 class EventReminderCard extends StatelessWidget {

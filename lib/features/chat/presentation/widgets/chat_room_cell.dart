@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../chat_tab.dart';
+import '../../../../types/chat.dart';
 
 class ChatRoomCell extends StatelessWidget {
   const ChatRoomCell({
@@ -78,12 +78,13 @@ class ChatRoomCell extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        _formatTime(room.lastMessageTime),
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textTertiary,
+                      if (room.lastMessageTime != null)
+                        Text(
+                          _formatTime(room.lastMessageTime!),
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxs),
@@ -91,7 +92,11 @@ class ChatRoomCell extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '${room.lastMessageSender}: ${room.lastMessage}',
+                          room.lastMessage.isEmpty
+                              ? '아직 메시지가 없습니다'
+                              : (room.lastMessageSender.isEmpty
+                                  ? room.lastMessage
+                                  : '${room.lastMessageSender}: ${room.lastMessage}'),
                           style: AppTextStyles.bodyRegular.copyWith(
                             color: AppColors.textSecondary,
                             fontSize: 14,
@@ -125,6 +130,18 @@ class ChatRoomCell extends StatelessWidget {
   Widget _buildAvatar() {
     const size = 52.0;
 
+    // 우선순위: 서버 업로드 URL > 로컬 asset path > 이니셜 원형
+    if (room.logoUrl != null && room.logoUrl!.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          room.logoUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallbackInitial(size),
+        ),
+      );
+    }
     if (room.logoPath != null) {
       return ClipOval(
         child: Image.asset(
@@ -135,19 +152,32 @@ class ChatRoomCell extends StatelessWidget {
         ),
       );
     }
+    return _fallbackInitial(size);
+  }
 
-    final colorIndex = room.id.hashCode.abs() % _avatarColors.length;
+  Widget _fallbackInitial(double size) {
+    final bg = _parseHex(room.logoColor) ??
+        _avatarColors[room.id.hashCode.abs() % _avatarColors.length];
+    final initial = room.name.isNotEmpty ? room.name[0] : '?';
     return CircleAvatar(
       radius: size / 2,
-      backgroundColor: _avatarColors[colorIndex],
+      backgroundColor: bg,
       child: Text(
-        room.name[0],
+        initial,
         style: AppTextStyles.sectionTitle.copyWith(
           color: Colors.white,
           fontSize: 18,
         ),
       ),
     );
+  }
+
+  static Color? _parseHex(String? hex) {
+    if (hex == null) return null;
+    var s = hex.replaceAll('#', '').trim();
+    if (s.length == 6) s = 'FF$s';
+    final v = int.tryParse(s, radix: 16);
+    return v == null ? null : Color(v);
   }
 
   Widget _buildUnreadBadge() {

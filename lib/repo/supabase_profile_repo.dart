@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../types/enums.dart';
@@ -8,6 +10,31 @@ class SupabaseProfileRepo implements ProfileRepo {
   final SupabaseClient _client;
 
   SupabaseProfileRepo(this._client);
+
+  @override
+  Future<String> uploadAvatar({
+    required String playerId,
+    required List<int> bytes,
+    required String extension,
+  }) async {
+    final ext = extension.toLowerCase().replaceAll('.', '');
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final path = '$playerId/avatar_$ts.$ext';
+    final contentType = switch (ext) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
+    await _client.storage.from('player-avatars').uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(
+            contentType: contentType,
+            upsert: true,
+          ),
+        );
+    return _client.storage.from('player-avatars').getPublicUrl(path);
+  }
 
   @override
   Future<void> update({

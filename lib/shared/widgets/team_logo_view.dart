@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../types/team.dart';
-import 'opponent_logo.dart' show opponentInitial;
+import 'opponent_logo.dart';
 
 /// 팀 로고 렌더 통합 위젯.
 ///
-/// - `team.logoUrl` 있으면 네트워크 이미지 (실패 시 이니셜 fallback)
-/// - 없으면 `team.logoColor` 배경에 팀 이니셜
+/// - `team.logoUrl` 있으면 네트워크 이미지 (실패 시 기본 로고 fallback)
+/// - 없으면 기본 로고: `OpponentLogo` 스타일(방패 이미지 + 이니셜)
 ///
 /// 우리팀/상대팀 구분 없이 동일하게 사용.
 class TeamLogoView extends StatelessWidget {
@@ -68,42 +69,28 @@ class TeamLogoView extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildMonogram(radius),
+          errorBuilder: (_, __, ___) => _buildDefault(radius),
         ),
       );
     }
-    return _buildMonogram(radius);
+    return _buildDefault(radius);
   }
 
-  Widget _buildMonogram(BorderRadius radius) {
-    final bg = _parseHex(team.logoColor) ?? AppColors.primary;
-    final fg = textColor ?? _pickForeground(bg);
-    final initial = opponentInitial(team.name);
-    return ClipRRect(
+  /// 업로드된 사진이 없을 때의 기본 로고.
+  /// 상대팀 기본 로고와 동일하게 `defaultteamlogo.png` 방패 위에 이니셜.
+  Widget _buildDefault(BorderRadius radius) {
+    return OpponentLogo(
+      teamName: team.name,
+      size: size,
       borderRadius: radius,
-      child: Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        color: bg,
-        child: Text(
-          initial,
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: fontSize ?? size * 0.46,
-            fontWeight: FontWeight.w800,
-            color: fg,
-            height: 1.0,
-            letterSpacing: -0.5,
-          ),
-        ),
-      ),
+      textColor: textColor,
+      fontSize: fontSize,
     );
   }
 }
 
 /// `#RRGGBB` / `#AARRGGBB` hex 를 Color 로. 실패 시 null.
-Color? _parseHex(String? hex) {
+Color? parseLogoHex(String? hex) {
   if (hex == null) return null;
   var v = hex.trim();
   if (v.startsWith('#')) v = v.substring(1);
@@ -114,10 +101,55 @@ Color? _parseHex(String? hex) {
   return Color(n);
 }
 
-/// 배경 밝기에 따라 흰/검정 텍스트 선택.
-Color _pickForeground(Color bg) {
-  final luminance = bg.computeLuminance();
-  return luminance > 0.55 ? AppColors.textPrimary : Colors.white;
+/// 파일 경로에서 지원 확장자(jpg/png/webp) 추출. 미지원은 jpg 로 폴백.
+String extensionFromPath(String path) {
+  final i = path.lastIndexOf('.');
+  if (i < 0 || i == path.length - 1) return 'jpg';
+  final ext = path.substring(i + 1).toLowerCase();
+  if (ext == 'jpeg') return 'jpg';
+  if (ext == 'png' || ext == 'webp' || ext == 'jpg') return ext;
+  return 'jpg';
+}
+
+/// 8색 팔레트를 4-col 그리드로 선택하는 위젯.
+class TeamLogoPaletteGrid extends StatelessWidget {
+  const TeamLogoPaletteGrid({
+    super.key,
+    required this.selected,
+    required this.onSelect,
+    this.enabled = true,
+  });
+
+  final String selected;
+  final ValueChanged<String> onSelect;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 4,
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        for (final hex in kTeamLogoPalette)
+          GestureDetector(
+            onTap: enabled ? () => onSelect(hex) : null,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: parseLogoHex(hex),
+                border: hex == selected
+                    ? Border.all(color: AppColors.textPrimary, width: 3)
+                    : null,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 /// 팀 로고 기본 색상 팔레트 (B 모드 선택용).

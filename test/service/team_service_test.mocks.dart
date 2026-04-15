@@ -167,6 +167,31 @@ class MockTeamRepo extends _i1.Mock implements _i4.TeamRepo {
           as _i5.Future<void>);
 
   @override
+  _i5.Future<String> uploadLogo({
+    required String? teamId,
+    required List<int>? bytes,
+    required String? extension,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#uploadLogo, [], {
+              #teamId: teamId,
+              #bytes: bytes,
+              #extension: extension,
+            }),
+            returnValue: _i5.Future<String>.value(
+              _i6.dummyValue<String>(
+                this,
+                Invocation.method(#uploadLogo, [], {
+                  #teamId: teamId,
+                  #bytes: bytes,
+                  #extension: extension,
+                }),
+              ),
+            ),
+          )
+          as _i5.Future<String>);
+
+  @override
   _i5.Future<_i2.TeamStats> getStats(String? teamId) =>
       (super.noSuchMethod(
             Invocation.method(#getStats, [teamId]),

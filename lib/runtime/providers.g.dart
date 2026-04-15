@@ -337,6 +337,47 @@ final class ProfileRepoProvider
 
 String _$profileRepoHash() => r'00c290c485ac51ded25c4733dfb2e2e5e77b7c39';
 
+@ProviderFor(chatRepo)
+final chatRepoProvider = ChatRepoProvider._();
+
+final class ChatRepoProvider
+    extends $FunctionalProvider<ChatRepo, ChatRepo, ChatRepo>
+    with $Provider<ChatRepo> {
+  ChatRepoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'chatRepoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$chatRepoHash();
+
+  @$internal
+  @override
+  $ProviderElement<ChatRepo> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ChatRepo create(Ref ref) {
+    return chatRepo(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ChatRepo value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ChatRepo>(value),
+    );
+  }
+}
+
+String _$chatRepoHash() => r'83d15083733074f00082dddcbf82309bb226a7e9';
+
 @ProviderFor(matchService)
 final matchServiceProvider = MatchServiceProvider._();
 
@@ -460,6 +501,596 @@ final class TeamServiceProvider
 
 String _$teamServiceHash() => r'e85d3611867f6fef0689b68d23d421516b7f0de4';
 
+@ProviderFor(chatService)
+final chatServiceProvider = ChatServiceProvider._();
+
+final class ChatServiceProvider
+    extends $FunctionalProvider<ChatService, ChatService, ChatService>
+    with $Provider<ChatService> {
+  ChatServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'chatServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$chatServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<ChatService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ChatService create(Ref ref) {
+    return chatService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ChatService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ChatService>(value),
+    );
+  }
+}
+
+String _$chatServiceHash() => r'dacc28081dac9a372dad38a6ecfb81f53a3a499c';
+
+/// 내가 참여한 채팅방 목록.
+
+@ProviderFor(myChatRooms)
+final myChatRoomsProvider = MyChatRoomsProvider._();
+
+/// 내가 참여한 채팅방 목록.
+
+final class MyChatRoomsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<ChatRoom>>,
+          List<ChatRoom>,
+          FutureOr<List<ChatRoom>>
+        >
+    with $FutureModifier<List<ChatRoom>>, $FutureProvider<List<ChatRoom>> {
+  /// 내가 참여한 채팅방 목록.
+  MyChatRoomsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'myChatRoomsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$myChatRoomsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<ChatRoom>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<ChatRoom>> create(Ref ref) {
+    return myChatRooms(ref);
+  }
+}
+
+String _$myChatRoomsHash() => r'52c6e01b0457e50827528512811d493ba898c72f';
+
+/// 특정 방의 메시지.
+
+@ProviderFor(roomMessages)
+final roomMessagesProvider = RoomMessagesFamily._();
+
+/// 특정 방의 메시지.
+
+final class RoomMessagesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<ChatMessage>>,
+          List<ChatMessage>,
+          FutureOr<List<ChatMessage>>
+        >
+    with
+        $FutureModifier<List<ChatMessage>>,
+        $FutureProvider<List<ChatMessage>> {
+  /// 특정 방의 메시지.
+  RoomMessagesProvider._({
+    required RoomMessagesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'roomMessagesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$roomMessagesHash();
+
+  @override
+  String toString() {
+    return r'roomMessagesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<ChatMessage>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<ChatMessage>> create(Ref ref) {
+    final argument = this.argument as String;
+    return roomMessages(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RoomMessagesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$roomMessagesHash() => r'e26aa3d6ac2e7c76e4cae55242ac97c5a2f5e067';
+
+/// 특정 방의 메시지.
+
+final class RoomMessagesFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<ChatMessage>>, String> {
+  RoomMessagesFamily._()
+    : super(
+        retry: null,
+        name: r'roomMessagesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 특정 방의 메시지.
+
+  RoomMessagesProvider call(String roomId) =>
+      RoomMessagesProvider._(argument: roomId, from: this);
+
+  @override
+  String toString() => r'roomMessagesProvider';
+}
+
+/// 특정 방의 실시간 메시지 스트림.
+
+@ProviderFor(roomMessageStream)
+final roomMessageStreamProvider = RoomMessageStreamFamily._();
+
+/// 특정 방의 실시간 메시지 스트림.
+
+final class RoomMessageStreamProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<ChatMessage>,
+          ChatMessage,
+          Stream<ChatMessage>
+        >
+    with $FutureModifier<ChatMessage>, $StreamProvider<ChatMessage> {
+  /// 특정 방의 실시간 메시지 스트림.
+  RoomMessageStreamProvider._({
+    required RoomMessageStreamFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'roomMessageStreamProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$roomMessageStreamHash();
+
+  @override
+  String toString() {
+    return r'roomMessageStreamProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<ChatMessage> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<ChatMessage> create(Ref ref) {
+    final argument = this.argument as String;
+    return roomMessageStream(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RoomMessageStreamProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$roomMessageStreamHash() => r'7589bd4d812ddd9ac5debac1386a138088e2b0bf';
+
+/// 특정 방의 실시간 메시지 스트림.
+
+final class RoomMessageStreamFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<ChatMessage>, String> {
+  RoomMessageStreamFamily._()
+    : super(
+        retry: null,
+        name: r'roomMessageStreamProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 특정 방의 실시간 메시지 스트림.
+
+  RoomMessageStreamProvider call(String roomId) =>
+      RoomMessageStreamProvider._(argument: roomId, from: this);
+
+  @override
+  String toString() => r'roomMessageStreamProvider';
+}
+
+/// 특정 팀의 멤버 목록.
+
+@ProviderFor(teamMembersByTeam)
+final teamMembersByTeamProvider = TeamMembersByTeamFamily._();
+
+/// 특정 팀의 멤버 목록.
+
+final class TeamMembersByTeamProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<TeamMember>>,
+          List<TeamMember>,
+          FutureOr<List<TeamMember>>
+        >
+    with $FutureModifier<List<TeamMember>>, $FutureProvider<List<TeamMember>> {
+  /// 특정 팀의 멤버 목록.
+  TeamMembersByTeamProvider._({
+    required TeamMembersByTeamFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'teamMembersByTeamProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamMembersByTeamHash();
+
+  @override
+  String toString() {
+    return r'teamMembersByTeamProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<TeamMember>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<TeamMember>> create(Ref ref) {
+    final argument = this.argument as String;
+    return teamMembersByTeam(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TeamMembersByTeamProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$teamMembersByTeamHash() => r'c06bfd10173b5f68dcbe3dc557b54ed8535035e2';
+
+/// 특정 팀의 멤버 목록.
+
+final class TeamMembersByTeamFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<TeamMember>>, String> {
+  TeamMembersByTeamFamily._()
+    : super(
+        retry: null,
+        name: r'teamMembersByTeamProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 특정 팀의 멤버 목록.
+
+  TeamMembersByTeamProvider call(String teamId) =>
+      TeamMembersByTeamProvider._(argument: teamId, from: this);
+
+  @override
+  String toString() => r'teamMembersByTeamProvider';
+}
+
+/// 특정 팀의 전적/스탯 요약.
+
+@ProviderFor(teamStatsByTeam)
+final teamStatsByTeamProvider = TeamStatsByTeamFamily._();
+
+/// 특정 팀의 전적/스탯 요약.
+
+final class TeamStatsByTeamProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<TeamStats>,
+          TeamStats,
+          FutureOr<TeamStats>
+        >
+    with $FutureModifier<TeamStats>, $FutureProvider<TeamStats> {
+  /// 특정 팀의 전적/스탯 요약.
+  TeamStatsByTeamProvider._({
+    required TeamStatsByTeamFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'teamStatsByTeamProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamStatsByTeamHash();
+
+  @override
+  String toString() {
+    return r'teamStatsByTeamProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<TeamStats> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<TeamStats> create(Ref ref) {
+    final argument = this.argument as String;
+    return teamStatsByTeam(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TeamStatsByTeamProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$teamStatsByTeamHash() => r'f94b8bdd4e03a79cf0dcb4f111d6b11a2f382d2c';
+
+/// 특정 팀의 전적/스탯 요약.
+
+final class TeamStatsByTeamFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<TeamStats>, String> {
+  TeamStatsByTeamFamily._()
+    : super(
+        retry: null,
+        name: r'teamStatsByTeamProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 특정 팀의 전적/스탯 요약.
+
+  TeamStatsByTeamProvider call(String teamId) =>
+      TeamStatsByTeamProvider._(argument: teamId, from: this);
+
+  @override
+  String toString() => r'teamStatsByTeamProvider';
+}
+
+/// 특정 팀의 득점 랭킹.
+
+@ProviderFor(teamGoalRanking)
+final teamGoalRankingProvider = TeamGoalRankingFamily._();
+
+/// 특정 팀의 득점 랭킹.
+
+final class TeamGoalRankingProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<PlayerRank>>,
+          List<PlayerRank>,
+          FutureOr<List<PlayerRank>>
+        >
+    with $FutureModifier<List<PlayerRank>>, $FutureProvider<List<PlayerRank>> {
+  /// 특정 팀의 득점 랭킹.
+  TeamGoalRankingProvider._({
+    required TeamGoalRankingFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'teamGoalRankingProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamGoalRankingHash();
+
+  @override
+  String toString() {
+    return r'teamGoalRankingProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<PlayerRank>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<PlayerRank>> create(Ref ref) {
+    final argument = this.argument as String;
+    return teamGoalRanking(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TeamGoalRankingProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$teamGoalRankingHash() => r'ac1d470d1416b6558e46fd3772926b4dc7f57085';
+
+/// 특정 팀의 득점 랭킹.
+
+final class TeamGoalRankingFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<PlayerRank>>, String> {
+  TeamGoalRankingFamily._()
+    : super(
+        retry: null,
+        name: r'teamGoalRankingProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 특정 팀의 득점 랭킹.
+
+  TeamGoalRankingProvider call(String teamId) =>
+      TeamGoalRankingProvider._(argument: teamId, from: this);
+
+  @override
+  String toString() => r'teamGoalRankingProvider';
+}
+
+/// 특정 팀의 어시스트 랭킹.
+
+@ProviderFor(teamAssistRanking)
+final teamAssistRankingProvider = TeamAssistRankingFamily._();
+
+/// 특정 팀의 어시스트 랭킹.
+
+final class TeamAssistRankingProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<PlayerRank>>,
+          List<PlayerRank>,
+          FutureOr<List<PlayerRank>>
+        >
+    with $FutureModifier<List<PlayerRank>>, $FutureProvider<List<PlayerRank>> {
+  /// 특정 팀의 어시스트 랭킹.
+  TeamAssistRankingProvider._({
+    required TeamAssistRankingFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'teamAssistRankingProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamAssistRankingHash();
+
+  @override
+  String toString() {
+    return r'teamAssistRankingProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<PlayerRank>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<PlayerRank>> create(Ref ref) {
+    final argument = this.argument as String;
+    return teamAssistRanking(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TeamAssistRankingProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$teamAssistRankingHash() => r'9bad4defe402cdae4f9d0c4a17d32b73f684305b';
+
+/// 특정 팀의 어시스트 랭킹.
+
+final class TeamAssistRankingFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<PlayerRank>>, String> {
+  TeamAssistRankingFamily._()
+    : super(
+        retry: null,
+        name: r'teamAssistRankingProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 특정 팀의 어시스트 랭킹.
+
+  TeamAssistRankingProvider call(String teamId) =>
+      TeamAssistRankingProvider._(argument: teamId, from: this);
+
+  @override
+  String toString() => r'teamAssistRankingProvider';
+}
+
 /// 현재 유저의 팀 목록.
 
 @ProviderFor(myTeams)
@@ -504,16 +1135,25 @@ final class MyTeamsProvider
 String _$myTeamsHash() => r'5efc42250e6b12e766f85688536774c7ea8f3ce7';
 
 /// 현재 선택된 팀.
+///
+/// `players.active_team_id` 를 우선 조회. 없거나 해당 팀이 더 이상 내 팀 목록에
+/// 없으면 가입한 첫 팀으로 폴백.
 
 @ProviderFor(currentTeam)
 final currentTeamProvider = CurrentTeamProvider._();
 
 /// 현재 선택된 팀.
+///
+/// `players.active_team_id` 를 우선 조회. 없거나 해당 팀이 더 이상 내 팀 목록에
+/// 없으면 가입한 첫 팀으로 폴백.
 
 final class CurrentTeamProvider
     extends $FunctionalProvider<AsyncValue<Team?>, Team?, FutureOr<Team?>>
     with $FutureModifier<Team?>, $FutureProvider<Team?> {
   /// 현재 선택된 팀.
+  ///
+  /// `players.active_team_id` 를 우선 조회. 없거나 해당 팀이 더 이상 내 팀 목록에
+  /// 없으면 가입한 첫 팀으로 폴백.
   CurrentTeamProvider._()
     : super(
         from: null,
@@ -539,7 +1179,7 @@ final class CurrentTeamProvider
   }
 }
 
-String _$currentTeamHash() => r'eace4e77110b34b98e391d6b582241369a63fe82';
+String _$currentTeamHash() => r'203f1c0086d06aa1e2a56d19e780f5a9bfea11b8';
 
 /// 현재 유저의 첫 번째 팀 ID.
 

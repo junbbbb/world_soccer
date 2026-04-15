@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../chat_tab.dart';
+import '../../../../types/chat.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
@@ -83,7 +83,7 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget _buildReceived(BuildContext context) {
-    final colorIndex = message.senderId % _avatarColors.length;
+    final colorIndex = message.senderId.hashCode.abs() % _avatarColors.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +159,7 @@ class ChatBubble extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        message.senderName[0],
+        message.senderName.isNotEmpty ? message.senderName[0] : '?',
         style: const TextStyle(
           fontFamily: 'Pretendard',
           fontSize: 16,

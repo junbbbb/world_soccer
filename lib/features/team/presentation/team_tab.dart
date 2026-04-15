@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -14,106 +14,9 @@ import '../../../shared/widgets/section_title.dart';
 import '../../../shared/widgets/team_logo_view.dart';
 import '../../../types/profile.dart';
 import '../../../types/team.dart';
-import 'package:go_router/go_router.dart';
-
 import 'widgets/team_settings_sheet.dart';
 
-// ── 더미 데이터 ──
-
-const _teamInfo = _TeamInfo(
-  name: 'FC칼로',
-  foundedYear: 2020,
-  region: '서울 강동구',
-  memberCount: 24,
-  activityDay: '매주 토요일',
-  totalRecord: '48승 12무 8패',
-  seasonBest: '5연승',
-);
-
-const _teamStats = TeamStats(
-  totalMatches: 12,
-  wins: 7,
-  draws: 2,
-  losses: 3,
-  goalsFor: 28,
-  goalsAgainst: 14,
-  cleanSheets: 4,
-);
-
-const _topScorers = [
-  PlayerRank(name: '이병준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 5),
-  PlayerRank(name: '김태호', position: 'FW', avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif', value: 4),
-  PlayerRank(name: '박정우', position: 'FW', avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif', value: 3),
-  PlayerRank(name: '최민수', position: 'MF', avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif', value: 3),
-  PlayerRank(name: '윤서준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 2),
-];
-
-const _topAssisters = [
-  PlayerRank(name: '윤서준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 5),
-  PlayerRank(name: '이병준', position: 'MF', avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif', value: 3),
-  PlayerRank(name: '김태호', position: 'FW', avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif', value: 2),
-  PlayerRank(name: '박정우', position: 'FW', avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif', value: 2),
-  PlayerRank(name: '최민수', position: 'MF', avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif', value: 1),
-];
-
-const _dummyMembers = [
-  _Member(name: '박서준', position: 'GK', number: 1, avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif'),
-  _Member(name: '한준혁', position: 'GK', number: 21, avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif'),
-  _Member(name: '윤태경', position: 'DF', number: 2, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Member(name: '정도현', position: 'DF', number: 4, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Member(name: '김재윤', position: 'DF', number: 5, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Member(name: '이현우', position: 'DF', number: 15, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Member(name: '송민호', position: 'DF', number: 23, avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif'),
-  _Member(name: '이병준', position: 'MF', number: 7, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '최민수', position: 'MF', number: 8, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '윤서준', position: 'MF', number: 10, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '강지훈', position: 'MF', number: 14, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '조원빈', position: 'MF', number: 16, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '배준서', position: 'MF', number: 18, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '임시우', position: 'MF', number: 22, avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif'),
-  _Member(name: '김태호', position: 'FW', number: 9, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-  _Member(name: '박정우', position: 'FW', number: 11, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-  _Member(name: '신유찬', position: 'FW', number: 17, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-  _Member(name: '오준영', position: 'FW', number: 19, avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif'),
-];
-
-// ── 모델 ──
-
-class _TeamInfo {
-  final String name;
-  final int foundedYear;
-  final String region;
-  final int memberCount;
-  final String activityDay;
-  final String totalRecord;
-  final String seasonBest;
-
-  const _TeamInfo({
-    required this.name,
-    required this.foundedYear,
-    required this.region,
-    required this.memberCount,
-    required this.activityDay,
-    required this.totalRecord,
-    required this.seasonBest,
-  });
-}
-
-// TeamStats, PlayerRank → types/ 에서 import
-
-class _Member {
-  final String name;
-  final String position;
-  final int number;
-  final String avatarPath;
-
-  const _Member({
-    required this.name,
-    required this.position,
-    required this.number,
-    required this.avatarPath,
-  });
-}
+// TeamStats, PlayerRank → types/ 에서 import. TeamMember → types/team.dart.
 
 // ── TeamTab ──
 
@@ -143,18 +46,8 @@ class _TeamTabState extends ConsumerState<TeamTab> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
-
-    final emptyView = Padding(
-      padding: EdgeInsets.only(top: topPadding + _headerHeight + 60),
-      child: Center(
-        child: Text(
-          '데이터가 없습니다',
-          style: AppTextStyles.body.copyWith(color: AppColors.textTertiary),
-        ),
-      ),
-    );
+    final scrollTop = topPadding + _headerHeight + AppSpacing.sm;
 
     return ColoredBox(
       color: Colors.white,
@@ -163,19 +56,11 @@ class _TeamTabState extends ConsumerState<TeamTab> with SingleTickerProviderStat
           // ── 탭 본문 ──
           TabBarView(
             controller: _tabController,
-            children: showDummy
-                ? [
-                    _OverviewView(
-                        scrollPaddingTop:
-                            topPadding + _headerHeight + AppSpacing.sm),
-                    _TeamStatsView(
-                        scrollPaddingTop:
-                            topPadding + _headerHeight + AppSpacing.sm),
-                    _MembersView(
-                        scrollPaddingTop:
-                            topPadding + _headerHeight + AppSpacing.sm),
-                  ]
-                : [emptyView, emptyView, emptyView],
+            children: [
+              _OverviewView(scrollPaddingTop: scrollTop),
+              _TeamStatsView(scrollPaddingTop: scrollTop),
+              _MembersView(scrollPaddingTop: scrollTop),
+            ],
           ),
 
           // ── 헤더 ──
@@ -226,32 +111,37 @@ class _TeamTabState extends ConsumerState<TeamTab> with SingleTickerProviderStat
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      TabBar(
-                        controller: _tabController,
-                        labelStyle: AppTextStyles.body
-                            .copyWith(fontWeight: FontWeight.w700),
-                        labelColor: AppColors.textPrimary,
-                        unselectedLabelStyle: AppTextStyles.body,
-                        unselectedLabelColor: AppColors.textTertiary,
-                        indicator: const UnderlineTabIndicator(
-                          borderSide: BorderSide(
-                              color: AppColors.textPrimary, width: 2),
-                          borderRadius: BorderRadius.zero,
+                      // 첫 탭 텍스트가 페이지 edge(AppSpacing.lg=20)와 맞도록
+                      // labelPadding(base=16) 차액만큼(xs=4) 외부 패딩.
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.xs),
+                        child: TabBar(
+                          controller: _tabController,
+                          labelStyle: AppTextStyles.body
+                              .copyWith(fontWeight: FontWeight.w700),
+                          labelColor: AppColors.textPrimary,
+                          unselectedLabelStyle: AppTextStyles.body,
+                          unselectedLabelColor: AppColors.textTertiary,
+                          indicator: const UnderlineTabIndicator(
+                            borderSide: BorderSide(
+                                color: AppColors.textPrimary, width: 2),
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          tabAlignment: TabAlignment.start,
+                          isScrollable: true,
+                          padding: EdgeInsets.zero,
+                          labelPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.base),
+                          dividerColor:
+                              AppColors.textPrimary.withValues(alpha: 0.06),
+                          overlayColor:
+                              WidgetStateProperty.all(Colors.transparent),
+                          tabs: const [
+                            Tab(text: '오버뷰'),
+                            Tab(text: '팀 스탯'),
+                            Tab(text: '멤버'),
+                          ],
                         ),
-                        tabAlignment: TabAlignment.start,
-                        isScrollable: true,
-                        padding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.base),
-                        dividerColor:
-                            AppColors.textPrimary.withValues(alpha: 0.06),
-                        overlayColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                        tabs: const [
-                          Tab(text: '오버뷰'),
-                          Tab(text: '팀 스탯'),
-                          Tab(text: '멤버'),
-                        ],
                       ),
                     ],
                   ),
@@ -269,23 +159,66 @@ class _TeamTabState extends ConsumerState<TeamTab> with SingleTickerProviderStat
 // 탭 1: 오버뷰
 // ══════════════════════════════════════════════
 
-class _OverviewView extends StatelessWidget {
+class _OverviewView extends ConsumerWidget {
   const _OverviewView({required this.scrollPaddingTop});
   final double scrollPaddingTop;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamAsync = ref.watch(currentTeamProvider);
+    final team = teamAsync.maybeWhen(data: (t) => t, orElse: () => null);
+
+    // 팀 없음 — 새 팀 만들기 CTA
+    if (team == null) {
+      return Padding(
+        padding: EdgeInsets.only(top: scrollPaddingTop + 60),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '아직 팀이 없어요',
+                style: AppTextStyles.body
+                    .copyWith(color: AppColors.textTertiary),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              GestureDetector(
+                onTap: () => context.push('/team/create'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: ShapeDecoration(
+                    color: AppColors.textPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.smoothSm,
+                    ),
+                  ),
+                  child: Text(
+                    '새 팀 만들기',
+                    style: AppTextStyles.labelMedium
+                        .copyWith(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: scrollPaddingTop),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _TeamInfoSection(),
-          SizedBox(height: AppSpacing.xxl),
-          _InviteLinkCard(),
-          SizedBox(height: AppSpacing.xxl),
-          _TeamSummarySection(),
-          SizedBox(height: AppSpacing.xxxl),
+          _TeamInfoSection(team: team),
+          const SizedBox(height: AppSpacing.xxl),
+          const _InviteLinkCard(),
+          const SizedBox(height: AppSpacing.xxl),
+          _TeamSummarySection(teamId: team.id),
+          const SizedBox(height: AppSpacing.xxxl),
         ],
       ),
     );
@@ -295,55 +228,56 @@ class _OverviewView extends StatelessWidget {
 // ── 팀 정보 섹션 ──
 
 class _TeamInfoSection extends ConsumerWidget {
-  const _TeamInfoSection();
+  const _TeamInfoSection({required this.team});
+  final Team team;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final realTeam = ref.watch(currentTeamProvider).maybeWhen(
-          data: (t) => t,
-          orElse: () => null,
-        );
+    final membersAsync = ref.watch(teamMembersByTeamProvider(team.id));
+    final memberCount = membersAsync.maybeWhen(
+      data: (list) => list.length,
+      orElse: () => 0,
+    );
+    final yearText = '${team.createdAt.year}년 창단';
+
     return Padding(
       padding: AppSpacing.paddingPage,
       child: Column(
         children: [
-          if (realTeam != null)
-            TeamLogoView(
-              team: realTeam,
-              size: 80,
-              borderRadius: AppRadius.smoothLg,
-            )
-          else
-            ClipRRect(
-              borderRadius: AppRadius.smoothLg,
-              child: Image.asset(
-                'assets/images/logo_calo.png',
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-              ),
-            ),
+          TeamLogoView(
+            team: team,
+            size: 80,
+            borderRadius: AppRadius.smoothLg,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            realTeam?.name ?? _teamInfo.name,
+            team.name,
             style: AppTextStyles.sectionTitle.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
+          if ((team.description ?? '').isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              team.description!,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyRegular.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '${_teamInfo.foundedYear}년 창단 · ${_teamInfo.region}',
-            style: AppTextStyles.bodyRegular.copyWith(
-              color: AppColors.textSecondary,
+            yearText,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textTertiary,
             ),
           ),
           const SizedBox(height: AppSpacing.base),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _InfoBadge(label: '${_teamInfo.memberCount}명'),
-              const SizedBox(width: AppSpacing.sm),
-              _InfoBadge(label: _teamInfo.activityDay),
+              _InfoBadge(label: '멤버 $memberCount명'),
             ],
           ),
         ],
@@ -619,11 +553,24 @@ class _InviteShareButton extends StatelessWidget {
 
 // ── 팀 기록 요약 ──
 
-class _TeamSummarySection extends StatelessWidget {
-  const _TeamSummarySection();
+class _TeamSummarySection extends ConsumerWidget {
+  const _TeamSummarySection({required this.teamId});
+  final String teamId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(teamStatsByTeamProvider(teamId));
+    final stats = statsAsync.maybeWhen(
+      data: (s) => s,
+      orElse: () => null,
+    );
+    final totalRecord = stats == null
+        ? '—'
+        : '${stats.wins}승 ${stats.draws}무 ${stats.losses}패';
+    final winRateText = stats == null || stats.totalMatches == 0
+        ? '—'
+        : '${(stats.winRate * 100).round()}%';
+
     return Padding(
       padding: AppSpacing.paddingPage,
       child: Column(
@@ -633,13 +580,11 @@ class _TeamSummarySection extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _SummaryCard(
-                    label: '통산 전적', value: _teamInfo.totalRecord),
+                child: _SummaryCard(label: '통산 전적', value: totalRecord),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child:
-                    _SummaryCard(label: '시즌 최고', value: _teamInfo.seasonBest),
+                child: _SummaryCard(label: '승률', value: winRateText),
               ),
             ],
           ),
@@ -682,12 +627,51 @@ class _SummaryCard extends StatelessWidget {
 // 탭 2: 팀 스탯
 // ══════════════════════════════════════════════
 
-class _TeamStatsView extends StatelessWidget {
+class _TeamStatsView extends ConsumerWidget {
   const _TeamStatsView({required this.scrollPaddingTop});
   final double scrollPaddingTop;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamAsync = ref.watch(currentTeamProvider);
+    final team = teamAsync.maybeWhen(data: (t) => t, orElse: () => null);
+
+    if (team == null) {
+      return Padding(
+        padding: EdgeInsets.only(top: scrollPaddingTop + 60),
+        child: Center(
+          child: Text('팀을 먼저 만들어주세요',
+              style: AppTextStyles.body
+                  .copyWith(color: AppColors.textTertiary)),
+        ),
+      );
+    }
+
+    final statsAsync = ref.watch(teamStatsByTeamProvider(team.id));
+    final goalsAsync = ref.watch(teamGoalRankingProvider(team.id));
+    final assistsAsync = ref.watch(teamAssistRankingProvider(team.id));
+
+    final stats = statsAsync.maybeWhen(
+      data: (s) => s,
+      orElse: () => const TeamStats(
+        totalMatches: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        cleanSheets: 0,
+      ),
+    );
+    final goals = goalsAsync.maybeWhen(
+      data: (list) => list,
+      orElse: () => const <PlayerRank>[],
+    );
+    final assists = assistsAsync.maybeWhen(
+      data: (list) => list,
+      orElse: () => const <PlayerRank>[],
+    );
+
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: scrollPaddingTop),
       child: Column(
@@ -696,7 +680,7 @@ class _TeamStatsView extends StatelessWidget {
           // 전적 요약
           Padding(
             padding: AppSpacing.paddingPage,
-            child: _RecordOverviewCard(stats: _teamStats),
+            child: _RecordOverviewCard(stats: stats),
           ),
           const SizedBox(height: AppSpacing.xxl),
 
@@ -719,19 +703,16 @@ class _TeamStatsView extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _statRow('총 득점', '${_teamStats.goalsFor}'),
+                  _statRow('총 득점', '${stats.goalsFor}'),
                   _statDivider(),
-                  _statRow('총 실점', '${_teamStats.goalsAgainst}'),
+                  _statRow('총 실점', '${stats.goalsAgainst}'),
                   _statDivider(),
-                  _statRow('평균 득점',
-                      _teamStats.avgGoalsFor.toStringAsFixed(1)),
+                  _statRow('평균 득점', stats.avgGoalsFor.toStringAsFixed(1)),
                   _statDivider(),
-                  _statRow('평균 실점',
-                      _teamStats.avgGoalsAgainst.toStringAsFixed(1)),
+                  _statRow(
+                      '평균 실점', stats.avgGoalsAgainst.toStringAsFixed(1)),
                   _statDivider(),
-                  _statRow('최다 득점', '5골 (vs FC쏘아)'),
-                  _statDivider(),
-                  _statRow('클린 시트', '${_teamStats.cleanSheets}'),
+                  _statRow('클린 시트', '${stats.cleanSheets}'),
                 ],
               ),
             ),
@@ -743,10 +724,12 @@ class _TeamStatsView extends StatelessWidget {
             padding: AppSpacing.paddingPage,
             child: const SectionTitle('득점 랭킹'),
           ),
-          ...List.generate(_topScorers.length, (i) {
-            return _RankingRow(
-                rank: i + 1, player: _topScorers[i], unit: '골');
-          }),
+          if (goals.isEmpty)
+            _emptyRankingText('기록된 득점이 없습니다')
+          else
+            ...List.generate(goals.length, (i) {
+              return _RankingRow(rank: i + 1, player: goals[i], unit: '골');
+            }),
           const SizedBox(height: AppSpacing.xxl),
 
           // 어시스트 랭킹
@@ -754,12 +737,28 @@ class _TeamStatsView extends StatelessWidget {
             padding: AppSpacing.paddingPage,
             child: const SectionTitle('어시스트 랭킹'),
           ),
-          ...List.generate(_topAssisters.length, (i) {
-            return _RankingRow(
-                rank: i + 1, player: _topAssisters[i], unit: '도움');
-          }),
+          if (assists.isEmpty)
+            _emptyRankingText('기록된 어시스트가 없습니다')
+          else
+            ...List.generate(assists.length, (i) {
+              return _RankingRow(
+                  rank: i + 1, player: assists[i], unit: '도움');
+            }),
           const SizedBox(height: AppSpacing.xxxl),
         ],
+      ),
+    );
+  }
+
+  static Widget _emptyRankingText(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
       ),
     );
   }
@@ -909,11 +908,7 @@ class _RankingRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: AppRadius.smoothSm,
-            child: Image.asset(player.avatarPath ?? '',
-                width: 36, height: 36, fit: BoxFit.cover),
-          ),
+          _playerAvatar(player.avatarPath, player.name, size: 36),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(player.name,
@@ -933,7 +928,7 @@ class _RankingRow extends StatelessWidget {
 // 탭 3: 멤버
 // ══════════════════════════════════════════════
 
-class _MembersView extends StatelessWidget {
+class _MembersView extends ConsumerWidget {
   const _MembersView({required this.scrollPaddingTop});
   final double scrollPaddingTop;
 
@@ -946,103 +941,210 @@ class _MembersView extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(top: scrollPaddingTop),
-      child: Padding(
-        padding: AppSpacing.paddingPage,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 멤버 추가 버튼
-            GestureDetector(
-              onTap: () {
-                // TODO: 멤버 추가
-              },
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                decoration: ShapeDecoration(
-                  color: AppColors.surface,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: AppRadius.smoothMd),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.add,
-                        size: 18, color: AppColors.textSecondary),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      '멤버 추가',
-                      style: AppTextStyles.labelMedium
-                          .copyWith(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            ..._positionOrder.map((pos) {
-              final members =
-                  _dummyMembers.where((m) => m.position == pos).toList();
-              if (members.isEmpty) return const SizedBox.shrink();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    '${_positionLabels[pos]} (${members.length})',
-                    style: AppTextStyles.captionMedium
-                        .copyWith(color: AppColors.textTertiary),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  ...members.map((m) => _MemberRow(member: m)),
-                ],
-              );
-            }),
-            const SizedBox(height: AppSpacing.xxxl),
-          ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamAsync = ref.watch(currentTeamProvider);
+    final team = teamAsync.maybeWhen(data: (t) => t, orElse: () => null);
+
+    if (team == null) {
+      return Padding(
+        padding: EdgeInsets.only(top: scrollPaddingTop + 60),
+        child: Center(
+          child: Text('팀을 먼저 만들어주세요',
+              style: AppTextStyles.body
+                  .copyWith(color: AppColors.textTertiary)),
+        ),
+      );
+    }
+
+    final membersAsync = ref.watch(teamMembersByTeamProvider(team.id));
+
+    return membersAsync.when(
+      loading: () => Padding(
+        padding: EdgeInsets.only(top: scrollPaddingTop + 60),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Padding(
+        padding: EdgeInsets.only(top: scrollPaddingTop + 60),
+        child: Center(
+          child: Text('멤버를 불러오지 못했습니다\n$e',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body
+                  .copyWith(color: AppColors.textTertiary)),
         ),
       ),
+      data: (members) {
+        // position 이 없거나 매핑 안 되는 멤버는 '기타'
+        final byPos = <String, List<TeamMember>>{};
+        for (final m in members) {
+          final key = _positionLabels.containsKey(m.playerPosition)
+              ? m.playerPosition!
+              : '기타';
+          byPos.putIfAbsent(key, () => []).add(m);
+        }
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.only(top: scrollPaddingTop),
+          child: Padding(
+            padding: AppSpacing.paddingPage,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 멤버 초대 버튼
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => const _InviteBottomSheet(),
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.md),
+                    decoration: ShapeDecoration(
+                      color: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: AppRadius.smoothMd),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.person_add_alt_1_rounded,
+                            size: 18, color: AppColors.textSecondary),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          '팀원 초대',
+                          style: AppTextStyles.labelMedium
+                              .copyWith(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (members.isEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxl),
+                  Center(
+                    child: Text(
+                      '아직 멤버가 없습니다',
+                      style: AppTextStyles.body
+                          .copyWith(color: AppColors.textTertiary),
+                    ),
+                  ),
+                ] else
+                  ..._positionOrder
+                      .followedBy(const ['기타'])
+                      .map((pos) {
+                    final list = byPos[pos];
+                    if (list == null || list.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    final label = _positionLabels[pos] ?? pos;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          '$label (${list.length})',
+                          style: AppTextStyles.captionMedium
+                              .copyWith(color: AppColors.textTertiary),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        ...list.map((m) => _MemberRow(member: m)),
+                      ],
+                    );
+                  }),
+                const SizedBox(height: AppSpacing.xxxl),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _MemberRow extends StatelessWidget {
   const _MemberRow({required this.member});
-  final _Member member;
+  final TeamMember member;
 
   @override
   Widget build(BuildContext context) {
+    final name = member.playerName ?? '이름 없음';
+    final pos = member.playerPosition ?? '-';
+    final num = member.playerNumber;
+    final subtitle = num != null ? '$pos · #$num' : pos;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: AppRadius.smoothSm,
-            child: Image.asset(member.avatarPath,
-                width: 40, height: 40, fit: BoxFit.cover),
-          ),
+          _playerAvatar(member.playerAvatarUrl, name, size: 40),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(member.name,
+                Text(name,
                     style: AppTextStyles.body
                         .copyWith(color: AppColors.textPrimary)),
                 const SizedBox(height: AppSpacing.xxs),
-                Text('${member.position} · #${member.number}',
+                Text(subtitle,
                     style: AppTextStyles.caption
                         .copyWith(color: AppColors.textSecondary)),
               ],
             ),
           ),
-          const Icon(Icons.phone_outlined,
-              size: 20, color: AppColors.textTertiary),
         ],
       ),
     );
   }
+}
+
+/// 선수 아바타. URL 있으면 네트워크, 없으면 이니셜 원.
+/// 형태는 원형(ClipOval) — 다른 화면의 아바타와 일관.
+Widget _playerAvatar(String? url, String name, {required double size}) {
+  final initial = name.isNotEmpty ? name[0] : '?';
+  final fallback = Container(
+    width: size,
+    height: size,
+    alignment: Alignment.center,
+    decoration: const BoxDecoration(
+      color: AppColors.surface,
+      shape: BoxShape.circle,
+    ),
+    child: Text(
+      initial,
+      style: TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: size * 0.4,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textSecondary,
+        height: 1.0,
+      ),
+    ),
+  );
+  if (url == null || url.isEmpty) return fallback;
+  if (url.startsWith('http')) {
+    return ClipOval(
+      child: Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback,
+      ),
+    );
+  }
+  return ClipOval(
+    child: Image.asset(
+      url,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback,
+    ),
+  );
 }

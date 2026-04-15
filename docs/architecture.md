@@ -200,6 +200,68 @@ PRIMARY KEY (match_id, player_id)
 -- RLS: team_members 기반으로 팀 데이터 격리
 ```
 
+### Chat 도메인 (결정 012~014)
+
+```
+-- chat_rooms (팀 단체방 + DM)
+id uuid PK, type text check in ('team', 'direct'),
+team_id uuid FK nullable (type='team' 필수),
+name text,
+CONSTRAINT chat_rooms_team_unique unique (team_id),
+CONSTRAINT chat_rooms_type_integrity check (
+  (type='team' and team_id is not null) or
+  (type='direct' and team_id is null)
+)
+
+-- chat_room_members
+room_id uuid FK, player_id uuid FK,
+joined_at timestamptz, last_read_at timestamptz,
+PRIMARY KEY (room_id, player_id)
+
+-- chat_messages
+id uuid PK, room_id uuid FK, sender_id uuid FK,
+content text, type text DEFAULT 'text', created_at timestamptz
+INDEX (room_id, created_at desc)
+
+-- 자동 동기화 트리거 (앱 로직 없이 DB 가 처리)
+-- teams insert/update/delete, team_members insert/delete 전부 감지
+
+-- RLS: SECURITY DEFINER 헬퍼 is_chat_room_member(room_id) 기반
+--      (재귀 방지, 결정 013 참고)
+
+-- RPC:
+--   get_my_chat_rooms()           → 방 목록 + 메타 집계 (결정 014)
+--   get_or_create_direct_room(p)  → DM 방 원자적 생성 (advisory lock)
+--   share_team_with(p)            → 같은 팀 여부 단일 쿼리
+```
+
+### Storage 버킷
+
+| 버킷 | 용도 | 쓰기 권한 | 결정 |
+|---|---|---|---|
+| `team-logos` | 팀 로고 이미지 | 팀 admin (경로 `{teamId}/`) | 011 |
+| `player-avatars` | 선수 프로필 아바타 | 본인 (경로 `{playerId}/`) | 016 |
+
+두 버킷 모두 public read, 2MB 제한, mime 제한(jpeg/png/webp).
+RLS 정책은 `storage.foldername(name)[1]` 과 `auth.uid()::text` 비교로
+본인/admin 만 쓰기 허용.
+
+데이터 흐름:
+- 팀 생성 → `on_team_created_create_chat_room` 트리거 → 단체방 생성
+- 팀원 가입 → `on_team_member_added_join_chat_room` 트리거 → 방 참여
+- 팀명 변경 → `on_team_renamed_sync_chat_room_name` 트리거 → 방이름 갱신
+- 팀원 탈퇴/강퇴 → `on_team_member_removed_leave_chat_room` 트리거 → 방 제거
+- 실시간: `chat_messages`/`chat_room_members` 가 `supabase_realtime` publication
+  에 등록됨. 클라이언트는 방 상세에서 메시지 스트림, 홈 탭에서 배지 갱신
+  이벤트 구독
+
+N+1 회피 원칙 (결정 014):
+- 방 목록은 `get_my_chat_rooms()` RPC 1회로 모든 메타 포함
+- 메시지 스트림은 단일 테이블(`chat_messages`) 만 구독하므로 sender 조인 불가 →
+  `SupabaseChatRepo._senderCache` 에 `{name, avatar_url}` 유지, miss 시 1회 조회
+- DM 방 얻기는 `getOrCreateDirectRoom` RPC 1회 + `getRoom` 1회
+  (`chat_rooms!inner(chat_room_members, players)` 단일 join)
+
 ## Riverpod Provider 구조 (Runtime)
 
 ```dart

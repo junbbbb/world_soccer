@@ -7,6 +7,8 @@ Supabase 백엔드. 6-Layer 아키텍처 (OpenAI Layered) 마이그레이션 진
 > 디자인 시스템 상세: `DESIGN.md`
 > 아키텍처 상세: `docs/architecture.md`
 > 마이그레이션 계획: `docs/migration-scenarios.md`
+> 기술 결정 로그: `docs/decisions/index.md`
+> 주요 작업 타임라인: `docs/plans/`
 
 ## Build & Run
 
@@ -30,11 +32,10 @@ flutter run                                  # 앱 실행
 ## Tech Stack
 
 - **Flutter** + **Dart** (SDK ^3.8.1)
-- **Supabase** — Postgres, Auth, Realtime, Storage (연동 예정)
+- **Supabase** — Postgres, Auth, Realtime, Storage (연동 완료)
 - **Riverpod** (상태관리, `riverpod_annotation` + code generation)
 - **GoRouter** (라우팅, `app_router.dart` → `app_router.g.dart`)
 - **Freezed** + **json_serializable** (모델, 예정)
-- **figma_squircle** (iOS 스타일 squircle 라운딩)
 - **Google Fonts** (Barlow Condensed)
 
 ## Architecture
@@ -72,7 +73,30 @@ lib/
   경기 상세 → 라인업 만들기 → /match/lineup-builder
   경기 상세 → 결과 입력 → /match/result-input
   프로필 → ⚙️ → 프로필 편집 (풀스크린)
+  채팅 → 방 탭 → /chat (ChatRoomScreen, 실시간 송수신)
+  채팅방 → 헤더 → /group-info (팀원 목록 + 1:1 메시지 버튼)
+  팀원 "1:1 메시지" → getOrCreateDirectRoom → /chat (DM)
 ```
+
+## Chat 시스템 요약
+
+팀 생성/멤버 변동에 맞춰 DB 트리거가 방을 자동 동기화, 1:1 DM 은
+RPC + advisory lock 으로 원자 생성. 방 목록/메시지는 RPC 집계와
+sender 캐시로 N+1 없음. 상세: `docs/plans/20260415-chat-feature.md`
++ 결정 012~014.
+
+핵심 파일:
+- `lib/types/chat.dart`, `lib/repo/chat_repo.dart`, `lib/repo/supabase_chat_repo.dart`
+- `lib/service/chat_service.dart` (TDD, 12 케이스)
+- `lib/features/chat/presentation/chat_tab.dart` (realtime 배지)
+- `lib/features/chat/presentation/chat_room_screen.dart` (stream + optimistic send)
+- `lib/features/chat/presentation/group_info_screen.dart` (팀원 + DM 진입점)
+
+서버:
+- `supabase/migrations/20260414050000_chat.sql` (스키마 + 트리거)
+- `supabase/migrations/20260414060000_chat_rls_fix.sql` (RLS 재귀 수정)
+- `supabase/migrations/20260414070000_chat_perf.sql` (RPC 집계 + lock)
+- `supabase/migrations/20260415000000_chat_logo.sql` (팀 로고 RPC 반영)
 
 ## Design Tokens (요약)
 

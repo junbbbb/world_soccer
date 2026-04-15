@@ -52,6 +52,8 @@ lib/
 - UI 변경 → `DESIGN.md` + `docs/product-spec.md`
 - 새 기능 → `docs/product-spec.md` + `docs/architecture.md`
 - 리팩토링 → `docs/migration-scenarios.md`
+- 채팅 기능 (방/메시지/DM/트리거/RLS) → `docs/plans/20260415-chat-feature.md`
+  + `docs/decisions/index.md` §012~014 (아키텍처 + 재귀 RLS + N+1 회피)
 - 그 외 → 이 파일로 충분
 
 ## Change Risk Classification

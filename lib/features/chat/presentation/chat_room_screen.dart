@@ -1,181 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
-import 'chat_tab.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/chat.dart';
+import '../../../types/enums.dart';
 import 'widgets/chat_bubble.dart';
 import 'widgets/chat_date_separator.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/event_reminder_card.dart';
 
-class ChatRoomScreen extends StatefulWidget {
+class ChatRoomScreen extends ConsumerStatefulWidget {
   const ChatRoomScreen({super.key, required this.room});
 
   final ChatRoom room;
 
   @override
-  State<ChatRoomScreen> createState() => _ChatRoomScreenState();
+  ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
 }
 
-class _ChatRoomScreenState extends State<ChatRoomScreen> {
+class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
 
-  final List<ChatMessage> _messages = [
-    ChatMessage(
-      id: '1',
-      senderId: 1,
-      senderName: '김민수',
-      avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
-      text: '내일 경기 준비 다들 되셨나요?',
-      timestamp: DateTime(2026, 3, 14, 20, 30),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '2',
-      senderId: 2,
-      senderName: '이준호',
-      avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif',
-      text: '넵! 준비 완료입니다',
-      timestamp: DateTime(2026, 3, 14, 20, 31),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '3',
-      senderId: 0,
-      senderName: '나',
-      text: '유니폼 세탁 중이에요 ㅋㅋ',
-      timestamp: DateTime(2026, 3, 14, 20, 33),
-      isMe: true,
-      readStatus: MessageReadStatus.read,
-    ),
-    // Event Reminder
-    ChatMessage(
-      id: 'ev1',
-      senderId: -1,
-      senderName: '',
-      text: '3/22(토) 16:00 경기 — 보성 풋살장',
-      timestamp: DateTime(2026, 3, 15, 12, 0),
-      isMe: false,
-      type: MessageType.event,
-    ),
-    ChatMessage(
-      id: '4',
-      senderId: 1,
-      senderName: '김민수',
-      avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
-      text: '오늘 경기 4시입니다! 보성 풋살장으로 와주세요',
-      timestamp: DateTime(2026, 3, 15, 13, 0),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '5',
-      senderId: 2,
-      senderName: '이준호',
-      avatarPath: 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif',
-      text: '저 도착했어요!',
-      timestamp: DateTime(2026, 3, 15, 15, 30),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '6',
-      senderId: 3,
-      senderName: '박성진',
-      avatarPath: 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif',
-      text: '저는 조금 늦을 것 같습니다 ㅠㅠ 10분만 기다려주세요',
-      timestamp: DateTime(2026, 3, 15, 15, 42),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '7',
-      senderId: 0,
-      senderName: '나',
-      text: '저도 거의 다 왔어요',
-      timestamp: DateTime(2026, 3, 15, 15, 43),
-      isMe: true,
-      readStatus: MessageReadStatus.delivered,
-    ),
-    ChatMessage(
-      id: '8',
-      senderId: 4,
-      senderName: '최영훈',
-      avatarPath: 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif',
-      text: '주차장 자리 있나요?',
-      timestamp: DateTime(2026, 3, 15, 15, 45),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '9',
-      senderId: 1,
-      senderName: '김민수',
-      avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
-      text: '네 아직 자리 많아요',
-      timestamp: DateTime(2026, 3, 15, 15, 45),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '10',
-      senderId: 1,
-      senderName: '김민수',
-      avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
-      text: '빨리 오세요~',
-      timestamp: DateTime(2026, 3, 15, 15, 46),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '11',
-      senderId: 0,
-      senderName: '나',
-      text: '도착!',
-      timestamp: DateTime(2026, 3, 15, 15, 55),
-      isMe: true,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '12',
-      senderId: 5,
-      senderName: '정우성',
-      avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
-      text: '혹시 유니폼 가져와야 하나요?',
-      timestamp: DateTime(2026, 3, 15, 15, 58),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '13',
-      senderId: 1,
-      senderName: '김민수',
-      avatarPath: 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif',
-      text: '네 흰색 유니폼으로 통일하겠습니다',
-      timestamp: DateTime(2026, 3, 15, 16, 0),
-      isMe: false,
-      readStatus: MessageReadStatus.read,
-    ),
-    ChatMessage(
-      id: '14',
-      senderId: 0,
-      senderName: '나',
-      text: '알겠습니다',
-      timestamp: DateTime(2026, 3, 15, 16, 1),
-      isMe: true,
-      readStatus: MessageReadStatus.sent,
-    ),
-  ];
+  /// 초기 로드된 메시지 + 실시간 스트림 수신분을 합쳐서 보관.
+  final List<ChatMessage> _messages = [];
+  final Set<String> _messageIds = <String>{};
+  bool _initialLoaded = false;
 
   @override
   void initState() {
     super.initState();
+    _loadInitial();
+    _markRead();
   }
 
   @override
@@ -185,31 +46,83 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     super.dispose();
   }
 
-  void _handleSend(String text) {
-    if (text.trim().isEmpty) return;
-
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          senderId: 0,
-          senderName: '나',
-          text: text.trim(),
-          timestamp: DateTime.now(),
-          isMe: true,
-          readStatus: MessageReadStatus.sent,
-        ),
-      );
-    });
-    _textController.clear();
+  Future<void> _loadInitial() async {
+    final user = ref.read(supabaseClientProvider).auth.currentUser;
+    if (user == null) return;
+    try {
+      final msgs = await ref
+          .read(chatServiceProvider)
+          .getMessages(roomId: widget.room.id, viewerId: user.id);
+      if (!mounted) return;
+      setState(() {
+        for (final m in msgs) {
+          if (_messageIds.add(m.id)) _messages.add(m);
+        }
+        _initialLoaded = true;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _initialLoaded = true);
+    }
   }
 
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+  Future<void> _markRead() async {
+    final user = ref.read(supabaseClientProvider).auth.currentUser;
+    if (user == null) return;
+    await ref
+        .read(chatServiceProvider)
+        .markAsRead(roomId: widget.room.id, playerId: user.id);
+    // chat_room_members UPDATE 가 realtime 으로 흘러가 chat_tab 이
+    // myChatRoomsProvider 를 invalidate 한다. 여기서 재호출 불필요.
+  }
+
+  Future<void> _handleSend(String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    final user = ref.read(supabaseClientProvider).auth.currentUser;
+    if (user == null) return;
+
+    _textController.clear();
+    try {
+      final sent = await ref.read(chatServiceProvider).sendMessage(
+            roomId: widget.room.id,
+            senderId: user.id,
+            text: trimmed,
+          );
+      // Optimistic: 서버 ack 받자마자 즉시 화면에 반영.
+      // 뒤이어 오는 realtime stream 은 같은 id 로 dedup 된다.
+      _ingestStreamMessage(sent);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('전송 실패: $e')),
+      );
+    }
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  void _ingestStreamMessage(ChatMessage m) {
+    if (_messageIds.add(m.id)) {
+      setState(() {
+        _messages.add(m);
+        // 스트림 경합/오프셋 등으로 순서가 깨질 수 있어 timestamp 기준 오름차순 정렬.
+        // ListView 는 reverse:true 이므로 배열 끝이 화면 맨 아래(최신).
+        _messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 실시간 스트림 구독 (새 메시지 도착 시 _messages 에 누적).
+    ref.listen<AsyncValue<ChatMessage>>(
+      roomMessageStreamProvider(widget.room.id),
+      (prev, next) {
+        next.whenData(_ingestStreamMessage);
+      },
+    );
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
@@ -221,15 +134,27 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               Expanded(
                 child: Container(
                   color: Colors.white,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.sm,
-                    ),
-                    itemCount: _messages.length,
-                    itemBuilder: _buildItem,
-                  ),
+                  child: !_initialLoaded
+                      ? const Center(child: CircularProgressIndicator())
+                      : _messages.isEmpty
+                          ? Center(
+                              child: Text(
+                                '첫 메시지를 남겨보세요',
+                                style:
+                                    AppTextStyles.bodyRegular.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: _scrollController,
+                              reverse: true,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.sm,
+                              ),
+                              itemCount: _messages.length,
+                              itemBuilder: _buildItem,
+                            ),
                 ),
               ),
               ChatInputBar(
@@ -247,7 +172,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final messages = _messages;
     final message = messages[messages.length - 1 - index];
 
-    // Event Reminder
     if (message.type == MessageType.event) {
       return EventReminderCard(
         message: message,
@@ -258,13 +182,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final olderMessage = (index < messages.length - 1)
         ? messages[messages.length - 2 - index]
         : null;
-
     final newerMessage =
         (index > 0) ? messages[messages.length - index] : null;
 
-    // event 타입 메시지는 그룹핑에서 제외
-    final effectiveOlder = olderMessage?.type == MessageType.event ? null : olderMessage;
-    final effectiveNewer = newerMessage?.type == MessageType.event ? null : newerMessage;
+    final effectiveOlder =
+        olderMessage?.type == MessageType.event ? null : olderMessage;
+    final effectiveNewer =
+        newerMessage?.type == MessageType.event ? null : newerMessage;
 
     final isFirstInGroup = effectiveOlder == null ||
         effectiveOlder.senderId != message.senderId ||
@@ -289,11 +213,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     );
   }
 
-  /// Messenger 스타일 헤더
   Widget _buildHeader() {
-    // 더미 멤버 이름 (스크린샷처럼 "동생, 나" 형식)
-    const memberNames = '김민수, 이준호, 박성진, 나';
-
     return Container(
       height: 56,
       color: Colors.white,
@@ -303,7 +223,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       ),
       child: Row(
         children: [
-          // ← 백버튼
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(
@@ -312,13 +231,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               color: AppColors.textPrimary,
             ),
           ),
-          // 아바타 + 이름 (탭 → Group Info)
           Expanded(
             child: GestureDetector(
-              onTap: () => context.push('/group-info', extra: widget.room),
+              onTap: widget.room.type == ChatRoomType.team
+                  ? () => context.push('/group-info', extra: widget.room)
+                  : null,
               child: Row(
                 children: [
-                  // 원형 그룹 아바타 32×32pt
                   if (widget.room.logoPath != null)
                     ClipOval(
                       child: Image.asset(
@@ -331,15 +250,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   else
                     CircleAvatar(
                       radius: 16,
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                      backgroundColor:
+                          AppColors.primary.withValues(alpha: 0.15),
                       child: Icon(
-                        Icons.people_rounded,
+                        widget.room.type == ChatRoomType.direct
+                            ? Icons.person_rounded
+                            : Icons.people_rounded,
                         color: AppColors.primary,
                         size: 18,
                       ),
                     ),
                   const SizedBox(width: AppSpacing.sm),
-                  // 그룹 이름 + 멤버 이름 나열
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,33 +274,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          memberNames,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textTertiary,
-                            fontSize: 13,
+                        if (widget.room.type == ChatRoomType.team)
+                          Text(
+                            '참여자 ${widget.room.memberCount}명',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textTertiary,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          // 전화 + 영상통화 (Messenger 스타일)
-          const Icon(
-            Icons.phone_outlined,
-            color: AppColors.textPrimary,
-            size: 24,
-          ),
-          const SizedBox(width: AppSpacing.base),
-          const Icon(
-            Icons.videocam_outlined,
-            color: AppColors.textPrimary,
-            size: 24,
           ),
         ],
       ),

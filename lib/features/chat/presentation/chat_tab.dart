@@ -1,183 +1,182 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../runtime/providers.dart';
+import '../../../types/chat.dart';
 import 'widgets/chat_room_cell.dart';
 
-/// 읽음 상태 (WhatsApp 체크마크)
-enum MessageReadStatus { sent, delivered, read }
-
-/// 메시지 타입
-enum MessageType { text, event }
-
-/// 채팅 메시지 모델 (더미)
-class ChatMessage {
-  const ChatMessage({
-    required this.id,
-    required this.senderId,
-    required this.senderName,
-    this.memberTag,
-    this.avatarPath,
-    required this.text,
-    required this.timestamp,
-    required this.isMe,
-    this.readStatus = MessageReadStatus.read,
-    this.type = MessageType.text,
-  });
-
-  final String id;
-  final int senderId;
-  final String senderName;
-  final String? memberTag;
-  final String? avatarPath;
-  final String text;
-  final DateTime timestamp;
-  final bool isMe;
-  final MessageReadStatus readStatus;
-  final MessageType type;
-}
-
-/// 채팅방 모델 (더미)
-class ChatRoom {
-  const ChatRoom({
-    required this.id,
-    required this.name,
-    this.logoPath,
-    required this.lastMessage,
-    required this.lastMessageSender,
-    required this.lastMessageTime,
-    required this.memberCount,
-    this.unreadCount = 0,
-    this.isPinned = false,
-    this.isMuted = false,
-  });
-
-  final String id;
-  final String name;
-  final String? logoPath;
-  final String lastMessage;
-  final String lastMessageSender;
-  final DateTime lastMessageTime;
-  final int memberCount;
-  final int unreadCount;
-  final bool isPinned;
-  final bool isMuted;
-}
-
-class ChatTab extends ConsumerWidget {
+class ChatTab extends ConsumerStatefulWidget {
   const ChatTab({super.key});
 
-  static final _rooms = [
-    ChatRoom(
-      id: 'calor',
-      name: 'FC칼로',
-      logoPath: 'assets/images/logo_calo.png',
-      lastMessage: '네 흰색 유니폼으로 통일하겠습니다',
-      lastMessageSender: '김민수',
-      lastMessageTime: DateTime(2026, 3, 15, 16, 0),
-      memberCount: 24,
-      unreadCount: 3,
-      isPinned: true,
-    ),
-    ChatRoom(
-      id: 'bosong',
-      name: 'FC쏘아',
-      logoPath: 'assets/images/logo_ssoa.png',
-      lastMessage: '다음 주 연습경기 일정 확인해주세요',
-      lastMessageSender: '홍길동',
-      lastMessageTime: DateTime(2026, 3, 15, 14, 22),
-      memberCount: 18,
-      unreadCount: 0,
-    ),
-    ChatRoom(
-      id: 'futsal',
-      name: '수요 풋살 모임',
-      lastMessage: '이번 주 수요일 7시 맞죠?',
-      lastMessageSender: '최영훈',
-      lastMessageTime: DateTime(2026, 3, 14, 21, 15),
-      memberCount: 12,
-      unreadCount: 5,
-    ),
-    ChatRoom(
-      id: 'notice',
-      name: '전체 공지방',
-      lastMessage: '3월 회비 납부 안내드립니다',
-      lastMessageSender: '관리자',
-      lastMessageTime: DateTime(2026, 3, 13, 10, 0),
-      memberCount: 45,
-      unreadCount: 1,
-      isMuted: true,
-    ),
-  ];
+  @override
+  ConsumerState<ChatTab> createState() => _ChatTabState();
+}
 
+class _ChatTabState extends ConsumerState<ChatTab> {
   static const _headerHeight = 56.0;
 
+  RealtimeChannel? _channel;
+  Timer? _debounce;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final showDummy = ref.watch(showDummyDataProvider);
-    final rooms = showDummy ? _rooms : <ChatRoom>[];
+  void initState() {
+    super.initState();
+    _subscribeRealtime();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    final ch = _channel;
+    if (ch != null) {
+      ref.read(supabaseClientProvider).removeChannel(ch);
+    }
+    super.dispose();
+  }
+
+  /// chat_messages / chat_room_members 변경 시 방 목록을 재요청.
+  /// 다발 이벤트 대비해 200ms debounce.
+  void _subscribeRealtime() {
+    final client = ref.read(supabaseClientProvider);
+    _channel = client
+        .channel('chat-tab-updates')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'chat_messages',
+          callback: (_) => _scheduleRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'chat_room_members',
+          callback: (_) => _scheduleRefresh(),
+        )
+        .subscribe();
+  }
+
+  void _scheduleRefresh() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      if (mounted) ref.invalidate(myChatRoomsProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final roomsAsync = ref.watch(myChatRoomsProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(
       children: [
-        ListView.separated(
-          padding: EdgeInsets.only(top: topPadding + _headerHeight),
-          itemCount: rooms.length,
-          separatorBuilder: (_, __) => Divider(
-            height: 0.5,
-            indent: AppSpacing.base + 52 + AppSpacing.md,
-            color: AppColors.iconInactive.withValues(alpha: 0.3),
+        roomsAsync.when(
+          data: (rooms) => _buildList(context, ref, rooms, topPadding),
+          loading: () => Padding(
+            padding: EdgeInsets.only(top: topPadding + _headerHeight),
+            child: const Center(child: CircularProgressIndicator()),
           ),
-          itemBuilder: (context, index) {
-            final room = rooms[index];
-            return ChatRoomCell(
-              room: room,
-              onTap: () => context.push('/chat', extra: room),
-            );
-          },
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                color: Colors.white.withValues(alpha: 0.85),
-                padding: EdgeInsets.only(
-                  top: topPadding + AppSpacing.sm,
-                  left: AppSpacing.xl,
-                  right: AppSpacing.xl,
-                  bottom: AppSpacing.base,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      '채팅',
-                      style: AppTextStyles.pageTitle.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.edit_note_rounded,
-                      color: AppColors.textTertiary,
-                      size: 26,
-                    ),
-                  ],
+          error: (err, _) => Padding(
+            padding: EdgeInsets.only(top: topPadding + _headerHeight),
+            child: Center(
+              child: Text(
+                '채팅방을 불러오지 못했습니다\n$err',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyRegular.copyWith(
+                  color: AppColors.textTertiary,
                 ),
               ),
             ),
           ),
         ),
+        _buildHeader(context, topPadding),
       ],
+    );
+  }
+
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    List<ChatRoom> rooms,
+    double topPadding,
+  ) {
+    if (rooms.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(top: topPadding + _headerHeight),
+        child: Center(
+          child: Text(
+            '아직 채팅방이 없어요\n팀에 가입하면 자동으로 방이 생깁니다',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyRegular.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(myChatRoomsProvider),
+      child: ListView.separated(
+        padding: EdgeInsets.only(top: topPadding + _headerHeight),
+        itemCount: rooms.length,
+        separatorBuilder: (_, __) => Divider(
+          height: 0.5,
+          indent: AppSpacing.base + 52 + AppSpacing.md,
+          color: AppColors.iconInactive.withValues(alpha: 0.3),
+        ),
+        itemBuilder: (context, index) {
+          final room = rooms[index];
+          return ChatRoomCell(
+            room: room,
+            onTap: () => context.push('/chat', extra: room),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, double topPadding) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            color: Colors.white.withValues(alpha: 0.85),
+            padding: EdgeInsets.only(
+              top: topPadding + AppSpacing.sm,
+              left: AppSpacing.xl,
+              right: AppSpacing.xl,
+              bottom: AppSpacing.base,
+            ),
+            child: Row(
+              children: [
+                Text(
+                  '채팅',
+                  style: AppTextStyles.pageTitle.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.edit_note_rounded,
+                  color: AppColors.textTertiary,
+                  size: 26,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

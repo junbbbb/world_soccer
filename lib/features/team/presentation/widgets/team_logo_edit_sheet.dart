@@ -1,14 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../runtime/providers.dart';
+import '../../../../shared/widgets/team_logo_picker.dart';
 import '../../../../shared/widgets/team_logo_view.dart';
 import '../../../../types/team.dart';
 
@@ -48,32 +47,12 @@ class _TeamLogoEditSheetState extends ConsumerState<_TeamLogoEditSheet> {
   }
 
   Future<void> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
-      );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      final ext = _extensionFromPath(file.path);
-      if (!mounted) return;
-      HapticFeedback.selectionClick();
-      setState(() {
-        _pickedImageBytes = bytes;
-        _pickedImageExt = ext;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('사진을 불러오지 못했어요: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    final picked = await pickTeamLogoImage(context);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _pickedImageBytes = picked.bytes;
+      _pickedImageExt = picked.ext;
+    });
   }
 
   void _clearPickedImage() {
@@ -240,34 +219,13 @@ class _TeamLogoEditSheetState extends ConsumerState<_TeamLogoEditSheet> {
               // 팔레트 (사진 없을 때만 의미 있음, 있어도 fallback 색으로 저장되므로 선택 가능)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: GridView.count(
-                  crossAxisCount: 4,
-                  mainAxisSpacing: AppSpacing.md,
-                  crossAxisSpacing: AppSpacing.md,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    for (final hex in kTeamLogoPalette)
-                      GestureDetector(
-                        onTap: _saving
-                            ? null
-                            : () {
-                                HapticFeedback.selectionClick();
-                                setState(() => _selectedColor = hex);
-                              },
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _parseHex(hex),
-                            border: hex == _selectedColor
-                                ? Border.all(
-                                    color: AppColors.textPrimary, width: 3)
-                                : null,
-                          ),
-                        ),
-                      ),
-                  ],
+                child: TeamLogoPaletteGrid(
+                  selected: _selectedColor,
+                  enabled: !_saving,
+                  onSelect: (hex) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _selectedColor = hex);
+                  },
                 ),
               ),
               Padding(
@@ -355,18 +313,3 @@ class _ActionChip extends StatelessWidget {
   }
 }
 
-Color _parseHex(String hex) {
-  var v = hex.trim();
-  if (v.startsWith('#')) v = v.substring(1);
-  if (v.length == 6) v = 'FF$v';
-  return Color(int.parse(v, radix: 16));
-}
-
-String _extensionFromPath(String path) {
-  final i = path.lastIndexOf('.');
-  if (i < 0 || i == path.length - 1) return 'jpg';
-  final ext = path.substring(i + 1).toLowerCase();
-  if (ext == 'jpeg') return 'jpg';
-  if (ext == 'png' || ext == 'webp' || ext == 'jpg') return ext;
-  return 'jpg';
-}

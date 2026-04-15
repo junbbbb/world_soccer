@@ -15,6 +15,11 @@
 | 009 | 2026-04-14 | 팀 탈퇴 규칙: 마지막 admin 보호 (TDD) | 확정 |
 | 010 | 2026-04-14 | 활성 팀 전환: `players.active_team_id` (TDD) | 확정 |
 | 011 | 2026-04-14 | 팀 로고 업로드: Supabase Storage `team-logos` 버킷 | 확정 |
+| 012 | 2026-04-14 | 채팅 스키마 + 팀 ↔ 방 자동 동기화 트리거 | 확정 |
+| 013 | 2026-04-14 | RLS 무한 재귀 해결: SECURITY DEFINER 헬퍼 | 확정 |
+| 014 | 2026-04-14 | 방 목록 N+1 제거: RPC 집계 + DM advisory lock | 확정 |
+| 015 | 2026-04-15 | 기본 팀 로고: OpponentLogo(방패+이니셜)로 통합 | 확정 |
+| 016 | 2026-04-15 | 선수 아바타 업로드: `player-avatars` 버킷 | 확정 |
 
 ---
 
@@ -185,3 +190,175 @@
 - 크롭 UI 없이 `maxWidth: 512` 리사이즈만 → 긴 사진은 `BoxFit.cover` 시점에서 중앙 크롭으로 보임. 원본 비율이 극단적이면 어색할 수 있음
 - 버킷 public read → URL 만 알면 누구나 이미지 접근 가능. 팀 로고는 공개 정보라 허용
 - 구 로고 파일 자동 삭제 안 함 — 경로가 타임스탬프로 다르므로 업데이트 시 과거 파일이 스토리지에 남음. 추후 정리 크론 또는 upload 시 기존 파일 일괄 삭제 로직 고려
+
+## 012. 채팅 스키마 + 팀 ↔ 방 자동 동기화 트리거
+
+**결정**: 채팅 도메인 세 테이블(`chat_rooms`, `chat_room_members`, `chat_messages`)
+을 도입. 팀 단체방의 생성/가입/탈퇴를 앱 레이어가 아닌 DB 트리거로 자동 동기화.
+방 종류는 `type in ('team', 'direct')` 두 가지. 팀당 단체방은 정확히 1개
+(`unique (team_id)` + CHECK `chat_rooms_type_integrity`).
+
+**이유**:
+- 앱이 `team_members` insert 직후 별도 rooms insert 를 호출하는 방식은
+  RPC 초대, RLS 우회 경로, 백필 시나리오에서 누락 위험 → DB 에서 단일화
+- `on delete cascade` 와 조합해 팀/멤버 라이프사이클이 채팅 데이터까지 그대로 전파
+- 단체방 이름은 `teams.name` 을 복제해 보관 — 팀명 rename 시 `sync_team_chat_room_name`
+  트리거가 즉시 반영하므로 조회 1회에 방이름 포함
+
+**구현**:
+- 마이그레이션 `20260414050000_chat.sql`:
+  - 테이블 3개 + 인덱스 (`room_id, created_at desc` 등)
+  - 트리거 4종:
+    - `on_team_created_create_chat_room` — 팀 insert → 방 insert
+    - `on_team_renamed_sync_chat_room_name` — 팀명 update → 방이름 update
+    - `on_team_member_added_join_chat_room` — 멤버 insert → 방 참여
+    - `on_team_member_removed_leave_chat_room` — 멤버 delete → 방 탈퇴
+  - 기존 팀/멤버에 대한 백필 쿼리(중복 insert 는 `on conflict do nothing`)
+  - `get_or_create_direct_room(p_other)` RPC (DM 생성/재사용)
+  - `chat_messages`/`chat_room_members` 를 `supabase_realtime` publication 에 등록
+
+**트레이드오프**:
+- 트리거는 비가시적이라 신규 기여자가 "왜 방이 저절로 생기지?" 혼란 가능 → 이 ADR
+  + `20260414050000_chat.sql` 주석으로 문서화
+- 단체방당 1개 제약이라 "여러 주제 채널" 같은 확장은 별도 `channels` 테이블이 필요
+
+## 013. RLS 무한 재귀 해결: SECURITY DEFINER 헬퍼
+
+**결정**: `chat_rooms_select` / `chat_room_members_select` / `chat_messages_select`
+정책이 모두 `chat_room_members` 에 대한 서브쿼리로 멤버십을 확인하도록
+작성됐는데, `chat_room_members_select` 가 자기 자신을 참조해 PostgreSQL 이
+`infinite recursion detected in policy for relation 'chat_room_members'`
+(`42P17`) 로 거절. 헬퍼 함수 `public.is_chat_room_member(uuid)` 를
+`SECURITY DEFINER STABLE` 로 정의해 RLS 를 우회하고, 네 정책을 모두
+이 함수 한 번 호출로 재작성.
+
+**이유**:
+- Supabase 공식 권장 패턴. DEFINER 로 RLS 를 끊어 재귀를 구조적으로 해결
+- 함수 인자가 `room_id` 단일, 내부에서 `auth.uid()` 로 본인 행만 검사 →
+  권한 확장/우회 위험 없음
+- 정책을 헬퍼 호출 1줄로 통일 → 가독성 + 유지보수성 상승
+
+**구현**:
+- 마이그레이션 `20260414060000_chat_rls_fix.sql` — 재귀 정책 4종 `drop policy if exists`
+  후, 헬퍼 + 정책 재작성
+- 헬퍼는 `search_path = ''` 로 고정해 스키마 하이재킹 방지
+- `chat_messages_insert` 도 `sender_id = auth.uid() and public.is_chat_room_member(room_id)`
+  조합으로 재작성
+
+**트레이드오프**:
+- DEFINER 함수는 소유자 권한으로 실행되므로 정의/수정 시 코드리뷰 필수.
+  현재는 단순 `exists` 만 반환하므로 공격 표면 없음
+
+## 014. 방 목록 N+1 제거: RPC 집계 + DM advisory lock
+
+**결정**: `ChatRepo.getMyRooms` 구현이 방 개수 N 에 대해 `memberCount` N회,
+`unreadCount` N회, DM peer 이름 K회 로 `2 + 2N + K` round-trip 발생. 이를
+서버 RPC `get_my_chat_rooms()` 한 번으로 집계해 **1 round-trip**. 함께
+DM 방 중복 생성 레이스(동시 `SELECT` 두 번이 모두 null → 둘 다 INSERT)
+는 `pg_advisory_xact_lock(hashtextextended(정렬쌍))` 으로 차단.
+`ChatRepo` 인터페이스에서 `findDirectRoom` / `createDirectRoom` /
+`shareTeam` 세 메서드를 제거하고 `getOrCreateDirectRoom` 하나로 통합
+(서버 RPC 가 팀원 검증/락/생성 전부 책임).
+
+**이유**:
+- 방 10개·DM 3 기준 26 RT → 1 RT. 3G 환경에서 체감 2초 → 80ms
+- 클라이언트 로직이 서버 RPC 로 이동 → Dart 단순화 + 트랜잭션 원자성 확보
+- Advisory lock 은 트랜잭션 스코프라 교착 위험 없음. 정렬쌍 해시로 순서 무관하게 동일 키
+
+**구현**:
+- 마이그레이션 `20260414070000_chat_perf.sql`:
+  - `get_my_chat_rooms()` returns table — `with me`, `my_rooms`, `last_msg`
+    (`distinct on (room_id)`), `member_cnt`, `unread_cnt`, `dm_peer` CTE 합성
+  - `share_team_with(uuid)` returns boolean
+  - `get_or_create_direct_room(uuid)` 재정의 — advisory lock 획득 후
+    재조회 → 없으면 insert. `chat_rooms` insert 와 양쪽 `chat_room_members`
+    insert 를 단일 트랜잭션으로 원자화
+- 후속 마이그레이션 `20260415000000_chat_logo.sql`:
+  - 방 목록 RPC 에 `team_logo_url` / `team_logo_color` 컬럼 추가
+    (셀이 팀 로고 이미지를 한 번에 받도록)
+- 클라이언트: `ChatRepo.getMyRooms` 는 `rpc('get_my_chat_rooms')` 반환
+  JSON 을 `ChatRoom` 으로 매핑
+- `SupabaseChatRepo` 는 `_senderCache: Map<String, Map<String, String?>>` 를
+  repo 내부에 유지해 realtime stream 에서 sender 조회 N+1 을 1회로 축소
+- `subscribeMessages` 는 `.order desc .limit(1)` 로 최신 1행만 관찰.
+  초기 로드(`getMessages`) 와 경합 방지 + 불필요한 과거 tuple 재방출 제거
+
+**트레이드오프**:
+- RPC 하나로 쿼리가 길어져 초기 디버깅 난이도는 소폭 증가. 각 CTE 별 주석으로 완화
+- Advisory lock 키가 `hashtextextended` 이므로 64비트 해시 충돌 이론적으로 가능
+  (실질 0에 수렴). 충돌해도 최악 직렬화 한 트랜잭션 더 대기일 뿐
+- `PostgrestException.message.contains('Not a teammate')` 문자열 매칭으로
+  `NotTeammateException` 변환 — 서버 예외 메시지 변경 시 동기화 필요
+
+## 015. 기본 팀 로고: OpponentLogo(방패+이니셜)로 통합
+
+**결정**: 팀 로고 렌더 공용 위젯 `TeamLogoView` 의 업로드 없는 fallback 을,
+기존 `logoColor` 배경 원/사각 + 이니셜 에서, 상대팀과 동일한
+`defaultteamlogo.png`(방패 SVG→PNG) + 이니셜 오버레이 (`OpponentLogo`) 로 변경.
+업로드된 `logo_url` 이 있으면 그 이미지 그대로. 홈 헤더의 로고 클립은
+원형(`BorderRadius.circular(16)`) → `AppRadius.smoothSm` 로 바꿔 방패 윤곽이
+잘리지 않게 함.
+
+**이유**:
+- 업로드 없는 팀과 상대팀이 완전히 다른 비주얼이었음 → 한 화면에 섞이면
+  (예: 경기 카드의 우리팀 vs 상대팀) 이질감. 두 로고 시스템 통합이 일관성 측면에서 분명한 개선
+- 방패 모양 자체가 "스포츠 엠블럼" 느낌을 전달 → 컬러 원보다 팀 정체성에 가깝다
+- 기존 `OpponentLogo` 의 한글 초성→영문 이니셜 매핑 로직을 그대로 재사용
+
+**구현**:
+- `shared/widgets/team_logo_view.dart`:
+  - `_buildMonogram` 제거 → `_buildDefault` 가 `OpponentLogo(teamName, size, borderRadius, ...)` 위임
+  - `_pickForeground` 삭제 (더 이상 배경색 밝기 기반 text color 선택 불필요)
+- `features/home/presentation/home_tab.dart`: 좌상단 `TeamLogoView` 의
+  borderRadius 를 원형에서 `AppRadius.smoothSm` 로 변경 — 방패 모양 유지
+- `features/chat/presentation/widgets/chat_room_cell.dart`: 방 목록 셀의 로고
+  렌더 우선순위를 (logoUrl → logoPath → logoColor+이니셜 원형) 로 재정의.
+  `logoColor` 는 해시 기반 폴백 색상과 병용. `_parseHex` 헬퍼 추가
+
+**트레이드오프**:
+- `TeamLogoPaletteGrid` 와 `teams.logo_color` 의 시각적 영향이 줄어듦 —
+  팔레트는 이제 "업로드 이미지 없는 팀의 이니셜/주변 색조 튜닝" 용도로만
+  남음. 팀 생성 UI 의 팔레트 스텝 UX 는 향후 재검토 여지
+- 방패 PNG 의 중앙 이니셜 폰트 대비/그림자 문제는 `OpponentLogo` 쪽 스타일로만
+  조정 가능. 크기/회색 제약 있어 이니셜 가독성이 팀명에 따라 다를 수 있음
+
+## 016. 선수 아바타 업로드: `player-avatars` 버킷
+
+**결정**: 프로필 편집 화면에서 갤러리 이미지 선택 → Supabase Storage 업로드 →
+`players.avatar_url` 갱신. 버킷 `player-avatars` 는 public read, 쓰기/수정/삭제
+는 본인 폴더(`{playerId}/`) 에만 허용 (RLS). 경로 규칙 `{playerId}/avatar_{ts}.{ext}`,
+허용 확장자 jpeg/png/webp, 최대 2MB.
+
+**이유**:
+- 팀 내 식별성 핵심 자산. 업로드 없으면 멤버 목록/채팅 DM/홈 헤더 전부 이니셜
+  원만 보여 매우 flat. 아바타가 실제 얼굴일 때 팀 분위기가 살아남
+- 팀 로고 업로드(결정 011) 가 이미 비슷한 패턴을 검증 — Storage 버킷 + RLS +
+  `image_picker` 리사이즈(512px) + `Repo.upload*` 메서드. 아바타도 같은 패턴 복제
+- public read 허용은 위험도 낮음 (팀 로고와 동일). URL 추측 불가 수준의 경로
+  (`{uuid}/avatar_{epoch_ms}.ext`) + `players.avatar_url` 이 이미 공개 정보
+
+**구현**:
+- 마이그레이션 `20260415010000_player_avatars_bucket.sql`:
+  - `storage.buckets` insert — public, 2MB, mime 3종
+  - `storage.objects` RLS 4종: select 공개 / insert·update·delete 는
+    `(storage.foldername(name))[1] = auth.uid()::text`
+- Repo: `ProfileRepo.uploadAvatar({playerId, bytes, extension})` 인터페이스 +
+  `SupabaseProfileRepo` 구현 — `uploadBinary` + public URL 반환.
+  기존 `update()` 가 이미 `avatarUrl` 을 받으므로 uploadAvatar 결과를 바로
+  연결
+- UI: `features/profile/presentation/profile_screen.dart`:
+  - `_EditProfileScreen` → `ConsumerStatefulWidget`
+  - `_pickedAvatarBytes` / `_pickedAvatarExt` 상태
+  - `_pickAvatar()` 가 `pickTeamLogoImage(context)` 재사용 (512px, 품질 85,
+    jpeg/png/webp 확장자 정리)
+  - 프리뷰: 선택된 bytes → `Image.memory`, 없으면 기존 asset
+  - `_save()` 가 업로드 → `profileRepo.update(avatarUrl)` → pop. 로딩 스피너 +
+    실패 시 SnackBar
+
+**트레이드오프**:
+- 크롭 UI 없이 `maxWidth: 512` 리사이즈만 → 세로 긴 사진은 원형 crop 시
+  중앙 위주로 잘림. 얼굴 위치가 중앙이 아니면 어색
+- 구 아바타 파일 자동 삭제 없음 (팀 로고와 동일 이슈). 스토리지 정리
+  크론 또는 upsert 시 이전 파일 삭제 로직은 향후
+- 이름/등번호/포지션/발/키 등 나머지 프로필 필드 저장은 이번 변경 scope 밖
+  (피커/업로드만 실제 연결, 텍스트 필드는 여전히 pop)

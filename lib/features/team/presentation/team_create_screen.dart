@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../runtime/providers.dart';
+import '../../../shared/widgets/team_logo_picker.dart';
 import '../../../shared/widgets/team_logo_view.dart';
-import '../../../types/team.dart';
 
 /// 새 팀 만들기 풀스크린.
 ///
@@ -33,7 +32,6 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
   final _descCtrl = TextEditingController();
   final _nameFocus = FocusNode();
   String _selectedColor = kTeamLogoPalette.first;
-  // 선택한 로고 이미지 bytes (업로드 대기 상태). null 이면 색상 모드.
   Uint8List? _pickedImageBytes;
   String? _pickedImageExt;
   bool _loading = false;
@@ -42,7 +40,6 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl.addListener(() => setState(() {})); // 로고 이니셜 실시간 갱신
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nameFocus.requestFocus();
     });
@@ -80,32 +77,12 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
   }
 
   Future<void> _pickImage() async {
-    try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
-      );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      final ext = _extensionFromPath(file.path);
-      if (!mounted) return;
-      HapticFeedback.selectionClick();
-      setState(() {
-        _pickedImageBytes = bytes;
-        _pickedImageExt = ext;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('사진을 불러오지 못했어요: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    final picked = await pickTeamLogoImage(context);
+    if (picked == null || !mounted) return;
+    setState(() {
+      _pickedImageBytes = picked.bytes;
+      _pickedImageExt = picked.ext;
+    });
   }
 
   Future<void> _pickColor() async {
@@ -184,16 +161,6 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = _nameCtrl.text.trim();
-    final canSubmit = !_loading && name.isNotEmpty;
-    // 실시간 미리보기용 임시 Team.
-    final previewTeam = Team(
-      id: '',
-      name: name.isEmpty ? '팀' : name,
-      logoColor: _selectedColor,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(0),
-    );
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -245,11 +212,18 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
                           ),
                         )
                       else
-                        TeamLogoView(
-                          team: previewTeam,
-                          size: 112,
-                          borderRadius: BorderRadius.circular(56),
-                          fontSize: 52,
+                        AnimatedBuilder(
+                          animation: _nameCtrl,
+                          builder: (_, __) {
+                            final name = _nameCtrl.text.trim();
+                            return TeamLogoView.byName(
+                              name: name.isEmpty ? '팀' : name,
+                              logoColor: _selectedColor,
+                              size: 112,
+                              borderRadius: BorderRadius.circular(56),
+                              fontSize: 52,
+                            );
+                          },
                         ),
                       Positioned(
                         right: -2,
@@ -323,30 +297,38 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
               const SizedBox(height: AppSpacing.xxl),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: canSubmit ? _submit : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.textPrimary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppColors.surface,
-                    disabledForegroundColor: AppColors.textTertiary,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.md),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppRadius.smoothButton,
-                    ),
-                  ),
-                  child: _loading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('만들기', style: AppTextStyles.buttonPrimary),
+                child: AnimatedBuilder(
+                  animation: _nameCtrl,
+                  builder: (_, __) {
+                    final canSubmit =
+                        !_loading && _nameCtrl.text.trim().isNotEmpty;
+                    return ElevatedButton(
+                      onPressed: canSubmit ? _submit : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.textPrimary,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: AppColors.surface,
+                        disabledForegroundColor: AppColors.textTertiary,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: AppRadius.smoothButton,
+                        ),
+                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('만들기',
+                              style: AppTextStyles.buttonPrimary),
+                    );
+                  },
                 ),
               ),
               SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
@@ -509,15 +491,6 @@ class _LogoMenuItem extends StatelessWidget {
   }
 }
 
-String _extensionFromPath(String path) {
-  final i = path.lastIndexOf('.');
-  if (i < 0 || i == path.length - 1) return 'jpg';
-  final ext = path.substring(i + 1).toLowerCase();
-  if (ext == 'jpeg') return 'jpg';
-  if (ext == 'png' || ext == 'webp' || ext == 'jpg') return ext;
-  return 'jpg';
-}
-
 // ══════════════════════════════════════════════
 // 색상 팔레트 바텀시트
 // ══════════════════════════════════════════════
@@ -569,29 +542,9 @@ class _ColorPickerSheet extends StatelessWidget {
                     .copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: AppSpacing.lg),
-              GridView.count(
-                crossAxisCount: 4,
-                mainAxisSpacing: AppSpacing.md,
-                crossAxisSpacing: AppSpacing.md,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  for (final hex in kTeamLogoPalette)
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context, hex),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _parseHex(hex),
-                          border: hex == selected
-                              ? Border.all(
-                                  color: AppColors.textPrimary, width: 3)
-                              : null,
-                        ),
-                      ),
-                    ),
-                ],
+              TeamLogoPaletteGrid(
+                selected: selected,
+                onSelect: (hex) => Navigator.pop(context, hex),
               ),
             ],
           ),
@@ -599,11 +552,4 @@ class _ColorPickerSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-Color _parseHex(String hex) {
-  var v = hex.trim();
-  if (v.startsWith('#')) v = v.substring(1);
-  if (v.length == 6) v = 'FF$v';
-  return Color(int.parse(v, radix: 16));
 }

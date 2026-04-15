@@ -30,13 +30,8 @@ class HomeTab extends ConsumerStatefulWidget {
 class _HomeTabState extends ConsumerState<HomeTab> {
   static const _headerHeight = 56.0;
 
-  // 개발용: 프로필 완성 여부 (false = 첫 가입자 상태)
   bool _hasProfile = false;
-
-  // 알림 카드 dismiss 상태
   bool _isResultCardDismissed = false;
-
-  // 결과 입력 카드 지연 등장
   bool _showResultCard = false;
 
   void _showTeamSwitcher(BuildContext context) {
@@ -50,24 +45,60 @@ class _HomeTabState extends ConsumerState<HomeTab> {
   @override
   void initState() {
     super.initState();
-    // 400ms 후 슬라이드인 — "이벤트성 카드"라는 인식 부여
+    // 400ms 후 슬라이드인 — "이벤트성 카드"라는 인식 부여.
     Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) setState(() => _showResultCard = true);
     });
   }
 
-  static Widget _defaultTeamLogo() {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(
-        Icons.shield_rounded,
-        size: 18,
-        color: AppColors.textTertiary,
+  /// 결과 입력 프롬프트 카드. 표시 조건에 맞지 않으면 null 반환.
+  /// Column 에서 null 일 때 주변 spacing 까지 함께 제거하기 위해 widget 을
+  /// 만들 여부 자체를 한 곳에서 결정.
+  Widget? _buildResultPromptCard({
+    required bool showDummy,
+    required bool hasNextMatch,
+    required List<Match> realMatchList,
+  }) {
+    if (!showDummy) {
+      final needsResult = realMatchList
+          .where((m) =>
+              (m.displayState == MatchDisplayState.ended ||
+                  m.displayState == MatchDisplayState.earlyEnded) &&
+              !m.hasResult)
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+      if (needsResult.isEmpty) return null;
+      final m = needsResult.first;
+      return _animatedPrompt(
+        child: _MatchResultPromptCard(
+          title: 'vs ${m.opponentName} 결과 입력',
+          matchId: m.id,
+          opponentName: m.opponentName,
+          onDismiss: () =>
+              setState(() => _isResultCardDismissed = true),
+        ),
+      );
+    }
+    if (hasNextMatch && !_isResultCardDismissed) {
+      return _animatedPrompt(
+        child: _MatchResultPromptCard(
+          onDismiss: () => setState(() => _isResultCardDismissed = true),
+        ),
+      );
+    }
+    return null;
+  }
+
+  Widget _animatedPrompt({required Widget child}) {
+    return AnimatedSlide(
+      offset: _showResultCard ? Offset.zero : const Offset(0, 0.3),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: _showResultCard ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        child: child,
       ),
     );
   }
@@ -77,14 +108,12 @@ class _HomeTabState extends ConsumerState<HomeTab> {
     final showDummy = ref.watch(showDummyDataProvider);
     final topPadding = MediaQuery.of(context).padding.top;
 
-    // 팀 데이터 (한 번만 watch)
     final team = ref.watch(currentTeamProvider).when<Team?>(
           data: (t) => t,
           loading: () => null,
           error: (_, __) => null,
         );
 
-    // 실제 데이터: 예정 경기가 있는지 확인
     final asyncMatches = ref.watch(teamMatchesProvider);
     final realMatchList = asyncMatches.when<List<Match>>(
       data: (list) => list,
@@ -95,6 +124,14 @@ class _HomeTabState extends ConsumerState<HomeTab> {
         realMatchList.any((m) => m.isVisibleOnHome);
     final hasNextMatch = showDummy || hasRealNextMatch;
 
+    // 결과 입력 프롬프트 카드 (표시 안 하면 null 반환 → Column 에서
+    // 주변 SizedBox 까지 함께 생략되도록).
+    final Widget? resultPromptCard = _buildResultPromptCard(
+      showDummy: showDummy,
+      hasNextMatch: hasNextMatch,
+      realMatchList: realMatchList,
+    );
+
     return Stack(
       children: [
         SingleChildScrollView(
@@ -102,63 +139,13 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           child: Column(
             children: [
               NextMatchCard(hasNextMatch: hasNextMatch),
-              const SizedBox(height: AppSpacing.base),
-              // 결과 미입력 경기 알림
-              if (!showDummy) ...[
-                ...() {
-                  final needsResult = realMatchList
-                      .where((m) =>
-                          (m.displayState == MatchDisplayState.ended ||
-                           m.displayState == MatchDisplayState.earlyEnded) &&
-                          !m.hasResult)
-                      .toList()
-                    ..sort((a, b) => b.date.compareTo(a.date));
-                  if (needsResult.isEmpty) return <Widget>[];
-                  final m = needsResult.first;
-                  return [
-                    AnimatedSlide(
-                      offset: _showResultCard
-                          ? Offset.zero
-                          : const Offset(0, 0.3),
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeOutCubic,
-                      child: AnimatedOpacity(
-                        opacity: _showResultCard ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 350),
-                        curve: Curves.easeOutCubic,
-                        child: _MatchResultPromptCard(
-                          title: 'vs ${m.opponentName} 결과 입력',
-                          matchId: m.id,
-                          opponentName: m.opponentName,
-                          onDismiss: () =>
-                              setState(() => _isResultCardDismissed = true),
-                        ),
-                      ),
-                    ),
-                  ];
-                }(),
-              ] else if (hasNextMatch && !_isResultCardDismissed) ...[
-                AnimatedSlide(
-                  offset: _showResultCard
-                      ? Offset.zero
-                      : const Offset(0, 0.3),
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
-                  child: AnimatedOpacity(
-                    opacity: _showResultCard ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOutCubic,
-                    child: _MatchResultPromptCard(
-                      onDismiss: () =>
-                          setState(() => _isResultCardDismissed = true),
-                    ),
-                  ),
-                ),
+              if (resultPromptCard != null) ...[
+                const SizedBox(height: AppSpacing.base),
+                resultPromptCard,
               ],
               const SizedBox(height: AppSpacing.xxl),
               TeamRecentResultsSection(hasResults: hasNextMatch),
               const SizedBox(height: AppSpacing.xxl),
-              // 두꺼운 섹션 구분선
               Container(
                 height: 12,
                 color: AppColors.surface,
@@ -191,16 +178,28 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                       behavior: HitTestBehavior.opaque,
                       child: Row(
                         children: [
-                          if (team?.logoUrl != null && team!.logoUrl!.isNotEmpty)
-                            ClipOval(
-                              child: Image.network(
-                                team.logoUrl!,
-                                width: 32, height: 32, fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _defaultTeamLogo(),
-                              ),
+                          if (team != null)
+                            TeamLogoView(
+                              team: team,
+                              size: 32,
+                              // 원형 대신 soft 사각 — 기본 로고일 때 방패 모양이
+                              // 잘리지 않도록. 업로드 사진도 부드럽게 라운드.
+                              borderRadius: AppRadius.smoothSm,
                             )
                           else
-                            _defaultTeamLogo(),
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.shield_rounded,
+                                size: 18,
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             team?.name ?? '...',
@@ -237,7 +236,6 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                               color: AppColors.textTertiary,
                             ),
                           ),
-                          // 프로필 미완성 시 빨간 점
                           if (!_hasProfile)
                             Positioned(
                               top: -2,
