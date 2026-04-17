@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../runtime/providers.dart';
 import '../../../types/match.dart';
 
@@ -201,13 +202,7 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
     final teamId = await ref.read(currentTeamIdProvider.future);
     if (teamId == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('팀 정보를 찾을 수 없습니다'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-        ),
-      );
+      context.showError('팀 정보를 찾을 수 없습니다');
       return;
     }
 
@@ -252,23 +247,11 @@ class _MatchCreateScreenState extends ConsumerState<MatchCreateScreen> {
       ref.invalidate(teamMatchesProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isEditMode ? '경기 정보가 수정되었습니다' : '경기 일정이 생성되었습니다'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-        ),
-      );
+      context.showInfo(_isEditMode ? '경기 정보가 수정되었습니다' : '경기 일정이 생성되었습니다');
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('저장 실패: $e'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-        ),
-      );
+      context.showError('저장 실패: $e');
     }
   }
 

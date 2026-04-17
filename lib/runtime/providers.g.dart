@@ -1441,3 +1441,96 @@ final class CurrentRecentPerformancesProvider
 
 String _$currentRecentPerformancesHash() =>
     r'69d66fb6a291c5c131af1506f7c3ded468c6bee8';
+
+/// 현재 유저가 특정 경기에 참가 신청 했는지 여부.
+///
+/// `match_participations` 에서 (matchId, user.id) 조회. 참가/취소 후
+/// `ref.invalidate(isParticipatingProvider(matchId))` 로 강제 재조회.
+
+@ProviderFor(isParticipating)
+final isParticipatingProvider = IsParticipatingFamily._();
+
+/// 현재 유저가 특정 경기에 참가 신청 했는지 여부.
+///
+/// `match_participations` 에서 (matchId, user.id) 조회. 참가/취소 후
+/// `ref.invalidate(isParticipatingProvider(matchId))` 로 강제 재조회.
+
+final class IsParticipatingProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// 현재 유저가 특정 경기에 참가 신청 했는지 여부.
+  ///
+  /// `match_participations` 에서 (matchId, user.id) 조회. 참가/취소 후
+  /// `ref.invalidate(isParticipatingProvider(matchId))` 로 강제 재조회.
+  IsParticipatingProvider._({
+    required IsParticipatingFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'isParticipatingProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$isParticipatingHash();
+
+  @override
+  String toString() {
+    return r'isParticipatingProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    final argument = this.argument as String;
+    return isParticipating(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is IsParticipatingProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$isParticipatingHash() => r'595c11df66378f13d3704eba6424f87d90a90ed0';
+
+/// 현재 유저가 특정 경기에 참가 신청 했는지 여부.
+///
+/// `match_participations` 에서 (matchId, user.id) 조회. 참가/취소 후
+/// `ref.invalidate(isParticipatingProvider(matchId))` 로 강제 재조회.
+
+final class IsParticipatingFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<bool>, String> {
+  IsParticipatingFamily._()
+    : super(
+        retry: null,
+        name: r'isParticipatingProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 현재 유저가 특정 경기에 참가 신청 했는지 여부.
+  ///
+  /// `match_participations` 에서 (matchId, user.id) 조회. 참가/취소 후
+  /// `ref.invalidate(isParticipatingProvider(matchId))` 로 강제 재조회.
+
+  IsParticipatingProvider call(String matchId) =>
+      IsParticipatingProvider._(argument: matchId, from: this);
+
+  @override
+  String toString() => r'isParticipatingProvider';
+}

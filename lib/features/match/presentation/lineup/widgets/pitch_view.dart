@@ -180,7 +180,7 @@ class PlayerSlot extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: hasMember
-                    ? Colors.white
+                    ? LineupColors.avatarRing
                     : (hovering
                         ? Colors.white.withValues(alpha: 0.18)
                         : Colors.white.withValues(alpha: 0.08)),

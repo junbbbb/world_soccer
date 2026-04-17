@@ -135,13 +135,13 @@ class SupabaseStatsRepo implements StatsRepo {
         'p_player_id': playerId,
         'p_team_id': teamId,
         'p_year': year,
-        'p_half': half == SeasonHalf.first ? 'H1' : 'H2',
+        'p_half': half.dbCode,
       },
     );
     if (raw == null) return const [];
-    final labels = (raw as List<dynamic>).cast<String>();
-    return labels
-        .map(PlayerTitle.fromLabel)
+    final codes = (raw as List<dynamic>).cast<String>();
+    return codes
+        .map(PlayerTitle.fromCode)
         .whereType<PlayerTitle>()
         .toList();
   }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../runtime/providers.dart';
 import '../../../types/chat.dart';
 import '../../../types/enums.dart';
@@ -58,11 +59,185 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         for (final m in msgs) {
           if (_messageIds.add(m.id)) _messages.add(m);
         }
+        _injectMockMessages();
         _initialLoaded = true;
       });
     } catch (_) {
-      if (mounted) setState(() => _initialLoaded = true);
+      if (mounted) {
+        setState(() {
+          _injectMockMessages();
+          _initialLoaded = true;
+        });
+      }
     }
+  }
+
+  /// 개발용 mock 메시지. 팀 단체방에서만 시각적으로 표시.
+  /// 실제 백엔드 메시지와 섞여 예시로만 보이며 전송/저장되지 않는다.
+  void _injectMockMessages() {
+    if (widget.room.type != ChatRoomType.team) return;
+
+    const avatarA = 'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif';
+    const avatarB = 'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif';
+    const avatarC = 'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif';
+    const avatarD = 'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif';
+    final roomId = widget.room.id;
+
+    final mocks = <ChatMessage>[
+      ChatMessage(
+        id: 'mock-1',
+        roomId: roomId,
+        senderId: 'mock-u1',
+        senderName: '김민수',
+        avatarPath: avatarA,
+        text: '내일 경기 준비 다들 되셨나요?',
+        timestamp: DateTime(2026, 3, 14, 20, 30),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-2',
+        roomId: roomId,
+        senderId: 'mock-u2',
+        senderName: '이준호',
+        avatarPath: avatarB,
+        text: '넵! 준비 완료입니다',
+        timestamp: DateTime(2026, 3, 14, 20, 31),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-3',
+        roomId: roomId,
+        senderId: 'mock-me',
+        senderName: '나',
+        text: '유니폼 세탁 중이에요 ㅋㅋ',
+        timestamp: DateTime(2026, 3, 14, 20, 33),
+        isMe: true,
+      ),
+      ChatMessage(
+        id: 'mock-ev1',
+        roomId: roomId,
+        senderId: 'mock-system',
+        senderName: '',
+        text: '3/22(토) 16:00 경기 — 보성 풋살장',
+        timestamp: DateTime(2026, 3, 15, 12, 0),
+        isMe: false,
+        type: MessageType.event,
+      ),
+      ChatMessage(
+        id: 'mock-4',
+        roomId: roomId,
+        senderId: 'mock-u1',
+        senderName: '김민수',
+        avatarPath: avatarA,
+        text: '오늘 경기 4시입니다! 보성 풋살장으로 와주세요',
+        timestamp: DateTime(2026, 3, 15, 13, 0),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-5',
+        roomId: roomId,
+        senderId: 'mock-u2',
+        senderName: '이준호',
+        avatarPath: avatarB,
+        text: '저 도착했어요!',
+        timestamp: DateTime(2026, 3, 15, 15, 30),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-6',
+        roomId: roomId,
+        senderId: 'mock-u3',
+        senderName: '박성진',
+        avatarPath: avatarC,
+        text: '저는 조금 늦을 것 같습니다 ㅠㅠ 10분만 기다려주세요',
+        timestamp: DateTime(2026, 3, 15, 15, 42),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-7',
+        roomId: roomId,
+        senderId: 'mock-me',
+        senderName: '나',
+        text: '저도 거의 다 왔어요',
+        timestamp: DateTime(2026, 3, 15, 15, 43),
+        isMe: true,
+        readStatus: MessageReadStatus.delivered,
+      ),
+      ChatMessage(
+        id: 'mock-8',
+        roomId: roomId,
+        senderId: 'mock-u4',
+        senderName: '최영훈',
+        avatarPath: avatarD,
+        text: '주차장 자리 있나요?',
+        timestamp: DateTime(2026, 3, 15, 15, 45),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-9',
+        roomId: roomId,
+        senderId: 'mock-u1',
+        senderName: '김민수',
+        avatarPath: avatarA,
+        text: '네 아직 자리 많아요',
+        timestamp: DateTime(2026, 3, 15, 15, 45, 30),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-10',
+        roomId: roomId,
+        senderId: 'mock-u1',
+        senderName: '김민수',
+        avatarPath: avatarA,
+        text: '빨리 오세요~',
+        timestamp: DateTime(2026, 3, 15, 15, 46),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-11',
+        roomId: roomId,
+        senderId: 'mock-me',
+        senderName: '나',
+        text: '도착!',
+        timestamp: DateTime(2026, 3, 15, 15, 55),
+        isMe: true,
+      ),
+      ChatMessage(
+        id: 'mock-12',
+        roomId: roomId,
+        senderId: 'mock-u5',
+        senderName: '정우성',
+        avatarPath: avatarA,
+        text: '혹시 유니폼 가져와야 하나요?',
+        timestamp: DateTime(2026, 3, 15, 15, 58),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-13',
+        roomId: roomId,
+        senderId: 'mock-u1',
+        senderName: '김민수',
+        avatarPath: avatarA,
+        text: '네 흰색 유니폼으로 통일하겠습니다',
+        timestamp: DateTime(2026, 3, 15, 16, 0),
+        isMe: false,
+      ),
+      ChatMessage(
+        id: 'mock-14',
+        roomId: roomId,
+        senderId: 'mock-me',
+        senderName: '나',
+        text: '알겠습니다',
+        timestamp: DateTime(2026, 3, 15, 16, 1),
+        isMe: true,
+        readStatus: MessageReadStatus.sent,
+      ),
+    ];
+
+    for (final m in mocks) {
+      if (_messageIds.add(m.id)) _messages.add(m);
+    }
+    _messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
   }
 
   Future<void> _markRead() async {
@@ -93,9 +268,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       _ingestStreamMessage(sent);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('전송 실패: $e')),
-      );
+      context.showError('전송 실패: $e');
     }
   }
 

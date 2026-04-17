@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../repo/chat_repo.dart';
 import '../../../runtime/providers.dart';
 import '../../../types/chat.dart';
@@ -63,14 +64,10 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
       context.push('/chat', extra: room);
     } on NotTeammateException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('같은 팀원에게만 메시지를 보낼 수 있습니다')),
-      );
+      context.showError('같은 팀원에게만 메시지를 보낼 수 있습니다');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('오류: $e')),
-      );
+      context.showError('오류: $e');
     }
   }
 

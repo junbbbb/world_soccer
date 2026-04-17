@@ -9,9 +9,11 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../runtime/providers.dart';
 import '../../../shared/widgets/section_title.dart';
 import '../../../shared/widgets/team_logo_view.dart';
+import '../../../types/enums.dart';
 import '../../../types/profile.dart';
 import '../../../types/team.dart';
 import 'widgets/team_settings_sheet.dart';
@@ -217,8 +219,42 @@ class _OverviewView extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xxl),
           const _InviteLinkCard(),
           const SizedBox(height: AppSpacing.xxl),
+          _OverviewRecordSection(teamId: team.id),
+          const SizedBox(height: AppSpacing.xxl),
           _TeamSummarySection(teamId: team.id),
           const SizedBox(height: AppSpacing.xxxl),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 오버뷰: 승률 카드 섹션 ──
+// (원래 팀스탯 탭 상단에 있었으나 오버뷰로 이동)
+
+class _OverviewRecordSection extends ConsumerWidget {
+  const _OverviewRecordSection({required this.teamId});
+  final String teamId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(teamStatsByTeamProvider(teamId));
+    final realStats = statsAsync.maybeWhen(
+      data: (s) => s,
+      orElse: () => null,
+    );
+    // 실 데이터가 없거나 경기 없음 → mock 대체 (캡쳐용)
+    final stats = (realStats == null || realStats.totalMatches == 0)
+        ? _mockTeamStats()
+        : realStats;
+
+    return Padding(
+      padding: AppSpacing.paddingPage,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionTitle('전적'),
+          _RecordOverviewCard(stats: stats),
         ],
       ),
     );
@@ -234,10 +270,13 @@ class _TeamInfoSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final membersAsync = ref.watch(teamMembersByTeamProvider(team.id));
-    final memberCount = membersAsync.maybeWhen(
+    final realCount = membersAsync.maybeWhen(
       data: (list) => list.length,
       orElse: () => 0,
     );
+    // 실 멤버 없을 땐 mock 멤버 수 반영
+    final memberCount =
+        realCount == 0 ? _mockMembers(team.id).length : realCount;
     final yearText = '${team.createdAt.year}년 창단';
 
     return Padding(
@@ -436,12 +475,7 @@ class _InviteBottomSheet extends StatelessWidget {
                       onTap: () {
                         HapticFeedback.selectionClick();
                         Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('링크가 복사되었습니다'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
+                        context.showInfo('링크가 복사되었습니다');
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -560,16 +594,19 @@ class _TeamSummarySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(teamStatsByTeamProvider(teamId));
-    final stats = statsAsync.maybeWhen(
+    final realStats = statsAsync.maybeWhen(
       data: (s) => s,
       orElse: () => null,
     );
-    final totalRecord = stats == null
-        ? '—'
-        : '${stats.wins}승 ${stats.draws}무 ${stats.losses}패';
-    final winRateText = stats == null || stats.totalMatches == 0
-        ? '—'
-        : '${(stats.winRate * 100).round()}%';
+    // 실 데이터 없음/빈 값이면 mock 대체
+    final stats = (realStats == null || realStats.totalMatches == 0)
+        ? _mockTeamStats()
+        : realStats;
+
+    final totalRecord =
+        '${stats.wins}승 ${stats.draws}무 ${stats.losses}패';
+    // 통산: 최근 연승 기록(mock 포함)
+    const bestStreak = '5연승';
 
     return Padding(
       padding: AppSpacing.paddingPage,
@@ -584,7 +621,7 @@ class _TeamSummarySection extends ConsumerWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: _SummaryCard(label: '승률', value: winRateText),
+                child: _SummaryCard(label: '최고 연승', value: bestStreak),
               ),
             ],
           ),
@@ -651,40 +688,33 @@ class _TeamStatsView extends ConsumerWidget {
     final goalsAsync = ref.watch(teamGoalRankingProvider(team.id));
     final assistsAsync = ref.watch(teamAssistRankingProvider(team.id));
 
-    final stats = statsAsync.maybeWhen(
+    final realStats = statsAsync.maybeWhen(
       data: (s) => s,
-      orElse: () => const TeamStats(
-        totalMatches: 0,
-        wins: 0,
-        draws: 0,
-        losses: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-        cleanSheets: 0,
-      ),
+      orElse: () => null,
     );
-    final goals = goalsAsync.maybeWhen(
+    // 빈 값이면 mock 으로 대체 (캡쳐용)
+    final stats = (realStats == null || realStats.totalMatches == 0)
+        ? _mockTeamStats()
+        : realStats;
+
+    final realGoals = goalsAsync.maybeWhen(
       data: (list) => list,
       orElse: () => const <PlayerRank>[],
     );
-    final assists = assistsAsync.maybeWhen(
+    final goals = realGoals.isEmpty ? _mockGoalRanking() : realGoals;
+
+    final realAssists = assistsAsync.maybeWhen(
       data: (list) => list,
       orElse: () => const <PlayerRank>[],
     );
+    final assists = realAssists.isEmpty ? _mockAssistRanking() : realAssists;
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: scrollPaddingTop),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 전적 요약
-          Padding(
-            padding: AppSpacing.paddingPage,
-            child: _RecordOverviewCard(stats: stats),
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-
-          // 시즌 기록
+          // 시즌 기록 (승률 카드는 오버뷰로 이동됨)
           Padding(
             padding: AppSpacing.paddingPage,
             child: const SectionTitle('시즌 기록'),
@@ -972,7 +1002,12 @@ class _MembersView extends ConsumerWidget {
                   .copyWith(color: AppColors.textTertiary)),
         ),
       ),
-      data: (members) {
+      data: (realMembers) {
+        // 실 멤버가 비어 있으면 mock 주입 (캡쳐용)
+        final members = realMembers.isEmpty
+            ? _mockMembers(team.id)
+            : realMembers;
+
         // position 이 없거나 매핑 안 되는 멤버는 '기타'
         final byPos = <String, List<TeamMember>>{};
         for (final m in members) {
@@ -1101,6 +1136,137 @@ class _MemberRow extends StatelessWidget {
       ),
     );
   }
+}
+
+// ══════════════════════════════════════════════
+// Mock 데이터 (캡쳐용)
+// 실제 provider가 빈 결과일 때만 UI 레이어에서 덮어씀.
+// id/name 은 mock- prefix 로 구분.
+// ══════════════════════════════════════════════
+
+const _mockAvatarMF =
+    'assets/images/avatars/B.WHITE_Headshot_web_xdbqzl78.avif';
+const _mockAvatarGK =
+    'assets/images/avatars/RAYA_Headshot_web_njztl3wr.avif';
+const _mockAvatarDF =
+    'assets/images/avatars/SALIBA_Headshot_web_khl9z1vw.avif';
+const _mockAvatarFW =
+    'assets/images/avatars/MOSQUERA_Headshot_web_b3sucu1j.avif';
+
+TeamStats _mockTeamStats() {
+  return const TeamStats(
+    totalMatches: 37,
+    wins: 24,
+    draws: 5,
+    losses: 8,
+    goalsFor: 82,
+    goalsAgainst: 39,
+    cleanSheets: 11,
+  );
+}
+
+List<PlayerRank> _mockGoalRanking() {
+  return const [
+    PlayerRank(
+        name: '김태호',
+        position: 'FW',
+        avatarPath: _mockAvatarFW,
+        value: 14),
+    PlayerRank(
+        name: '박정우',
+        position: 'FW',
+        avatarPath: _mockAvatarFW,
+        value: 11),
+    PlayerRank(
+        name: '이병준',
+        position: 'MF',
+        avatarPath: _mockAvatarMF,
+        value: 9),
+    PlayerRank(
+        name: '윤서준',
+        position: 'MF',
+        avatarPath: _mockAvatarMF,
+        value: 6),
+    PlayerRank(
+        name: '최민수',
+        position: 'MF',
+        avatarPath: _mockAvatarMF,
+        value: 5),
+  ];
+}
+
+List<PlayerRank> _mockAssistRanking() {
+  return const [
+    PlayerRank(
+        name: '윤서준',
+        position: 'MF',
+        avatarPath: _mockAvatarMF,
+        value: 10),
+    PlayerRank(
+        name: '이병준',
+        position: 'MF',
+        avatarPath: _mockAvatarMF,
+        value: 7),
+    PlayerRank(
+        name: '박정우',
+        position: 'FW',
+        avatarPath: _mockAvatarFW,
+        value: 5),
+    PlayerRank(
+        name: '강지훈',
+        position: 'MF',
+        avatarPath: _mockAvatarMF,
+        value: 4),
+    PlayerRank(
+        name: '김태호',
+        position: 'FW',
+        avatarPath: _mockAvatarFW,
+        value: 3),
+  ];
+}
+
+List<TeamMember> _mockMembers(String teamId) {
+  final joined = DateTime(2024, 3, 1);
+  TeamMember m({
+    required String id,
+    required String name,
+    required String position,
+    required int number,
+    required String avatar,
+    TeamRole role = TeamRole.member,
+  }) {
+    return TeamMember(
+      teamId: teamId,
+      playerId: 'mock-$id',
+      role: role,
+      joinedAt: joined,
+      playerName: name,
+      playerAvatarUrl: avatar,
+      playerNumber: number,
+      playerPosition: position,
+    );
+  }
+
+  return [
+    m(
+        id: 'gk-1',
+        name: '박서준',
+        position: 'GK',
+        number: 1,
+        avatar: _mockAvatarGK,
+        role: TeamRole.admin),
+    m(id: 'gk-2', name: '한준혁', position: 'GK', number: 21, avatar: _mockAvatarGK),
+    m(id: 'df-1', name: '윤태경', position: 'DF', number: 2, avatar: _mockAvatarDF),
+    m(id: 'df-2', name: '정도현', position: 'DF', number: 4, avatar: _mockAvatarDF),
+    m(id: 'df-3', name: '김재윤', position: 'DF', number: 5, avatar: _mockAvatarDF),
+    m(id: 'df-4', name: '송민호', position: 'DF', number: 23, avatar: _mockAvatarDF),
+    m(id: 'mf-1', name: '이병준', position: 'MF', number: 7, avatar: _mockAvatarMF),
+    m(id: 'mf-2', name: '윤서준', position: 'MF', number: 10, avatar: _mockAvatarMF),
+    m(id: 'mf-3', name: '강지훈', position: 'MF', number: 14, avatar: _mockAvatarMF),
+    m(id: 'mf-4', name: '최민수', position: 'MF', number: 8, avatar: _mockAvatarMF),
+    m(id: 'fw-1', name: '김태호', position: 'FW', number: 9, avatar: _mockAvatarFW),
+    m(id: 'fw-2', name: '박정우', position: 'FW', number: 11, avatar: _mockAvatarFW),
+  ];
 }
 
 /// 선수 아바타. URL 있으면 네트워크, 없으면 이니셜 원.

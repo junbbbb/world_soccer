@@ -42,7 +42,6 @@ dependencies:
   dio:
   freezed_annotation:
   json_annotation:
-  google_fonts:
   checkmark: ^0.0.2+1
   flutter_svg: ^2.2.4
   chat_bubbles: ^1.9.0
@@ -129,3 +128,9 @@ flutter:
           weight: 800
         - asset: assets/fonts/Pretendard-Black.otf
           weight: 900
+    - family: Barlow Condensed
+      fonts:
+        - asset: assets/fonts/BarlowCondensed-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/BarlowCondensed-ExtraBold.ttf
+          weight: 800

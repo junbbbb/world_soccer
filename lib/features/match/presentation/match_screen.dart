@@ -14,6 +14,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/snackbar.dart';
 import 'match_create_screen.dart';
 import 'widgets/attendance_section.dart';
 import 'widgets/lineup_section.dart';
@@ -221,12 +222,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen>
                           }
                           if (!context.mounted) return;
                           final label = status == 'cancelled' ? '취소' : '조기 종료';
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('경기가 $label 처리되었습니다'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          context.showInfo('경기가 $label 처리되었습니다');
                         },
                         onDelete: (!showDummy && widget.matchId != null)
                             ? () => _confirmDelete(widget.matchId!)

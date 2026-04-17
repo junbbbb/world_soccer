@@ -289,3 +289,21 @@ Future<List<RecentPerformance>> currentRecentPerformances(Ref ref) async {
         teamId: teamId,
       );
 }
+
+/// 현재 유저가 특정 경기에 참가 신청 했는지 여부.
+///
+/// `match_participations` 에서 (matchId, user.id) 조회. 참가/취소 후
+/// `ref.invalidate(isParticipatingProvider(matchId))` 로 강제 재조회.
+@riverpod
+Future<bool> isParticipating(Ref ref, String matchId) async {
+  final client = ref.watch(supabaseClientProvider);
+  final user = client.auth.currentUser;
+  if (user == null) return false;
+  final data = await client
+      .from('match_participations')
+      .select('player_id')
+      .eq('match_id', matchId)
+      .eq('player_id', user.id)
+      .maybeSingle();
+  return data != null;
+}

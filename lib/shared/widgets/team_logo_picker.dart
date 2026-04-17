@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/utils/snackbar.dart';
 import 'team_logo_view.dart' show extensionFromPath;
 
 typedef PickedLogoImage = ({Uint8List bytes, String ext});
@@ -30,12 +31,7 @@ Future<PickedLogoImage?> pickTeamLogoImage(
     return (bytes: bytes, ext: extensionFromPath(file.path));
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('사진을 불러오지 못했어요: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.showError('사진을 불러오지 못했어요: $e');
     }
     return null;
   }

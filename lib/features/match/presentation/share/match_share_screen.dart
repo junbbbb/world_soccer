@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/snackbar.dart';
 import '../lineup/logic/lineup_controller.dart';
 import '../lineup/models/lineup_models.dart';
 import 'widgets/squad_share_card.dart';
@@ -177,20 +178,7 @@ class _BottomBar extends StatelessWidget {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: enabled
-                ? () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                          '다음 단계에서 카톡 공유 연결 예정',
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppRadius.smoothMd,
-                        ),
-                        behavior: SnackBarBehavior.floating,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
+                ? () => context.showInfo('다음 단계에서 카톡 공유 연결 예정')
                 : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

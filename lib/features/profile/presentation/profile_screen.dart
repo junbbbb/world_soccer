@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../config/dev_settings.dart';
@@ -12,7 +11,9 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/capture.dart';
 import '../../../core/utils/date_format.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../runtime/providers.dart';
+import '../../../shared/widgets/inline_spinner.dart';
 import '../../../shared/widgets/team_logo_picker.dart';
 import '../../../shared/widgets/team_logo_view.dart';
 import '../../../types/enums.dart';
@@ -81,12 +82,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('공유 실패: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.showError('공유 실패: $e');
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -136,10 +132,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 );
               }
 
-              final team = teamAsync.value;
-              final stats = statsAsync.value;
-              final titles = titlesAsync.value ?? const <PlayerTitle>[];
-              final recent = recentAsync.value ?? const <RecentPerformance>[];
+              final realTeam = teamAsync.value;
+              final realStats = statsAsync.value;
+              final realTitles = titlesAsync.value ?? const <PlayerTitle>[];
+              final realRecent =
+                  recentAsync.value ?? const <RecentPerformance>[];
+
+              // 실데이터가 비어있거나 경기 없음이면 mock 으로 대체 (캡쳐용).
+              // 백엔드 호출 미변경 — UI 레이어에서만 덮어씀.
+              final useMockStats =
+                  realStats == null || realStats.appearances == 0;
+              final team = realTeam ?? _mockTeam(player.createdAt);
+              final stats = useMockStats ? _mockSeasonStats() : realStats;
+              final titles =
+                  realTitles.isEmpty ? _mockTitles() : realTitles;
+              final recent =
+                  realRecent.isEmpty ? _mockRecentPerformances() : realRecent;
 
               return SingleChildScrollView(
                 padding: EdgeInsets.only(
@@ -164,6 +172,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           team: team,
                           stats: stats,
                           titles: titles,
+                          useMockAvatar: useMockStats,
                         ),
                       ),
                     ),
@@ -305,16 +314,7 @@ class _Header extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
               child: isSharing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(
-                          AppColors.textPrimary,
-                        ),
-                      ),
-                    )
+                  ? const InlineSpinner(color: AppColors.textPrimary)
                   : const Icon(
                       Icons.ios_share_rounded,
                       size: 20,
@@ -439,12 +439,7 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('저장 실패: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.showError('저장 실패: $e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -689,14 +684,7 @@ class _EditProfileScreenState extends ConsumerState<_EditProfileScreen> {
                 ),
               ),
               child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    )
+                  ? const InlineSpinner()
                   : const Text(
                       '저장',
                       style: AppTextStyles.buttonPrimary,
@@ -905,12 +893,14 @@ class _ProfileCard extends StatelessWidget {
     required this.team,
     required this.stats,
     required this.titles,
+    this.useMockAvatar = false,
   });
 
   final Player player;
   final Team? team;
   final SeasonStats? stats;
   final List<PlayerTitle> titles;
+  final bool useMockAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -954,7 +944,13 @@ class _ProfileCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          _BigAvatar(avatarUrl: player.avatarUrl),
+          _BigAvatar(
+            avatarUrl: useMockAvatar
+                ? _mockProfileAvatar
+                : ((player.avatarUrl != null && player.avatarUrl!.isNotEmpty)
+                    ? player.avatarUrl
+                    : _mockProfileAvatar),
+          ),
           const SizedBox(height: AppSpacing.xl),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -985,6 +981,21 @@ class _BigAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+      // 로컬 mock 에셋 fallback 지원
+      if (!avatarUrl!.startsWith('http')) {
+        return ClipRRect(
+          borderRadius: AppRadius.smoothMd,
+          child: Image.asset(
+            avatarUrl!,
+            width: 220,
+            height: 220,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            errorBuilder: (_, __, ___) =>
+                Image.asset(_defaultAvatarAsset, height: 220),
+          ),
+        );
+      }
       return ClipRRect(
         borderRadius: AppRadius.smoothMd,
         child: Image.network(
@@ -992,6 +1003,7 @@ class _BigAvatar extends StatelessWidget {
           width: 220,
           height: 220,
           fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
           errorBuilder: (_, __, ___) =>
               Image.asset(_defaultAvatarAsset, height: 220),
         ),
@@ -1013,7 +1025,8 @@ class _BigStat extends StatelessWidget {
         children: [
           Text(
             value,
-            style: GoogleFonts.barlowCondensed(
+            style: const TextStyle(
+              fontFamily: 'Barlow Condensed',
               fontSize: 44,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -1141,6 +1154,84 @@ class _RecentSection extends StatelessWidget {
       ),
     );
   }
+}
+
+// ══════════════════════════════════════════════
+// Mock 데이터 (캡쳐용)
+// 실제 provider 가 빈 결과일 때만 UI 레이어에서 덮어씀.
+// id/키는 mock- prefix 로 구분.
+// ══════════════════════════════════════════════
+
+// 과거 mock 시절부터 쓰던 기본 축구선수 얼굴 이미지.
+const _mockProfileAvatar = 'assets/images/avatars/profileimage.png';
+
+Team _mockTeam(DateTime createdAt) {
+  return Team(
+    id: 'mock-team',
+    name: '칼로FC',
+    logoUrl: null,
+    logoColor: '#1572D1',
+    description: '주말 풋살 리그 소속 아마추어 팀',
+    createdAt: createdAt,
+  );
+}
+
+SeasonStats _mockSeasonStats() {
+  return const SeasonStats(
+    appearances: 18,
+    goals: 12,
+    assists: 7,
+    mom: 4,
+  );
+}
+
+List<PlayerTitle> _mockTitles() {
+  return const [
+    PlayerTitle.topScorer,
+    PlayerTitle.topMom,
+    PlayerTitle.topAttendance,
+  ];
+}
+
+List<RecentPerformance> _mockRecentPerformances() {
+  // 가장 최근이 맨 위. 현재 날짜 기준이 아닌 고정 날짜로 스냅샷 안정화.
+  return [
+    RecentPerformance(
+      opponent: 'FC 서울스타즈',
+      date: DateTime(2026, 4, 12),
+      goals: 2,
+      assists: 1,
+      isMom: true,
+    ),
+    RecentPerformance(
+      opponent: '한강 유나이티드',
+      date: DateTime(2026, 4, 5),
+      goals: 1,
+      assists: 2,
+      isMom: false,
+    ),
+    RecentPerformance(
+      opponent: '청담 루키스',
+      date: DateTime(2026, 3, 29),
+      goals: 0,
+      assists: 1,
+      isMom: false,
+    ),
+    RecentPerformance(
+      opponent: '성수 블루웨이브',
+      date: DateTime(2026, 3, 22),
+      goals: 3,
+      assists: 0,
+      isMom: true,
+    ),
+    RecentPerformance(
+      opponent: '용산 FC',
+      date: DateTime(2026, 3, 15),
+      goals: 1,
+      assists: 1,
+      isMom: false,
+    ),
+  ];
 }
 
 class _MatchRow extends StatelessWidget {

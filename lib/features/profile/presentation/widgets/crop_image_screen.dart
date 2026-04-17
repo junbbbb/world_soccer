@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/capture.dart';
+import '../../../../core/utils/snackbar.dart';
+import '../../../../shared/widgets/inline_spinner.dart';
 
 /// 인스타그램 스타일 정사각 크롭 + 원형 가이드.
 ///
@@ -78,12 +80,7 @@ class _CropImageScreenState extends State<CropImageScreen> {
       Navigator.of(context).pop(bytes);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('크롭 실패: $e'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.showError('크롭 실패: $e');
     } finally {
       if (mounted) setState(() => _processing = false);
     }
@@ -141,14 +138,7 @@ class _CropImageScreenState extends State<CropImageScreen> {
                 vertical: AppSpacing.sm,
               ),
               child: _processing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    )
+                  ? const InlineSpinner(size: 18)
                   : Text(
                       '완료',
                       style: AppTextStyles.label.copyWith(

@@ -89,12 +89,16 @@ enum PreferredFoot {
 }
 
 /// 시즌 반기.
+///
+/// - `label` = UI/뷰(`season_player_stats.half`) 용 한글
+/// - `dbCode` = RPC 파라미터 ('H1'/'H2'). i18n 안전
 enum SeasonHalf {
-  first('상반기'),
-  second('하반기');
+  first('상반기', 'H1'),
+  second('하반기', 'H2');
 
-  const SeasonHalf(this.label);
+  const SeasonHalf(this.label, this.dbCode);
   final String label;
+  final String dbCode;
 }
 
 /// 랭킹 기준.
@@ -106,20 +110,23 @@ enum RankType {
 
 /// 반기 뱃지 (팀·반기 1등 카테고리).
 ///
-/// DB RPC `get_player_titles` 의 반환 라벨과 1:1 매칭.
+/// - `label` = UI 표시용 한글
+/// - `code` = DB RPC 반환값 (i18n 안전 안정 코드)
+///
 /// 최소 3경기 출전 + 해당 카테고리 값 > 0 + 공동 1위 포함.
 enum PlayerTitle {
-  topScorer('득점왕'),
-  topAssister('어시왕'),
-  topAttendance('출석왕'),
-  topMom('MOM왕');
+  topScorer('득점왕', 'top_scorer'),
+  topAssister('어시왕', 'top_assister'),
+  topAttendance('출석왕', 'top_attendance'),
+  topMom('MOM왕', 'top_mom');
 
-  const PlayerTitle(this.label);
+  const PlayerTitle(this.label, this.code);
   final String label;
+  final String code;
 
-  static PlayerTitle? fromLabel(String label) {
+  static PlayerTitle? fromCode(String code) {
     for (final t in PlayerTitle.values) {
-      if (t.label == label) return t;
+      if (t.code == code) return t;
     }
     return null;
   }

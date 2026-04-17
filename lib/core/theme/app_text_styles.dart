@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTextStyles {
   AppTextStyles._();
 
   static const _pretendard = 'Pretendard';
   static const _scDream = 'SCDream';
+  static const _barlowCondensed = 'Barlow Condensed';
 
   // ── Titles ──
   static const pageTitle = TextStyle(
@@ -114,7 +114,8 @@ class AppTextStyles {
     color: Colors.white,
   );
 
-  static final timeDisplay = GoogleFonts.barlowCondensed(
+  static const timeDisplay = TextStyle(
+    fontFamily: _barlowCondensed,
     fontSize: 36,
     fontWeight: FontWeight.w800,
     color: Colors.white,

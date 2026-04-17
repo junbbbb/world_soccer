@@ -9,7 +9,7 @@ import '../models/lineup_models.dart';
 /// 쿼터 선택기 — 슬라이딩 세그먼트 컨트롤.
 ///
 /// surface 배경 컨테이너 안에 흰색 인디케이터가 슬라이드.
-/// Q1~Q4 균등 분배, sublabel(인원수) 포함.
+/// 1쿼터~4쿼터 균등 분배, sublabel(인원수) 포함.
 class QuarterSelector extends StatelessWidget {
   const QuarterSelector({
     required this.quarters,
@@ -90,7 +90,7 @@ class QuarterSelector extends StatelessWidget {
                           onTap: () => onQuarterTap(q),
                           behavior: HitTestBehavior.opaque,
                           child: _SegmentLabel(
-                            label: 'Q${q + 1}',
+                            label: '${q + 1}쿼터',
                             sublabel:
                                 '${quarters[q].slotToMemberId.length}/${formations[quarters[q].formationIndex].slots.length}',
                             isSelected: q == currentQuarter,

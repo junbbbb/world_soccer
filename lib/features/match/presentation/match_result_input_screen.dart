@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../../../config/dev_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radius.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/snackbar.dart';
 import '../../../runtime/providers.dart';
 import '../../../types/team.dart' show Team;
 
@@ -73,15 +72,8 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
 
     final showDummy = ref.read(showDummyDataProvider);
     if (showDummy) {
-      // 더미 모드: 기존처럼 스낵바만
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('경기 결과가 저장되었습니다'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-        ),
-      );
+      context.showInfo('경기 결과가 저장되었습니다');
       Navigator.of(context).pop();
       return;
     }
@@ -117,23 +109,11 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
       ref.invalidate(teamMatchesProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('경기 결과가 저장되었습니다'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-        ),
-      );
+      context.showInfo('경기 결과가 저장되었습니다');
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('저장 실패: $e'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.smoothMd),
-        ),
-      );
+      context.showError('저장 실패: $e');
     }
   }
 
@@ -220,7 +200,8 @@ class _MatchResultInputScreenState extends ConsumerState<MatchResultInputScreen>
                       ),
                       child: Text(
                         ':',
-                        style: GoogleFonts.barlowCondensed(
+                        style: const TextStyle(
+                          fontFamily: 'Barlow Condensed',
                           fontSize: 32,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textTertiary,
@@ -471,7 +452,8 @@ class _TeamScore extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Text(
           '$score',
-          style: GoogleFonts.barlowCondensed(
+          style: const TextStyle(
+            fontFamily: 'Barlow Condensed',
             fontSize: 48,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
@@ -657,7 +639,8 @@ class _TeamScoreWithInput extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Text(
           '$score',
-          style: GoogleFonts.barlowCondensed(
+          style: const TextStyle(
+            fontFamily: 'Barlow Condensed',
             fontSize: 48,
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,

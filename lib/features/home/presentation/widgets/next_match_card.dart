@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/snackbar.dart';
 import '../../../../runtime/providers.dart';
 import '../../../../shared/widgets/info_capsule.dart';
 import '../../../../shared/widgets/match_badges.dart';
@@ -72,27 +73,23 @@ class NextMatchCard extends ConsumerStatefulWidget {
 }
 
 class _NextMatchCardState extends ConsumerState<NextMatchCard> {
-  bool _isJoined = false;
+  /// 더미 모드 전용 로컬 토글. 실데이터는 `isParticipatingProvider` 사용.
+  bool _dummyJoined = false;
   bool _busy = false;
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    context.showError(message);
   }
 
   /// 짧게 탭 → 프로필 선호 포지션으로 바로 참가 (전 쿼터).
   /// 이미 참가 상태면 참가 취소.
-  Future<void> _onParticipateTap(Match? match) async {
+  Future<void> _onParticipateTap(Match? match, bool currentlyJoined) async {
     if (_busy) return;
     HapticFeedback.mediumImpact();
 
     if (ref.read(showDummyDataProvider) || match == null) {
-      setState(() => _isJoined = !_isJoined);
+      setState(() => _dummyJoined = !_dummyJoined);
       return;
     }
 
@@ -105,9 +102,9 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
     setState(() => _busy = true);
     try {
       final service = ref.read(matchServiceProvider);
-      if (_isJoined) {
+      if (currentlyJoined) {
         await service.leaveMatch(matchId: match.id, playerId: user.id);
-        if (mounted) setState(() => _isJoined = false);
+        ref.invalidate(isParticipatingProvider(match.id));
         return;
       }
 
@@ -122,7 +119,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
         preferredPositions: player.preferredPositions,
         availableQuarters: const [1, 2, 3, 4],
       );
-      if (mounted) setState(() => _isJoined = true);
+      ref.invalidate(isParticipatingProvider(match.id));
     } catch (e) {
       _showError('참가 처리 실패: $e');
     } finally {
@@ -138,7 +135,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
     if (ref.read(showDummyDataProvider) || match == null) {
       final result = await showJoinMatchSheet(context);
       if (!mounted || result == null) return;
-      setState(() => _isJoined = true);
+      setState(() => _dummyJoined = true);
       return;
     }
 
@@ -159,7 +156,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
         preferredPositions: result.preferredPositions.toList(),
         availableQuarters: result.availableQuarters.toList(),
       );
-      if (mounted) setState(() => _isJoined = true);
+      ref.invalidate(isParticipatingProvider(match.id));
     } catch (e) {
       _showError('참가 처리 실패: $e');
     } finally {
@@ -191,6 +188,14 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
         );
     final match = showDummy ? null : _pickHomeMatch(matchList);
     final isMatchEnded = match != null && match.isFinished;
+
+    // 참가 여부: 실데이터 모드면 서버에서 조회, 더미면 로컬 토글.
+    final isJoined = (match == null || showDummy)
+        ? _dummyJoined
+        : ref.watch(isParticipatingProvider(match.id)).maybeWhen(
+              data: (v) => v,
+              orElse: () => false,
+            );
 
     // 표시할 값
     final ourName = showDummy ? 'FC칼로' : (team?.name ?? '...');
@@ -281,7 +286,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
                                 ] else ...[
                                   ...buildMatchBadges(matchList, match),
                                 ],
-                                if (_isJoined) ...[
+                                if (isJoined) ...[
                                   const SizedBox(width: AppSpacing.sm),
                                   const InfoCapsule(text: '참가완료'),
                                 ],
@@ -300,7 +305,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
                 duration: _animDuration,
                 curve: _animCurve,
                 alignment: Alignment.topCenter,
-                child: (_isJoined || isMatchEnded)
+                child: (isJoined || isMatchEnded)
                     ? const SizedBox(width: double.infinity)
                     : Column(
                         mainAxisSize: MainAxisSize.min,
@@ -321,7 +326,7 @@ class _NextMatchCardState extends ConsumerState<NextMatchCard> {
                             ),
                           ),
                           _ParticipateButton(
-                            onTap: () => _onParticipateTap(match),
+                            onTap: () => _onParticipateTap(match, isJoined),
                             onLongPress: () =>
                                 _onParticipateLongPress(match),
                           ),

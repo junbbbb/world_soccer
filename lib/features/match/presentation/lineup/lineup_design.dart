@@ -16,6 +16,9 @@ class LineupColors {
   /// 피치 라인. 초록 배경 위 옅은 흰색.
   static const pitchLine = Color(0x33FFFFFF); // white alpha 20%
 
+  /// 선수 아바타 링(슬롯 배경 겸 테두리).
+  static const avatarRing = Color(0xFFDEEDE6);
+
   // ── 공정성 (출전 쿼터 수 기반) ──
   /// 적정(2~3쿼터). 유일한 채도 있는 색.
   static const fairOk = AppColors.primary;
